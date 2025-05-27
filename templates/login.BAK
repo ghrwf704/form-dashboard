@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>キーワード管理</title>
+    <style>
+        body { font-family: sans-serif; margin: 2em; }
+        table { border-collapse: collapse; width: 100%; }
+        th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+        form { margin-bottom: 1em; }
+        .active { color: green; font-weight: bold; }
+        .inactive { color: gray; }
+    </style>
+</head>
+<body>
+    <h1>キーワード管理</h1>
+
+    <form method="post">
+        <input type="text" name="keyword" placeholder="新しいキーワード" required>
+        <button type="submit">追加</button>
+    </form>
+
+    <table>
+        <thead>
+            <tr>
+                <th>キーワード</th>
+                <th>状態</th>
+                <th>操作</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for kw in keywords %}
+            <tr>
+                <td>{{ kw.keyword }}</td>
+                <td class="{{ 'active' if kw.active else 'inactive' }}">
+                    {{ '有効' if kw.active else '無効' }}
+                </td>
+                <td>
+                    <a href="/keywords/toggle/{{ kw.keyword }}">切り替え</a> |
+                    <a href="/keywords/delete/{{ kw.keyword }}" onclick="return confirm('削除しますか？');">削除</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>
