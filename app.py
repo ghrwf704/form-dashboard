@@ -3,9 +3,11 @@ from pymongo import MongoClient
 
 app = Flask(__name__)
 
-# TLSƒIƒvƒVƒ‡ƒ“‚ğ’Ç‰Á‚µ‚½MongoDB AtlasÚ‘±URI
 client = MongoClient(
-    "mongodb+srv://ykeikeikie:qMUerl78WgsEEOWA@cluster0.helfbov.mongodb.net/form_database?retryWrites=true&w=majority&tls=true"
+    "mongodb://ykeikeikie:qMUerl78WgsEEOWA@ac-helfbov-shard-00-00.mongodb.net:27017,"
+    "ac-helfbov-shard-00-01.mongodb.net:27017,"
+    "ac-helfbov-shard-00-02.mongodb.net:27017/"
+    "?ssl=true&replicaSet=atlas-helfbov-shard-0&authSource=admin&retryWrites=true&w=majority"
 )
 
 db = client["form_database"]
