@@ -5,7 +5,7 @@ import certifi
 import bcrypt
 
 app = Flask(__name__)
-app.secret_key = 'your_secret_key_here'  # ƒZƒbƒVƒ‡ƒ“ŠÇ——piŠÂ‹«•Ï”‚ÉˆÚs„§j
+app.secret_key = 'your_secret_key_here'  # ã‚»ãƒƒã‚·ãƒ§ãƒ³ç®¡ç†ç”¨ï¼ˆç’°å¢ƒå¤‰æ•°ã«ç§»è¡Œæ¨å¥¨ï¼‰
 
 MONGO_URI = "mongodb+srv://ykeikeikie:qMUerl78WgsEEOWA@cluster0.helfbov.mongodb.net/?retryWrites=true&w=majority"
 client = pymongo.MongoClient(MONGO_URI, tls=True, tlsCAFile=certifi.where())
@@ -38,7 +38,7 @@ def login():
         if user and bcrypt.checkpw(password.encode('utf-8'), user["password_hash"]):
             login_user(User(username))
             return redirect(url_for("index"))
-        flash("ƒƒOƒCƒ“¸”s: ƒ†[ƒU[–¼‚Ü‚½‚ÍƒpƒXƒ[ƒh‚ªŠÔˆá‚Á‚Ä‚¢‚Ü‚·B")
+        flash("ãƒ­ã‚°ã‚¤ãƒ³å¤±æ•—: ãƒ¦ãƒ¼ã‚¶ãƒ¼åã¾ãŸã¯ãƒ‘ã‚¹ãƒ¯ãƒ¼ãƒ‰ãŒé–“é•ã£ã¦ã„ã¾ã™ã€‚")
     return render_template("login.html")
 
 @app.route("/logout")
