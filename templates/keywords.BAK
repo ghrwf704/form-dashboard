@@ -2,48 +2,58 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>フォーム一覧</title>
+    <title>キーワード管理</title>
     <style>
-        table {
-            border-collapse: collapse;
-            width: 100%;
-        }
-        th, td {
-            border: 1px solid #ccc;
-            padding: 8px;
-            text-align: left;
-        }
-        th {
-            background-color: #f2f2f2;
-        }
-        a {
-            color: blue;
-        }
+        body { font-family: sans-serif; margin: 2em; }
+        nav { margin-bottom: 1em; background: #f0f0f0; padding: 1em; }
+        nav a { margin-right: 1em; }
+        table { border-collapse: collapse; width: 100%; }
+        th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+        form { margin-bottom: 1em; }
+        .active { color: green; font-weight: bold; }
+        .inactive { color: gray; }
     </style>
 </head>
 <body>
-    <h1>登録済みフォーム情報</h1>
+    <nav>
+        <a href="/">ダッシュボード</a>
+        <a href="/keywords">キーワード管理</a>
+        <a href="/logout">ログアウト</a>
+    </nav>
+
+    {% if current_user.is_authenticated %}
+        <p>こんにちは、{{ current_user.id }} さん！</p>
+    {% endif %}
+
+    <h1>キーワード管理</h1>
+
+    <form method="post">
+        <input type="text" name="keyword" placeholder="新しいキーワード" required>
+        <button type="submit">追加</button>
+    </form>
+
     <table>
-        <tr>
-            <th>企業名</th>
-            <th>URL（トップ）</th>
-            <th>URL（問い合わせ）</th>
-            <th>住所</th>
-            <th>電話番号</th>
-            <th>カテゴリ</th>
-            <th>説明</th>
-        </tr>
-        {% for form in forms %}
-        <tr>
-            <td>{{ form.company_name }}</td>
-            <td><a href="{{ form.url_top }}" target="_blank">トップ</a></td>
-            <td><a href="{{ form.url_form }}" target="_blank">フォーム</a></td>
-            <td>{{ form.address }}</td>
-            <td>{{ form.tel }}</td>
-            <td>{{ form.category_keywords }}</td>
-            <td>{{ form.description }}</td>
-        </tr>
-        {% endfor %}
+        <thead>
+            <tr>
+                <th>キーワード</th>
+                <th>状態</th>
+                <th>操作</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for kw in keywords %}
+            <tr>
+                <td>{{ kw.keyword }}</td>
+                <td class="{{ 'active' if kw.active else 'inactive' }}">
+                    {{ '有効' if kw.active else '無効' }}
+                </td>
+                <td>
+                    <a href="/keywords/toggle/{{ kw.keyword }}">切り替え</a> |
+                    <a href="/keywords/delete/{{ kw.keyword }}" onclick="return confirm('削除しますか？');">削除</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
     </table>
 </body>
 </html>

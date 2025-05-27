@@ -5,6 +5,8 @@
     <title>キーワード管理</title>
     <style>
         body { font-family: sans-serif; margin: 2em; }
+        nav { margin-bottom: 1em; background: #f0f0f0; padding: 1em; }
+        nav a { margin-right: 1em; }
         table { border-collapse: collapse; width: 100%; }
         th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
         form { margin-bottom: 1em; }
@@ -13,6 +15,16 @@
     </style>
 </head>
 <body>
+    <nav>
+        <a href="/">ダッシュボード</a>
+        <a href="/keywords">キーワード管理</a>
+        <a href="/logout">ログアウト</a>
+    </nav>
+
+    {% if current_user.is_authenticated %}
+        <p>こんにちは、{{ current_user.id }} さん！</p>
+    {% endif %}
+
     <h1>キーワード管理</h1>
 
     <form method="post">

@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>{% block title %}Form Crawler{% endblock %}</title>
+  <style>
+    nav { background: #f0f0f0; padding: 1em; }
+    nav a { margin-right: 1em; }
+  </style>
+</head>
+<body>
+  <nav>
+    <a href="{{ url_for('index') }}">ダッシュボード</a>
+    <a href="{{ url_for('manage_keywords') }}">キーワード管理</a>
+    <a href="{{ url_for('logout') }}">ログアウト</a>
+  </nav>
+
+  <main>
+    {% block content %}{% endblock %}
+  </main>
+</body>
+</html>
