@@ -22,6 +22,10 @@
         <p>こんにちは、{{ current_user.id }} さん！</p>
     {% endif %}
 
+    {% if active_keywords %}
+        <p><strong>現在有効なキーワード:</strong> {{ active_keywords|join(", ") }}</p>
+    {% endif %}
+
     <h1>フォーム一覧</h1>
 
     <table>

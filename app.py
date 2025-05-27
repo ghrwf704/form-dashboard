@@ -5,7 +5,7 @@ import certifi
 import bcrypt
 
 app = Flask(__name__)
-app.secret_key = 'your_secret_key_here'  # セッション管理用（環境変数に移行推奨）
+app.secret_key = 'your_secret_key_here'
 
 MONGO_URI = "mongodb+srv://ykeikeikie:qMUerl78WgsEEOWA@cluster0.helfbov.mongodb.net/?retryWrites=true&w=majority"
 client = pymongo.MongoClient(MONGO_URI, tls=True, tlsCAFile=certifi.where())
@@ -51,7 +51,8 @@ def logout():
 @login_required
 def index():
     forms = list(collection.find().sort("_id", -1))
-    return render_template("index.html", forms=forms)
+    active_keywords = [k["keyword"] for k in keywords_collection.find({"active": True})]
+    return render_template("index.html", forms=forms, active_keywords=active_keywords)
 
 @app.route("/keywords", methods=["GET", "POST"])
 @login_required
@@ -77,6 +78,21 @@ def toggle_keyword(keyword):
 @login_required
 def delete_keyword(keyword):
     keywords_collection.delete_one({"keyword": keyword})
+    return redirect("/keywords")
+
+@app.route("/keywords/only/<keyword>")
+@login_required
+def activate_only_keyword(keyword):
+    keywords_collection.update_many({}, {"$set": {"active": False}})
+    keywords_collection.update_one({"keyword": keyword}, {"$set": {"active": True}})
+    return redirect("/keywords")
+
+@app.route("/keywords/update/<keyword>", methods=["POST"])
+@login_required
+def update_keyword(keyword):
+    new_keyword = request.form.get("new_keyword")
+    if new_keyword and new_keyword != keyword:
+        keywords_collection.update_one({"keyword": keyword}, {"$set": {"keyword": new_keyword}})
     return redirect("/keywords")
 
 if __name__ == "__main__":

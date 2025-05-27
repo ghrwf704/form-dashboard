@@ -1,22 +1,32 @@
-from search_engine import bing_search
+import configparser
+from pymongo import MongoClient
+import certifi
+from search_engine import search_urls
 
-def main():
-    query = "お問い合わせ site:.jp"  # 検索キーワード
-    max_pages = 3  # 最大検索ページ数（1ページあたり約10件）
-    output_file = "urls_raw.txt"
+# 設定ファイルからID・パスワード読み込み
+config = configparser.ConfigParser()
+config.read("setting.ini", encoding="utf-8")
 
-    print(f"🔍 Bing検索開始:「{query}」 ({max_pages}ページ分)")
-    urls = bing_search(query, max_pages)
+username = config["auth"]["id"]
+password = config["auth"]["pass"]
 
-    if not urls:
-        print("⚠ URLが取得できませんでした。")
-        return
+# MongoDB接続
+MONGO_URI = "mongodb+srv://ykeikeikie:qMUerl78WgsEEOWA@cluster0.helfbov.mongodb.net/?retryWrites=true&w=majority"
+client = MongoClient(MONGO_URI, tls=True, tlsCAFile=certifi.where())
+db = client["form_database"]
 
-    with open(output_file, "w", encoding="utf-8") as f:
-        for url in urls:
-            f.write(url + "\n")
+# 有効なキーワード取得
+keywords = [doc["keyword"] for doc in db["keywords"].find({"active": True})]
 
-    print(f"✅ {len(urls)} 件のURLを {output_file} に保存しました。")
+print("検索対象キーワード:", keywords)
 
-if __name__ == "__main__":
-    main()
+# 検索＆URL保存（検索処理は別モジュールに委譲）
+for keyword in keywords:
+    urls = search_urls(keyword)
+    for url in urls:
+        db["urls"].update_one(
+            {"url": url},  # 既存チェック
+            {"$setOnInsert": {"keyword": keyword, "status": "未収集"}},
+            upsert=True
+        )
+    print(f"→ {keyword}: {len(urls)} 件保存完了")

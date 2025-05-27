@@ -1,31 +1,24 @@
-from selenium import webdriver
-from selenium.webdriver.common.by import By
-from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.common.keys import Keys
-import time
-import os
+import configparser
+from pymongo import MongoClient
+import certifi
 
-def bing_search(query, max_pages=5):
-    options = Options()
-    # options.add_argument("--headless")  # 非headlessモードに変更
-    options.add_argument("--disable-gpu")
-    options.add_argument("--no-sandbox")
-    driver = webdriver.Chrome(options=options)
+def load_credentials():
+    config = configparser.ConfigParser()
+    config.read("setting.ini", encoding="utf-8")
+    return config["auth"]["id"], config["auth"]["pass"]
 
-    links = []
-    for page in range(max_pages):
-        offset = page * 10
-        search_url = f"https://www.bing.com/search?q={query}&first={offset + 1}"
-        driver.get(search_url)
-        time.sleep(1.5)
+def fetch_urls():
+    user_id, _ = load_credentials()
 
-        results = driver.find_elements(By.CSS_SELECTOR, 'li.b_algo h2 a')
-        for a in results:
-            href = a.get_attribute("href")
-            if href and href.startswith("http"):
-                links.append(href)
+    MONGO_URI = "mongodb+srv://ykeikeikie:qMUerl78WgsEEOWA@cluster0.helfbov.mongodb.net/?retryWrites=true&w=majority"
+    client = MongoClient(MONGO_URI, tls=True, tlsCAFile=certifi.where())
+    db = client["form_database"]
 
-    driver.quit()
-    links = list(set(links))
-    print(f"🔗 {len(links)} 件の URL を検出")
-    return links
+    urls = db["urls"].find({"status": "未収集"})
+    return [doc["url"] for doc in urls]
+
+# 例として実行
+if __name__ == "__main__":
+    urls = fetch_urls()
+    for u in urls:
+        print("収集対象:", u)

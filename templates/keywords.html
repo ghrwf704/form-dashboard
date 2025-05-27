@@ -43,12 +43,18 @@
         <tbody>
             {% for kw in keywords %}
             <tr>
-                <td>{{ kw.keyword }}</td>
+                <td>
+                    <form method="post" action="/keywords/update/{{ kw.keyword }}">
+                        <input type="text" name="new_keyword" value="{{ kw.keyword }}">
+                        <button type="submit">変更</button>
+                    </form>
+                </td>
                 <td class="{{ 'active' if kw.active else 'inactive' }}">
                     {{ '有効' if kw.active else '無効' }}
                 </td>
                 <td>
                     <a href="/keywords/toggle/{{ kw.keyword }}">切り替え</a> |
+                    <a href="/keywords/only/{{ kw.keyword }}" onclick="return confirm('このキーワードのみを有効にしますか？');">これだけ有効</a> |
                     <a href="/keywords/delete/{{ kw.keyword }}" onclick="return confirm('削除しますか？');">削除</a>
                 </td>
             </tr>
