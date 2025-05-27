@@ -1,14 +1,12 @@
 from flask import Flask, render_template
-from pymongo import MongoClient
+from pymongo.mongo_client import MongoClient
+from pymongo.server_api import ServerApi
 
 app = Flask(__name__)
 
-client = MongoClient(
-    "mongodb://ykeikeikie:qMUerl78WgsEEOWA@ac-helfbov-shard-00-00.mongodb.net:27017,"
-    "ac-helfbov-shard-00-01.mongodb.net:27017,"
-    "ac-helfbov-shard-00-02.mongodb.net:27017/"
-    "?ssl=true&replicaSet=atlas-helfbov-shard-0&authSource=admin&retryWrites=true&w=majority"
-)
+# êÑèßå`éÆÅFSRVê⁄ë±
+uri = "mongodb+srv://ykeikeikie:qMUerl78WgsEEOWA@cluster0.helfbov.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
+client = MongoClient(uri, server_api=ServerApi('1'))
 
 db = client["form_database"]
 collection = db["forms"]
