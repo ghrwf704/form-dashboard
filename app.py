@@ -3,7 +3,11 @@ from pymongo import MongoClient
 
 app = Flask(__name__)
 
-client = MongoClient("mongodb+srv://ykeikeikie:qMUerl78WgsEEOWA@cluster0.helfbov.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0")
+# TLSƒIƒvƒVƒ‡ƒ“‚ğ’Ç‰Á‚µ‚½MongoDB AtlasÚ‘±URI
+client = MongoClient(
+    "mongodb+srv://ykeikeikie:qMUerl78WgsEEOWA@cluster0.helfbov.mongodb.net/form_database?retryWrites=true&w=majority&tls=true"
+)
+
 db = client["form_database"]
 collection = db["forms"]
 
