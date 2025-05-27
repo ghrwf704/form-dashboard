@@ -16,5 +16,3 @@ def index():
     forms = list(collection.find().sort("_id", -1))
     return render_template("index.html", forms=forms)
 
-if __name__ == "__main__":
-    app.run(debug=True)
