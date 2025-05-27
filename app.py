@@ -56,7 +56,7 @@ def logout():
 @login_required
 def index():
     forms = list(collection.find({"owner": current_user.id}).sort("_id", -1))
-    active_keywords = [k["keyword"] for k in keywords_collection.find({"active": True})]
+    active_keywords = [k["keyword"] for k in keywords_collection.find({"active": True, "owner": current_user.id})]
     return render_template("index.html", forms=forms, active_keywords=active_keywords)
 
 @app.route("/keywords", methods=["GET", "POST"])
@@ -65,16 +65,16 @@ def manage_keywords():
     if request.method == "POST":
         new_keyword = request.form.get("keyword")
         if new_keyword:
-            keywords_collection.insert_one({"keyword": new_keyword, "active": True})
+            keywords_collection.insert_one({"keyword": new_keyword, "active": True, "owner": current_user.id})
         return redirect("/keywords")
 
-    all_keywords = list(keywords_collection.find())
+    all_keywords = list(keywords_collection.find({"owner": current_user.id}))
     return render_template("keywords.html", keywords=all_keywords)
 
 @app.route("/keywords/toggle/<keyword>")
 @login_required
 def toggle_keyword(keyword):
-    entry = keywords_collection.find_one({"keyword": keyword})
+    entry = keywords_collection.find_one({"keyword": keyword, "owner": current_user.id})
     if entry:
         keywords_collection.update_one({"_id": entry["_id"]}, {"$set": {"active": not entry.get("active", True)}})
     return redirect("/keywords")
@@ -82,14 +82,14 @@ def toggle_keyword(keyword):
 @app.route("/keywords/delete/<keyword>")
 @login_required
 def delete_keyword(keyword):
-    keywords_collection.delete_one({"keyword": keyword})
+    keywords_collection.delete_one({"keyword": keyword, "owner": current_user.id})
     return redirect("/keywords")
 
 @app.route("/keywords/only/<keyword>")
 @login_required
 def activate_only_keyword(keyword):
-    keywords_collection.update_many({}, {"$set": {"active": False}})
-    keywords_collection.update_one({"keyword": keyword}, {"$set": {"active": True}})
+    keywords_collection.update_many({"owner": current_user.id}, {"$set": {"active": False}})
+    keywords_collection.update_one({"keyword": keyword, "owner": current_user.id}, {"$set": {"active": True}})
     return redirect("/keywords")
 
 @app.route("/keywords/update/<keyword>", methods=["POST"])
@@ -97,7 +97,7 @@ def activate_only_keyword(keyword):
 def update_keyword(keyword):
     new_keyword = request.form.get("new_keyword")
     if new_keyword and new_keyword != keyword:
-        keywords_collection.update_one({"keyword": keyword}, {"$set": {"keyword": new_keyword}})
+        keywords_collection.update_one({"keyword": keyword, "owner": current_user.id}, {"$set": {"keyword": new_keyword}})
     return redirect("/keywords")
 
 if __name__ == "__main__":
