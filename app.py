@@ -37,12 +37,16 @@ def index():
 
     collection = db[COLLECTION_NAME]
     try:
-        forms = list(collection.find().sort("_id", -1))
+        print("📥 データベースクエリ開始")
+        forms = list(collection.find().sort("_id", -1))  # ここで失敗してる可能性
         print(f"📦 フォームデータ {len(forms)} 件取得")
         return render_template("index.html", forms=forms)
     except Exception as e:
-        print(f"❌ フォームデータ取得エラー: {e}")
+        import traceback
+        print("❌ フォームデータ取得エラー:")
+        traceback.print_exc()  # ← これがログにスタックトレースを出す！
         return "🚨 データ取得に失敗しました", 500
+
 
 # 必要に応じてポートとデバッグ設定
 if __name__ == "__main__":
