@@ -3,9 +3,14 @@ from flask_login import LoginManager, login_user, logout_user, login_required, U
 import pymongo
 import certifi
 import bcrypt
+import configparser
+
+# 設定ファイル読み込み
+config = configparser.ConfigParser()
+config.read("setting.ini", encoding="utf-8")
 
 app = Flask(__name__)
-app.secret_key = 'your_secret_key_here'
+app.secret_key = config["auth"].get("secret_key", "fallback_key")
 
 MONGO_URI = "mongodb+srv://ykeikeikie:qMUerl78WgsEEOWA@cluster0.helfbov.mongodb.net/?retryWrites=true&w=majority"
 client = pymongo.MongoClient(MONGO_URI, tls=True, tlsCAFile=certifi.where())
@@ -50,7 +55,7 @@ def logout():
 @app.route("/", methods=["GET", "HEAD"])
 @login_required
 def index():
-    forms = list(collection.find().sort("_id", -1))
+    forms = list(collection.find({"owner": current_user.id}).sort("_id", -1))
     active_keywords = [k["keyword"] for k in keywords_collection.find({"active": True})]
     return render_template("index.html", forms=forms, active_keywords=active_keywords)
 

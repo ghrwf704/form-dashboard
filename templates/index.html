@@ -5,56 +5,49 @@
     <title>フォーム一覧</title>
     <style>
         body { font-family: sans-serif; margin: 2em; }
-        nav { margin-bottom: 1em; background: #f0f0f0; padding: 1em; }
-        nav a { margin-right: 1em; }
         table { border-collapse: collapse; width: 100%; }
-        th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+        th, td { padding: 8px; border: 1px solid #ccc; }
+        th { background-color: #f2f2f2; }
+        nav a { margin-right: 1em; }
     </style>
 </head>
 <body>
-    <nav>
-        <a href="/">ダッシュボード</a>
-        <a href="/keywords">キーワード管理</a>
-        <a href="/logout">ログアウト</a>
-    </nav>
 
-    {% if current_user.is_authenticated %}
-        <p>こんにちは、{{ current_user.id }} さん！</p>
-    {% endif %}
+<nav>
+    <a href="{{ url_for('index') }}">ダッシュボード</a>
+    <a href="{{ url_for('manage_keywords') }}">キーワード管理</a>
+    <a href="{{ url_for('logout') }}">ログアウト</a>
+</nav>
 
-    {% if active_keywords %}
-        <p><strong>現在有効なキーワード:</strong> {{ active_keywords|join(", ") }}</p>
-    {% endif %}
+<p>こんにちは、{{ current_user.id }} さん！</p>
+<p><strong>現在有効なキーワード:</strong> {{ active_keywords | join(', ') }}</p>
 
-    <h1>フォーム一覧</h1>
+<h1>フォーム一覧</h1>
 
-    <table>
-        <thead>
-            <tr>
-                <th>企業名</th>
-                <th>URL（トップ）</th>
-                <th>URL（問い合わせ）</th>
-                <th>住所</th>
-                <th>電話番号</th>
-                <th>FAX</th>
-                <th>カテゴリ</th>
-                <th>説明</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for form in forms %}
-            <tr>
-                <td>{{ form.company_name or '' }}</td>
-                <td><a href="{{ form.top_url }}" target="_blank">トップ</a></td>
-                <td><a href="{{ form.form_url }}" target="_blank">フォーム</a></td>
-                <td>{{ form.address or '' }}</td>
-                <td>{{ form.tel or '' }}</td>
-                <td>{{ form.fax or '' }}</td>
-                <td>{{ form.category or '' }}</td>
-                <td>{{ form.description or '' }}</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+<table>
+    <tr>
+        <th>企業名</th>
+        <th>URL（トップ）</th>
+        <th>URL（問い合わせ）</th>
+        <th>住所</th>
+        <th>電話番号</th>
+        <th>FAX</th>
+        <th>カテゴリ</th>
+        <th>説明</th>
+    </tr>
+    {% for f in forms %}
+    <tr>
+        <td>{{ f.get("company_name", "") }}</td>
+        <td><a href="{{ f.get('url_top', '#') }}" target="_blank">トップ</a></td>
+        <td><a href="{{ f.get('url_form', '#') }}" target="_blank">フォーム</a></td>
+        <td>{{ f.get("address", "") }}</td>
+        <td>{{ f.get("tel", "") }}</td>
+        <td>{{ f.get("fax", "") }}</td>
+        <td>{{ f.get("category_keywords", "") }}</td>
+        <td>{{ f.get("description", "") }}</td>
+    </tr>
+    {% endfor %}
+</table>
+
 </body>
 </html>

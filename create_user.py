@@ -7,8 +7,8 @@ client = MongoClient(MONGO_URI, tls=True, tlsCAFile=certifi.where())
 db = client["form_database"]
 users = db["users"]
 
-username = "admin"
-password = "yourpassword"
+username = "admin2"
+password = "yourpassword2"
 hashed = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt())
 
 users.insert_one({

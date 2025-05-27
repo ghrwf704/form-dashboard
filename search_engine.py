@@ -19,6 +19,6 @@ def search_urls():
 
 # 例として実行
 if __name__ == "__main__":
-    urls = search_urls
+    urls = search_urls()
     for u in urls:
         print("収集対象:", u)
