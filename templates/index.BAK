@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>autoPostToContactform</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            margin: 40px;
+            background: #f9f9f9;
+        }
+        h1 {
+            color: #2c3e50;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background: white;
+        }
+        th, td {
+            padding: 10px;
+            border: 1px solid #ccc;
+            font-size: 14px;
+        }
+        th {
+            background: #2c3e50;
+            color: white;
+        }
+        a.screenshot-link {
+            color: #2980b9;
+            text-decoration: none;
+        }
+        a.screenshot-link:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <h1>autoPostToContactform</h1>
+    <p>検出されたフォーム一覧と入力項目です</p>
+
+    <table>
+        <thead>
+            <tr>
+                <th>URL</th>
+                <th>アクション</th>
+                <th>メソッド</th>
+                <th>フィールド名</th>
+                <th>スクリーンショット</th>
+                <th>会社名</th>
+                <th>キーワード</th>
+                <th>送信文面</th>
+                <th>タイムスタンプ</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for form in forms %}
+            <tr>
+                <td><a href="{{ form.url }}" target="_blank">{{ form.url }}</a></td>
+                <td>{{ form.action }}</td>
+                <td>{{ form.method }}</td>
+                <td>{{ form.field_names }}</td>
+                <td>
+                    {% if form.screenshot %}
+                        <a href="/screenshot/{{ form.screenshot }}" class="screenshot-link" target="_blank">表示</a>
+                    {% else %}
+                        -
+                    {% endif %}
+                </td>
+                <td>{{ form.company_name }}</td>
+                <td>{{ form.keyword }}</td>
+                <td>{{ form.message }}</td>
+                <td>{{ form.timestamp }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>
