@@ -7,7 +7,7 @@ def load_credentials():
     config.read("setting.ini", encoding="utf-8")
     return config["auth"]["id"], config["auth"]["pass"]
 
-def fetch_urls():
+def search_urls():
     user_id, _ = load_credentials()
 
     MONGO_URI = "mongodb+srv://ykeikeikie:qMUerl78WgsEEOWA@cluster0.helfbov.mongodb.net/?retryWrites=true&w=majority"
