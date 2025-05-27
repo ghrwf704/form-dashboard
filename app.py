@@ -11,8 +11,3 @@ client = pymongo.MongoClient(MONGO_URI, tls=True, tlsCAFile=certifi.where())
 db = client["form_database"]
 collection = db["forms"]
 
-@app.route("/", methods=["GET", "HEAD"])
-def index():
-    forms = list(collection.find().sort("_id", -1))
-    return render_template("index.html", forms=forms)
-
