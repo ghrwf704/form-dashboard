@@ -1,12 +1,11 @@
 from flask import Flask, render_template
-from pymongo.mongo_client import MongoClient
-from pymongo.server_api import ServerApi
+from pymongo import MongoClient
+import certifi
 
 app = Flask(__name__)
 
-# êÑèßå`éÆÅFSRVê⁄ë±
-uri = "mongodb+srv://ykeikeikie:qMUerl78WgsEEOWA@cluster0.helfbov.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
-client = MongoClient(uri, server_api=ServerApi('1'))
+uri = "mongodb+srv://ykeikeikie:qMUerl78WgsEEOWA@cluster0.helfbov.mongodb.net/?retryWrites=true&w=majority"
+client = MongoClient(uri, tls=True, tlsCAFile=certifi.where())
 
 db = client["form_database"]
 collection = db["forms"]
