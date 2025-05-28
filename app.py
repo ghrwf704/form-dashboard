@@ -113,5 +113,24 @@ def index():
         weather=weather_info
     )
 
+from flask import request, jsonify
+from weather import get_weather_by_coords  # weather.pyからインポート
+@app.route("/get_weather_by_coords", methods=["POST"])
+def get_weather_by_coords_api():
+    try:
+        data = request.get_json()
+        lat = data.get("lat")
+        lon = data.get("lon")
+
+        if not lat or not lon:
+            return jsonify({"error": "緯度経度が不足しています"}), 400
+
+        weather_data = get_weather_by_coords(lat, lon)
+        return jsonify(weather_data)
+
+    except Exception as e:
+        print("🌩️ 天気API処理エラー:", e)
+        return jsonify({"error": "サーバーエラー"}), 500
+    
 if __name__ == "__main__":
     app.run(debug=True)

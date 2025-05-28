@@ -1,32 +1,55 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}フォーム管理{% endblock %}</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{% block title %}フォーム管理{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
-    <div class="container">
-        <nav>
-            <a href="{{ url_for('index') }}">📊 ダッシュボード</a>
-            <a href="{{ url_for('manage_keywords') }}">🏷️ キーワード管理</a>
-            <a href="{{ url_for('logout') }}">🚪 ログアウト</a>
-        </nav>
+  <div class="container">
+    <nav>
+      <a href="{{ url_for('index') }}">📊 ダッシュボード</a>
+      <a href="{{ url_for('manage_keywords') }}">🏷️ キーワード管理</a>
+      <a href="{{ url_for('logout') }}">🚪 ログアウト</a>
+    </nav>
 
-        <div class="weather-box">
-            <p>📍 地域: {{ weather.city }}</p>
-            <p>🌤 天気: {{ weather.description }}</p>
-            <p>🌡️ 気温: {{ weather.temp }}℃</p>
-            <p>💧 湿度: {{ weather.humidity }}%</p>
-            <p>📅 日付: {{ weather.date }}（{{ weather.weekday }}）</p>
-            <p>🕒 時間: {{ weather.time }}</p>
-        </div>
-        <div class="main-content">
-            {% block content %}
-            <!-- 各ページの中身がここに挿入される -->
-            {% endblock %}
-        </div>
+    <div class="weather-box">
+      <p>📍 地域: <span id="weather-city">取得中...</span></p>
+      <p>🌤 天気: <span id="weather-description">-</span></p>
+      <p>🌡️ 気温: <span id="weather-temp">-</span></p>
     </div>
+
+    <div class="main-content">
+      {% block content %}
+      <!-- 子テンプレートの内容 -->
+      {% endblock %}
+    </div>
+  </div>
+
+  <!-- 🌐 位置情報で天気取得スクリプト -->
+  <script>
+    navigator.geolocation.getCurrentPosition(function (pos) {
+      const lat = pos.coords.latitude;
+      const lon = pos.coords.longitude;
+
+      fetch("/get_weather_by_coords", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ lat, lon })
+      })
+      .then(res => res.json())
+      .then(data => {
+        const city = document.getElementById("weather-city");
+        if (city) {
+          city.textContent = data.city;
+          document.getElementById("weather-temp").textContent = data.temp + "℃";
+          document.getElementById("weather-description").textContent = data.description;
+        }
+      });
+    }, function (err) {
+      console.error("位置情報の取得に失敗:", err);
+    });
+  </script>
 </body>
 </html>

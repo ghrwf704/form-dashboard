@@ -1,3 +1,4 @@
+# weather.py
 import requests
 from datetime import datetime
 import locale
@@ -6,39 +7,36 @@ import locale
 try:
     locale.setlocale(locale.LC_TIME, 'ja_JP.UTF-8')
 except:
-    # Windowsなどで日本語ロケールが使えない場合の代替
-    pass
+    pass  # Windowsでは使えない可能性あり
 
 API_KEY = "60cac4666c0188f445e291cc645bc0f2"
-LAT = "35.6895"     # 東京
-LON = "139.6917"
+DEFAULT_LAT = "35.6895"  # 東京
+DEFAULT_LON = "139.6917"
 
-# 英語曜日を日本語に変換するマップ
+# 英語の曜日略称を日本語に変換
 WEEKDAYS_JP = {
     "Mon": "月", "Tue": "火", "Wed": "水",
     "Thu": "木", "Fri": "金", "Sat": "土", "Sun": "日"
 }
 
-def get_weather():
-    url = f"https://api.openweathermap.org/data/2.5/weather?lat={LAT}&lon={LON}&appid={API_KEY}&units=metric&lang=ja"
+def get_weather_by_coords(lat, lon):
     try:
-        res = requests.get(url)
-        data = res.json()
+        url = f"https://api.openweathermap.org/data/2.5/weather?lat={lat}&lon={lon}&appid={API_KEY}&units=metric&lang=ja"
+        res = requests.get(url).json()
 
-        # 現在時刻の取得（日本時間）
         now = datetime.now()
         date_str = now.strftime("%Y/%m/%d")
-        weekday_en = now.strftime("%a")  # 英語略称（Mon, Tue…）
+        weekday_en = now.strftime("%a")  # Mon, Tue, ...
         weekday_jp = WEEKDAYS_JP.get(weekday_en, weekday_en)
         time_str = now.strftime("%H:%M")
 
         return {
-            "description": data["weather"][0]["description"],
-            "temp": data["main"]["temp"],
-            "humidity": data["main"]["humidity"],
-            "city": data["name"],
+            "description": res["weather"][0]["description"],
+            "temp": res["main"]["temp"],
+            "humidity": res["main"]["humidity"],
+            "city": res["name"],
             "date": date_str,
-            "weekday": weekday_jp,  # ← ここが日本語曜日になります！
+            "weekday": weekday_jp,
             "time": time_str
         }
     except Exception as e:
@@ -47,7 +45,12 @@ def get_weather():
             "description": "取得失敗",
             "temp": "-",
             "humidity": "-",
+            "city": "-",
             "date": "-",
             "weekday": "-",
             "time": "-"
         }
+
+# 東京固定版（旧来のまま残したい場合）
+def get_weather():
+    return get_weather_by_coords(DEFAULT_LAT, DEFAULT_LON)
