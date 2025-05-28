@@ -53,13 +53,6 @@ def logout():
     logout_user()
     return redirect(url_for("login"))
 
-@app.route("/", methods=["GET", "HEAD"])
-@login_required
-def index():
-    forms = list(collection.find({"owner": current_user.id}).sort("_id", -1))
-    active_keywords = [k["keyword"] for k in keywords_collection.find({"active": True, "owner": current_user.id})]
-    return render_template("index.html", forms=forms, active_keywords=active_keywords)
-
 @app.route("/keywords", methods=["GET", "POST"])
 @login_required
 def manage_keywords():
