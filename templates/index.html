@@ -1,431 +1,69 @@
-{% extends "base.html" %}
+{% extends "_base.html" %}
 
-{% block title %}企業一覧 - フォーム管理システム{% endblock %}
+{% block title %}企業一覧 - フォーム管理{% endblock %}
 
 {% block content %}
-<div class="page-header">
-    <div class="welcome-section">
-        <div class="welcome-card">
-            <div class="avatar">
-                <i class="fas fa-user-circle"></i>
-            </div>
-            <div class="welcome-text">
-                <h2>こんにちは、<span class="username">{{ current_user.id }}</span> さん！</h2>
-                <p class="subtitle">今日も素晴らしい一日をお過ごしください</p>
-            </div>
-        </div>
-        
-        <div class="keyword-display">
-            <div class="keyword-header">
-                <i class="fas fa-search"></i>
-                <h3>現在のBing検索キーワード</h3>
-            </div>
-            <div class="keyword-tags">
-                {% for keyword in active_keywords %}
-                <span class="keyword-tag">{{ keyword }}</span>
-                {% endfor %}
-            </div>
-        </div>
-    </div>
+<div class="user-greeting">
+    <p>こんにちは、<strong>{{ current_user.id }}</strong> さん！</p>
 </div>
 
-<div class="content-section">
-    <div class="section-header">
-        <h1><i class="fas fa-building"></i> 企業一覧</h1>
-        <div class="stats">
-            <div class="stat-item">
-                <span class="stat-number">{{ forms|length }}</span>
-                <span class="stat-label">企業</span>
-            </div>
-        </div>
-    </div>
-
-    <div class="table-container">
-        <table class="company-table">
-            <thead>
-                <tr>
-                    <th><i class="fas fa-building"></i> 企業名</th>
-                    <th><i class="fas fa-home"></i> ウェブサイト</th>
-                    <th><i class="fas fa-envelope"></i> お問い合わせ</th>
-                    <th><i class="fas fa-map-marker-alt"></i> 住所</th>
-                    <th><i class="fas fa-phone"></i> 電話番号</th>
-                    <th><i class="fas fa-fax"></i> FAX</th>
-                    <th><i class="fas fa-tags"></i> カテゴリ</th>
-                    <th><i class="fas fa-info-circle"></i> 説明</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for f in forms %}
-                <tr class="company-row">
-                    <td class="company-name">
-                        <div class="company-info">
-                            <div class="company-icon">
-                                <i class="fas fa-building"></i>
-                            </div>
-                            <span>{{ f.get("company_name", "未設定") }}</span>
-                        </div>
-                    </td>
-                    <td class="url-cell">
-                        {% if f.get('url_top') %}
-                        <a href="{{ f.get('url_top') }}" target="_blank" class="url-link">
-                            <i class="fas fa-external-link-alt"></i>
-                            トップページ
-                        </a>
-                        {% else %}
-                        <span class="no-data">未設定</span>
-                        {% endif %}
-                    </td>
-                    <td class="url-cell">
-                        {% if f.get('url_form') %}
-                        <a href="{{ f.get('url_form') }}" target="_blank" class="url-link contact-link">
-                            <i class="fas fa-paper-plane"></i>
-                            お問い合わせ
-                        </a>
-                        {% else %}
-                        <span class="no-data">未設定</span>
-                        {% endif %}
-                    </td>
-                    <td class="address-cell">
-                        {% if f.get("address") %}
-                        <div class="address-info">
-                            <i class="fas fa-map-marker-alt"></i>
-                            <span>{{ f.get("address") }}</span>
-                        </div>
-                        {% else %}
-                        <span class="no-data">未設定</span>
-                        {% endif %}
-                    </td>
-                    <td class="contact-cell">
-                        {% if f.get("tel") %}
-                        <a href="tel:{{ f.get('tel') }}" class="contact-link">
-                            <i class="fas fa-phone"></i>
-                            {{ f.get("tel") }}
-                        </a>
-                        {% else %}
-                        <span class="no-data">未設定</span>
-                        {% endif %}
-                    </td>
-                    <td class="contact-cell">
-                        {% if f.get("fax") %}
-                        <div class="fax-info">
-                            <i class="fas fa-fax"></i>
-                            {{ f.get("fax") }}
-                        </div>
-                        {% else %}
-                        <span class="no-data">未設定</span>
-                        {% endif %}
-                    </td>
-                    <td class="category-cell">
-                        {% if f.get("category_keywords") %}
-                        <div class="category-tags">
-                            {% set categories = f.get("category_keywords").split(',') %}
-                            {% for category in categories[:3] %}
-                            <span class="category-tag">{{ category.strip() }}</span>
-                            {% endfor %}
-                            {% if categories|length > 3 %}
-                            <span class="more-tags">+{{ categories|length - 3 }}</span>
-                            {% endif %}
-                        </div>
-                        {% else %}
-                        <span class="no-data">未分類</span>
-                        {% endif %}
-                    </td>
-                    <td class="description-cell">
-                        {% if f.get("description") %}
-                        <div class="description-text">
-                            {{ f.get("description")[:100] }}
-                            {% if f.get("description")|length > 100 %}...{% endif %}
-                        </div>
-                        {% else %}
-                        <span class="no-data">説明なし</span>
-                        {% endif %}
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
+<div class="keywords-display">
+    <p>🔍 <strong>Bing検索キーワード:</strong> 「{{ active_keywords | join(' ') }}」</p>
 </div>
 
-<style>
-    .page-header {
-        margin-bottom: 2rem;
-    }
+<h1>🏢 企業一覧</h1>
 
-    .welcome-section {
-        display: grid;
-        grid-template-columns: 2fr 1fr;
-        gap: 2rem;
-        margin-bottom: 2rem;
-    }
+<table>
+    <thead>
+        <tr>
+            <th>企業名</th>
+            <th>トップページ</th>
+            <th>問い合わせ</th>
+            <th>住所</th>
+            <th>電話番号</th>
+            <th>FAX</th>
+            <th>カテゴリ</th>
+            <th>説明</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for f in forms %}
+        <tr>
+            <td><strong>{{ f.get("company_name", "未設定") }}</strong></td>
+            <td>
+                {% if f.get('url_top') %}
+                    <a href="{{ f.get('url_top') }}" target="_blank">🌐 サイトを開く</a>
+                {% else %}
+                    <span style="color: #999;">未設定</span>
+                {% endif %}
+            </td>
+            <td>
+                {% if f.get('url_form') %}
+                    <a href="{{ f.get('url_form') }}" target="_blank">📝 フォームを開く</a>
+                {% else %}
+                    <span style="color: #999;">未設定</span>
+                {% endif %}
+            </td>
+            <td>{{ f.get("address", "未設定") }}</td>
+            <td>{{ f.get("tel", "未設定") }}</td>
+            <td>{{ f.get("fax", "未設定") }}</td>
+            <td>
+                {% if f.get("category_keywords") %}
+                    <span class="keywords-tag">{{ f.get("category_keywords") }}</span>
+                {% else %}
+                    <span style="color: #999;">未設定</span>
+                {% endif %}
+            </td>
+            <td>{{ f.get("description", "未設定") }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
 
-    .welcome-card {
-        display: flex;
-        align-items: center;
-        gap: 1.5rem;
-        background: linear-gradient(135deg, #667eea, #764ba2);
-        color: white;
-        padding: 2rem;
-        border-radius: 1rem;
-        box-shadow: var(--shadow-lg);
-    }
-
-    .avatar {
-        font-size: 3rem;
-        color: rgba(255, 255, 255, 0.9);
-    }
-
-    .welcome-text h2 {
-        font-size: 1.75rem;
-        margin-bottom: 0.5rem;
-    }
-
-    .username {
-        color: #f093fb;
-        font-weight: 700;
-    }
-
-    .subtitle {
-        opacity: 0.9;
-        font-size: 1rem;
-    }
-
-    .keyword-display {
-        background: var(--surface);
-        border: 1px solid var(--border-color);
-        border-radius: 1rem;
-        padding: 1.5rem;
-        box-shadow: var(--shadow);
-    }
-
-    .keyword-header {
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
-        margin-bottom: 1rem;
-        color: var(--primary-color);
-    }
-
-    .keyword-header h3 {
-        font-size: 1.125rem;
-        margin: 0;
-    }
-
-    .keyword-tags {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 0.5rem;
-    }
-
-    .keyword-tag {
-        background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
-        color: white;
-        padding: 0.5rem 1rem;
-        border-radius: 2rem;
-        font-size: 0.875rem;
-        font-weight: 500;
-        box-shadow: var(--shadow);
-    }
-
-    .section-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 2rem;
-        padding-bottom: 1rem;
-        border-bottom: 2px solid var(--border-color);
-    }
-
-    .section-header h1 {
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
-        font-size: 2rem;
-        color: var(--text-primary);
-    }
-
-    .stats {
-        display: flex;
-        gap: 1rem;
-    }
-
-    .stat-item {
-        text-align: center;
-        background: linear-gradient(135deg, #f8fafc, #e2e8f0);
-        padding: 1rem;
-        border-radius: 0.75rem;
-        min-width: 80px;
-    }
-
-    .stat-number {
-        display: block;
-        font-size: 1.5rem;
-        font-weight: 700;
-        color: var(--primary-color);
-    }
-
-    .stat-label {
-        font-size: 0.875rem;
-        color: var(--text-secondary);
-    }
-
-    .company-table {
-        font-size: 0.9rem;
-    }
-
-    .company-row {
-        transition: all 0.3s ease;
-    }
-
-    .company-row:hover {
-        background: linear-gradient(135deg, #f8fafc, #f1f5f9);
-        transform: translateX(5px);
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    }
-
-    .company-info {
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
-    }
-
-    .company-icon {
-        width: 2rem;
-        height: 2rem;
-        background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
-        color: white;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 0.875rem;
-    }
-
-    .url-link {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.5rem;
-        padding: 0.5rem 1rem;
-        background: var(--primary-color);
-        color: white;
-        text-decoration: none;
-        border-radius: 0.5rem;
-        font-size: 0.875rem;
-        transition: all 0.3s ease;
-    }
-
-    .url-link:hover {
-        background: var(--primary-dark);
-        transform: translateY(-2px);
-        box-shadow: var(--shadow);
-    }
-
-    .contact-link {
-        background: var(--secondary-color);
-    }
-
-    .contact-link:hover {
-        background: #6b46c1;
-    }
-
-    .address-info {
-        display: flex;
-        align-items: flex-start;
-        gap: 0.5rem;
-        color: var(--text-secondary);
-    }
-
-    .contact-cell a {
-        color: var(--primary-color);
-        text-decoration: none;
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-    }
-
-    .contact-cell a:hover {
-        color: var(--primary-dark);
-    }
-
-    .fax-info {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        color: var(--text-secondary);
-    }
-
-    .category-tags {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 0.25rem;
-    }
-
-    .category-tag {
-        background: linear-gradient(135deg, #e2e8f0, #cbd5e0);
-        color: var(--text-primary);
-        padding: 0.25rem 0.75rem;
-        border-radius: 1rem;
-        font-size: 0.75rem;
-        font-weight: 500;
-    }
-
-    .more-tags {
-        background: var(--text-secondary);
-        color: white;
-        padding: 0.25rem 0.5rem;
-        border-radius: 1rem;
-        font-size: 0.75rem;
-    }
-
-    .description-text {
-        line-height: 1.4;
-        color: var(--text-secondary);
-        max-width: 300px;
-    }
-
-    .no-data {
-        color: var(--text-secondary);
-        font-style: italic;
-        opacity: 0.7;
-    }
-
-    @media (max-width: 1024px) {
-        .welcome-section {
-            grid-template-columns: 1fr;
-        }
-        
-        .section-header {
-            flex-direction: column;
-            gap: 1rem;
-            align-items: flex-start;
-        }
-    }
-
-    @media (max-width: 768px) {
-        .welcome-card {
-            flex-direction: column;
-            text-align: center;
-        }
-
-        .avatar {
-            font-size: 2.5rem;
-        }
-
-        .welcome-text h2 {
-            font-size: 1.5rem;
-        }
-
-        .keyword-tags {
-            justify-content: center;
-        }
-
-        .company-table {
-            font-size: 0.8rem;
-        }
-
-        .company-row:hover {
-            transform: none;
-        }
-    }
-</style>
+{% if not forms %}
+<div style="text-align: center; padding: 3rem; color: #999;">
+    <p style="font-size: 1.2rem;">📝 まだ企業データがありません</p>
+    <p>キーワードを設定して検索を開始してください。</p>
+</div>
+{% endif %}
 {% endblock %}
