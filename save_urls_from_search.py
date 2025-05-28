@@ -1,7 +1,8 @@
+#save_urls_from_search.py
 import configparser
 from pymongo import MongoClient
 import certifi
-from search_engine import search_urls
+from extract_company_info import search_urls
 
 # 設定ファイルからID・パスワード読み込み
 config = configparser.ConfigParser()
@@ -11,7 +12,7 @@ username = config["auth"]["id"]
 password = config["auth"]["pass"]
 
 # MongoDB接続
-MONGO_URI = "mongodb+srv://ykeikeikie:qMUerl78WgsEEOWA@cluster0.helfbov.mongodb.net/?retryWrites=true&w=majority"
+MONGO_URI = f"mongodb+srv://{username}:{password}@cluster0.helfbov.mongodb.net/?retryWrites=true&w=majority"
 client = MongoClient(MONGO_URI, tls=True, tlsCAFile=certifi.where())
 db = client["form_database"]
 
