@@ -24,7 +24,7 @@ keywords = [
     })
 ]
 
-keyword = " ".join(word.strip() for word in keywords if word and word.strip())
+keyword = " ".join(word.strip() for word in keywords if word and word.strip())." 概要 情報 -一覧 -ランキング -まとめ -比較"
 print("検索対象キーワード:", keyword)
 
 # 🔍 検索＆URL保存

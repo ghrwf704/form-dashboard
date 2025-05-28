@@ -71,10 +71,23 @@
 <div style="margin-top: 2rem; padding: 1.5rem; background: rgba(102, 126, 234, 0.1); border-radius: 15px; border-left: 4px solid #667eea;">
     <h3 style="color: #667eea; margin-bottom: 1rem;">💡 使い方のヒント</h3>
     <ul style="color: #555; line-height: 1.6;">
-        <li><strong>キーワード追加:</strong> 検索に使用したいキーワードを入力して追加ボタンを押します</li>
-        <li><strong>状態切り替え:</strong> キーワードの有効/無効を個別に切り替えできます</li>
-        <li><strong>これだけ有効:</strong> 選択したキーワードのみを有効にし、他を全て無効にします</li>
-        <li><strong>キーワード編集:</strong> 既存のキーワードの内容を変更できます</li>
-    </ul>
+        <li><strong>キーワード追加:</strong> 検索に使用したいキーワードを入力して追加ボタンを押します。</li>
+        <li><strong>状態切り替え:</strong> キーワードの有効/無効を個別に切り替えできます。</li>
+        <li><strong>これだけ有効:</strong> 選択したキーワードのみを有効にし、他を全て無効にします。</li>
+        <li><strong>キーワード編集:</strong> 既存のキーワードの内容を変更できます。</li>
+        <li>
+          <strong>入力ルール:</strong> 法人属性、地域、業種 をスペース区切りで入力してください。
+          <br><br>
+          <strong>入力例：</strong>
+          <ul style="margin-top: 4px; margin-bottom: 4px;">
+            <li>医療法人 町田市 美容</li>
+            <li>NPO法人 八王子市 介護</li>
+            <li>株式会社 渋谷区 IT</li>
+            <li>合同会社 横浜市 飲食</li>
+            <li>有限会社 新宿区 建設</li>
+          </ul>
+          ※ 固定キーワード（<code>概要 情報</code>）と除外ワード（<code>-一覧 -ランキング -まとめ -比較</code>）は自動で追加されます。
+        </li>
+      </ul>     
 </div>
 {% endblock %}
