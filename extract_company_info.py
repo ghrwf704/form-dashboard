@@ -1,4 +1,6 @@
+# extract_company_info.py
 import configparser
+import pprint
 from pymongo import MongoClient
 import certifi
 import requests
@@ -18,9 +20,9 @@ def load_credentials():
 # DB接続
 def get_db():
     username, password = load_credentials()
-    MONGO_URI = f"mongodb+srv://{username}:{password}@cluster0.helfbov.mongodb.net/?retryWrites=true&w=majority"
+    MONGO_URI = "mongodb+srv://ykeikeikie:qMUerl78WgsEEOWA@cluster0.helfbov.mongodb.net/?retryWrites=true&w=majority"
     client = MongoClient(MONGO_URI, tls=True, tlsCAFile=certifi.where())
-    return client["form_database"]
+    return client["form_database"], username
 
 # 汎用フィールド抽出関数
 def extract_field(patterns, text):
@@ -39,10 +41,7 @@ def extract_company_info(html):
     soup = BeautifulSoup(html, "html.parser")
     text = soup.get_text(separator="\n")
 
-    # 会社名
-    company_name = (
-        soup.title.string.strip() if soup.title and soup.title.string else ""
-    )
+    company_name = soup.title.string.strip() if soup.title and soup.title.string else ""
     if not company_name:
         h1 = soup.find("h1")
         company_name = h1.get_text(strip=True) if h1 else ""
@@ -51,13 +50,12 @@ def extract_company_info(html):
         if og_site and "content" in og_site.attrs:
             company_name = og_site["content"].strip()
 
-    # 各フィールド抽出
     employees = extract_field([r"従業員数[:：]?\s*([0-9,]+人?)", r"社員数[:：]?\s*([0-9,]+人?)"], text)
     capital = extract_field([r"資本金[:：]?\s*([0-9,億円万円]+)"], text)
     address = extract_field([r"(〒?\d{3}-\d{4}.+?[都道府県].+?市.+?区?.+)", r"住所[:：]?\s*(.+)"], text)
     tel = extract_field([r"TEL[:：]?\s*(\d{2,4}[-‐－―]\d{2,4}[-‐－―]\d{3,4})"], text)
     fax = extract_field([r"FAX[:：]?\s*(\d{2,4}[-‐－―]\d{2,4}[-‐－―]\d{3,4})"], text)
-    founded = extract_field([r"(設立|創立|創業)[:：]?\s*(\d{4}年\d{1,2}月)"], text)
+    founded = extract_field([r"(?:設立|創立|創業)[:：]?\s*(\d{4}年\d{1,2}月?)"], text)
     ceo = extract_field([r"(代表取締役[^\n]{0,20})", r"(CEO[^\n]{0,20})"], text)
     email = extract_email(text)
 
@@ -93,9 +91,9 @@ def find_form_url(domain):
 
 # メイン処理
 def run_extraction():
-    db = get_db()
-    urls = db["urls"].find({"status": "未収集"})
-
+    db, username = get_db()
+    urls = db["urls"].find({"status": "未収集", "owner": username})
+    
     for doc in urls:
         url = doc["url"]
         try:
@@ -111,8 +109,9 @@ def run_extraction():
             info = extract_company_info(html)
             info["url_top"] = domain
             info["url_form"] = form_url
+            info["owner"] = username
 
-            db["companies"].insert_one(info)
+            db["forms"].insert_one(info)
             db["urls"].update_one({"_id": doc["_id"]}, {"$set": {"status": "収集済み"}})
             print(f"✅ 保存成功: {info['company_name'] or domain}")
         except Exception as e:
