@@ -15,10 +15,12 @@
     </nav>
 
     <div class="weather-box">
-      <p>📍 地域: <span id="weather-city">取得中...</span></p>
-      <p>🌤 天気: <span id="weather-description">-</span></p>
-      <p>🌡️ 気温: <span id="weather-temp">-</span></p>
-    </div>
+        <p>📍 地域: <span id="weather-city">取得中...</span></p>
+        <p>🌤 天気: <span id="weather-description">-</span></p>
+        <p>🌡️ 気温: <span id="weather-temp">-</span></p>
+        <p>📅 日付: <span id="weather-date">-</span>（<span id="weather-weekday">-</span>）</p>
+        <p>🕒 時間: <span id="weather-time">-</span></p>
+      </div>      
 
     <div class="main-content">
       {% block content %}
@@ -30,25 +32,23 @@
   <!-- 🌐 位置情報で天気取得スクリプト -->
   <script>
     navigator.geolocation.getCurrentPosition(function (pos) {
-      const lat = pos.coords.latitude;
-      const lon = pos.coords.longitude;
+    const lat = pos.coords.latitude;
+    const lon = pos.coords.longitude;
 
-      fetch("/get_weather_by_coords", {
+    fetch("/get_weather_by_coords", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ lat, lon })
-      })
-      .then(res => res.json())
-      .then(data => {
-        const city = document.getElementById("weather-city");
-        if (city) {
-          city.textContent = data.city;
-          document.getElementById("weather-temp").textContent = data.temp + "℃";
-          document.getElementById("weather-description").textContent = data.description;
-        }
-      });
-    }, function (err) {
-      console.error("位置情報の取得に失敗:", err);
+    })
+    .then(res => res.json())
+    .then(data => {
+        document.getElementById("weather-city").textContent = data.city;
+        document.getElementById("weather-description").textContent = data.description;
+        document.getElementById("weather-temp").textContent = data.temp + "℃";
+        document.getElementById("weather-date").textContent = data.date;
+        document.getElementById("weather-weekday").textContent = data.weekday;
+        document.getElementById("weather-time").textContent = data.time;
+    });
     });
   </script>
 </body>
