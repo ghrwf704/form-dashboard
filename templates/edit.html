@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>企業編集</title>
+</head>
+<body>
+    <h1>✏️ 企業編集</h1>
+    <form method="POST">
+        <label>会社名: <input type="text" name="company_name" value="{{ company['company_name'] }}"></label><br>
+        <label>住所: <input type="text" name="address" value="{{ company['address'] }}"></label><br>
+        <label>TEL: <input type="text" name="tel" value="{{ company['tel'] }}"></label><br>
+        <label>代表者: <input type="text" name="ceo" value="{{ company['ceo'] }}"></label><br>
+        <label>Email: <input type="email" name="email" value="{{ company['email'] }}"></label><br>
+        <button type="submit">保存</button>
+    </form>
+</body>
+</html>

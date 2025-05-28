@@ -1,61 +1,45 @@
 from flask import Flask, render_template, redirect, url_for, g, session, request
 from pymongo import MongoClient
 from bson import ObjectId
-from pymongo.errors import ServerSelectionTimeoutError
 
-app = Flask(__name__)
-app.secret_key = "super_secret_key"
+# ... 既存のコードは省略 ...
 
-MONGO_URI = "mongodb+srv://ykeikeikie:qMUerl78WgsEEOWA@cluster0.helfbov.mongodb.net/?retryWrites=true&w=majority"
-DB_NAME = "form_database"
-COLLECTION_NAME = "forms"
-
-def get_db():
-    if "db" not in g:
-        try:
-            client = MongoClient(
-                MONGO_URI,
-                serverSelectionTimeoutMS=5000,
-                socketTimeoutMS=5000,
-                retryWrites=True
-            )
-            client.server_info()
-            g.db = client[DB_NAME]
-        except ServerSelectionTimeoutError as e:
-            print(f"❌ MongoDB接続失敗: {e}")
-            g.db = None
-    return g.db
-
-@app.route("/")
-def index():
+@app.route("/edit/<company_id>", methods=["GET", "POST"])
+def edit_company(company_id):
     db = get_db()
-    if db is None:
-        return "🚫 MongoDB接続に失敗", 503
-
+    if not db:
+        return "DB接続エラー", 500
     collection = db[COLLECTION_NAME]
-    try:
-        companies = list(collection.find().sort("_id", -1))
-        return render_template("index.html", companies=companies)
-    except Exception as e:
-        print("❌ 企業データ取得エラー:", e)
-        return "🚨 データ取得失敗", 500
+    if request.method == "POST":
+        updated = {
+            "company_name": request.form["company_name"],
+            "address": request.form["address"],
+            "tel": request.form["tel"],
+            "ceo": request.form["ceo"],
+            "email": request.form["email"],
+        }
+        collection.update_one({"_id": ObjectId(company_id)}, {"$set": updated})
+        return redirect(url_for("index"))
 
-@app.route("/delete/<company_id>", methods=["POST"])
-def delete_company(company_id):
+    company = collection.find_one({"_id": ObjectId(company_id)})
+    return render_template("edit.html", company=company)
+
+@app.route("/add", methods=["GET", "POST"])
+def add_company():
     db = get_db()
-    if db:
-        db[COLLECTION_NAME].delete_one({"_id": ObjectId(company_id)})
-    return redirect(url_for("index"))
+    if not db:
+        return "DB接続エラー", 500
+    collection = db[COLLECTION_NAME]
 
-@app.route("/manage_keywords")
-def manage_keywords():
-    return "<h1>🔧 キーワード管理画面（実装予定）</h1>"
+    if request.method == "POST":
+        new_company = {
+            "company_name": request.form["company_name"],
+            "address": request.form["address"],
+            "tel": request.form["tel"],
+            "ceo": request.form["ceo"],
+            "email": request.form["email"],
+        }
+        collection.insert_one(new_company)
+        return redirect(url_for("index"))
 
-@app.route("/logout")
-def logout():
-    session.clear()
-    return redirect(url_for("login"))
-
-@app.route("/login")
-def login():
-    return render_template("login.html")
+    return render_template("add.html")
