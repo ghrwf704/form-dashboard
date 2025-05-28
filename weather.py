@@ -24,7 +24,11 @@ def get_weather_by_coords(lat, lon):
         url = f"https://api.openweathermap.org/data/2.5/weather?lat={lat}&lon={lon}&appid={API_KEY}&units=metric&lang=ja"
         res = requests.get(url).json()
 
-        now = datetime.now()
+        # ⏰ JST（日本時間）で現在時刻を取得
+        import pytz
+        JST = pytz.timezone("Asia/Tokyo")
+        now = datetime.now(JST)
+
         date_str = now.strftime("%Y/%m/%d")
         weekday_en = now.strftime("%a")  # Mon, Tue, ...
         weekday_jp = WEEKDAYS_JP.get(weekday_en, weekday_en)
