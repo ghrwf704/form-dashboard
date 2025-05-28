@@ -44,6 +44,9 @@
                 data-description="{{ f.get('description', '') }}"
                 data-bs-toggle="modal"
                 data-bs-target="#editModal">✏️</a>
+                <!-- 削除ボタン -->
+                <a href="{{ url_for('delete_company', company_id=f['_id']) }}"
+                   onclick="return confirm('この企業データを削除してよろしいですか？');">🗑️</a>
             </td>
             <td>
                 {% if f.get("company_name") %}
@@ -113,7 +116,8 @@
     <p>キーワードを設定して検索を開始してください。</p>
 </div>
 {% endif %}
-{% endblock %}<script>
+{% endblock %}
+    <script>
     document.querySelectorAll(".edit-btn").forEach(btn => {
       btn.addEventListener("click", () => {
         document.getElementById("edit_id").value = btn.dataset.id;
