@@ -1,9 +1,8 @@
-<!-- templates/index.html -->
 <!DOCTYPE html>
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>フォーム一覧</title>
+    <title>企業一覧</title>
     <style>
         body { font-family: Arial, sans-serif; margin: 40px; }
         nav a {
@@ -12,45 +11,58 @@
             color: #007acc;
             font-weight: bold;
         }
-        .form-block {
-            margin-bottom: 20px;
-            padding: 10px;
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td {
             border: 1px solid #ccc;
+            padding: 8px;
+            text-align: left;
+            vertical-align: top;
         }
-        .meta {
-            color: #555;
-            font-size: 0.9em;
-        }
+        th { background-color: #f0f0f0; }
+        form { display: inline; }
     </style>
 </head>
 <body>
-    <h1>📋 フォーム一覧</h1>
+    <h1>🏢 企業一覧</h1>
 
     <nav>
         <a href="{{ url_for('index') }}">🏠 ダッシュボード</a>
-        <a href="{{ url_for('manage_keywords') }}">🔧 キーワード登録</a>
+        <a href="{{ url_for('manage_keywords') }}">🔧 キーワード管理</a>
         <a href="{{ url_for('logout') }}">🚪 ログアウト</a>
     </nav>
 
-    <hr>
-
-    {% for form in forms %}
-        <div class="form-block">
-            <p><strong>URL:</strong> <a href="{{ form['url_form'] }}" target="_blank">{{ form['url_form'] }}</a></p>
-            <p><strong>会社名:</strong> {{ form['company_name'] }}</p>
-            <p><strong>社員数:</strong> {{ form['employees'] }}</p>
-            <p><strong>資本金:</strong> {{ form['capital'] }}</p>
-            <p><strong>住所:</strong> {{ form['address'] }}</p>
-            <p><strong>TEL:</strong> {{ form['tel'] }}</p>
-            <p><strong>FAX:</strong> {{ form['fax'] }}</p>
-            <p><strong>設立:</strong> {{ form['founded'] }}</p>
-            <p><strong>代表者:</strong> {{ form['ceo'] }}</p>
-            <p><strong>Email:</strong> {{ form['email'] }}</p>
-            <p class="meta">📄 meta description: {{ form['description'] }}</p>
-            <p class="meta">🔑 keywords: {{ form['category_keywords'] }}</p>
-        </div>
+    {% if companies %}
+    <table>
+        <thead>
+            <tr>
+                <th>会社名</th>
+                <th>住所</th>
+                <th>電話番号</th>
+                <th>代表者</th>
+                <th>Email</th>
+                <th>操作</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for c in companies %}
+            <tr>
+                <td>{{ c['company_name'] }}</td>
+                <td>{{ c['address'] }}</td>
+                <td>{{ c['tel'] }}</td>
+                <td>{{ c['ceo'] }}</td>
+                <td>{{ c['email'] }}</td>
+                <td>
+                    <form method="POST" action="{{ url_for('delete_company', company_id=c['_id']) }}">
+                        <button type="submit">🗑 削除</button>
+                    </form>
+                    <!-- 編集／追加は次ステップで -->
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
     {% else %}
-        <p>フォーム情報がありません。</p>
-    {% endfor %}
+    <p>企業データがありません。</p>
+    {% endif %}
 </body>
 </html>

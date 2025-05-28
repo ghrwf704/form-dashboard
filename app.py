@@ -1,8 +1,10 @@
-from flask import Flask, render_template, g
+from flask import Flask, render_template, redirect, url_for, g, session, request
 from pymongo import MongoClient
+from bson import ObjectId
 from pymongo.errors import ServerSelectionTimeoutError
 
 app = Flask(__name__)
+app.secret_key = "super_secret_key"
 
 MONGO_URI = "mongodb+srv://ykeikeikie:qMUerl78WgsEEOWA@cluster0.helfbov.mongodb.net/?retryWrites=true&w=majority"
 DB_NAME = "form_database"
@@ -11,7 +13,6 @@ COLLECTION_NAME = "forms"
 def get_db():
     if "db" not in g:
         try:
-            print("🌐 MongoDB接続初期化中...")
             client = MongoClient(
                 MONGO_URI,
                 serverSelectionTimeoutMS=5000,
@@ -20,7 +21,6 @@ def get_db():
             )
             client.server_info()
             g.db = client[DB_NAME]
-            print("✅ MongoDB接続成功")
         except ServerSelectionTimeoutError as e:
             print(f"❌ MongoDB接続失敗: {e}")
             g.db = None
@@ -28,28 +28,34 @@ def get_db():
 
 @app.route("/")
 def index():
-    print("🔁 '/' にアクセスされました")
     db = get_db()
     if db is None:
-        return "🚫 MongoDBに接続できませんでした", 503
+        return "🚫 MongoDB接続に失敗", 503
 
     collection = db[COLLECTION_NAME]
     try:
-        forms = list(collection.find().sort("_id", -1))
-        print(f"📦 フォームデータ {len(forms)} 件取得")
-        return render_template("index.html", forms=forms)
+        companies = list(collection.find().sort("_id", -1))
+        return render_template("index.html", companies=companies)
     except Exception as e:
-        import traceback
-        print("❌ フォームデータ取得エラー:")
-        traceback.print_exc()
-        return "🚨 データ取得に失敗しました", 500
+        print("❌ 企業データ取得エラー:", e)
+        return "🚨 データ取得失敗", 500
 
-# 仮のキーワード登録画面
+@app.route("/delete/<company_id>", methods=["POST"])
+def delete_company(company_id):
+    db = get_db()
+    if db:
+        db[COLLECTION_NAME].delete_one({"_id": ObjectId(company_id)})
+    return redirect(url_for("index"))
+
 @app.route("/manage_keywords")
 def manage_keywords():
-    return "<h1>🔧 キーワード登録画面（準備中）</h1>"
+    return "<h1>🔧 キーワード管理画面（実装予定）</h1>"
 
-# 仮のログアウト（本実装は未定）
 @app.route("/logout")
 def logout():
-    return "<h1>👋 ログアウトしました（仮）</h1>"
+    session.clear()
+    return redirect(url_for("login"))
+
+@app.route("/login")
+def login():
+    return render_template("login.html")
