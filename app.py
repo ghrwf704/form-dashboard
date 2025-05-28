@@ -64,7 +64,9 @@ def manage_keywords():
         return redirect("/keywords")
 
     all_keywords = list(keywords_collection.find({"owner": current_user.id}))
-    return render_template("keywords.html", keywords=all_keywords)
+    weather_info = get_weather()  # 🌤 追加
+    return render_template("keywords.html", keywords=all_keywords, weather=weather_info)  # ✅ weather追加
+
 
 @app.route("/keywords/toggle/<keyword>")
 @login_required
