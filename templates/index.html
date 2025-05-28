@@ -32,14 +32,14 @@
             <td><strong>{{ f.get("company_name", "未設定") }}</strong></td>
             <td>
                 {% if f.get('url_top') %}
-                    <a href="{{ f.get('url_top') }}" target="_blank">🌐 サイトを開く</a>
+                    <a href="{{ f.get('url_top') }}" target="_blank">🌐</a>
                 {% else %}
                     <span style="color: #999;">未設定</span>
                 {% endif %}
             </td>
             <td>
                 {% if f.get('url_form') %}
-                    <a href="{{ f.get('url_form') }}" target="_blank">📝 フォームを開く</a>
+                    <a href="{{ f.get('url_form') }}" target="_blank">📝</a>
                 {% else %}
                     <span style="color: #999;">未設定</span>
                 {% endif %}

@@ -53,6 +53,7 @@ def logout():
     logout_user()
     return redirect(url_for("login"))
 
+
 @app.route("/keywords", methods=["GET", "POST"])
 @login_required
 def manage_keywords():
