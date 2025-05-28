@@ -1,4 +1,3 @@
-#save_urls_from_search.py
 import configparser
 from pymongo import MongoClient
 import certifi
@@ -16,18 +15,32 @@ MONGO_URI = "mongodb+srv://ykeikeikie:qMUerl78WgsEEOWA@cluster0.helfbov.mongodb.
 client = MongoClient(MONGO_URI, tls=True, tlsCAFile=certifi.where())
 db = client["form_database"]
 
-# 有効なキーワード取得
-keywords = [doc["keyword"] for doc in db["keywords"].find({"active": True})]
+# 🧠 ログインユーザーにひもづく有効キーワードだけ取得
+keywords = [
+    doc["keyword"]
+    for doc in db["keywords"].find({
+        "active": True,
+        "user_id": username  # 🔑 ここが重要
+    })
+]
 
 print("検索対象キーワード:", keywords)
 
-# 検索＆URL保存（検索処理は別モジュールに委譲）
+# 🔍 検索＆URL保存
 for keyword in keywords:
     urls = search_urls(keyword)
+    count = 0
     for url in urls:
-        db["urls"].update_one(
-            {"url": url},  # 既存チェック
-            {"$setOnInsert": {"keyword": keyword, "status": "未収集"}},
+        result = db["urls"].update_one(
+            {"url": url},
+            {
+                "$setOnInsert": {
+                    "keyword": keyword,
+                    "status": "未収集"
+                }
+            },
             upsert=True
         )
-    print(f"→ {keyword}: {len(urls)} 件保存完了")
+        if result.upserted_id:
+            count += 1
+    print(f"➡ {keyword}: {count} 件保存完了")
