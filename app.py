@@ -1,140 +1,104 @@
-from flask import Flask, render_template, g, request, redirect, url_for, session
-from pymongo import MongoClient
-from pymongo.errors import ServerSelectionTimeoutError
-from bson import ObjectId
+from flask import Flask, render_template, request, redirect, url_for, flash
+from flask_login import LoginManager, login_user, logout_user, login_required, UserMixin, current_user
+import pymongo
+import certifi
+import bcrypt
+import configparser
+
+# 設定ファイル読み込み
+config = configparser.ConfigParser()
+config.read("setting.ini", encoding="utf-8")
 
 app = Flask(__name__)
-app.secret_key = "super_secret_key"
+app.secret_key = config["auth"].get("secret_key", "fallback_key")
 
-# MongoDB接続設定
 MONGO_URI = "mongodb+srv://ykeikeikie:qMUerl78WgsEEOWA@cluster0.helfbov.mongodb.net/?retryWrites=true&w=majority"
-DB_NAME = "form_database"
-COLLECTION_NAME = "forms"
-KEYWORDS_COLLECTION = "keywords"
+client = pymongo.MongoClient(MONGO_URI, tls=True, tlsCAFile=certifi.where())
+db = client["form_database"]
+collection = db["forms"]
+keywords_collection = db["keywords"]
+users_collection = db["users"]
 
-# MongoDB 遅延接続
-def get_db():
-    if "db" not in g:
-        try:
-            print("🌐 MongoDB接続初期化中...")
-            client = MongoClient(
-                MONGO_URI,
-                serverSelectionTimeoutMS=5000,
-                socketTimeoutMS=5000,
-                retryWrites=True
-            )
-            client.server_info()
-            g.db = client[DB_NAME]
-            print("✅ MongoDB接続成功")
-        except ServerSelectionTimeoutError as e:
-            print(f"❌ MongoDB接続失敗: {e}")
-            g.db = None
-    return g.db
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = "login"
 
-# ダッシュボード（企業一覧）
-@app.route("/")
-def index():
-    print("🔁 '/' にアクセスされました")
-    db = get_db()
-    if db is None:
-        return "🚫 MongoDBに接続できませんでした", 503
+class User(UserMixin):
+    def __init__(self, username):
+        self.id = username
 
-    collection = db[COLLECTION_NAME]
-    try:
-        companies = list(collection.find().sort("_id", -1))
-        print(f"📦 データ {len(companies)} 件取得")
-        return render_template("index.html", companies=companies)
-    except Exception as e:
-        print(f"❌ データ取得エラー: {e}")
-        return "🚨 データ取得に失敗しました", 500
+@login_manager.user_loader
+def load_user(username):
+    user = users_collection.find_one({"username": username})
+    if user:
+        return User(username=user["username"])
+    return None
 
-# 企業の新規追加
-@app.route("/add", methods=["GET", "POST"])
-def add_company():
-    db = get_db()
-    if not db:
-        return "DB接続エラー", 500
-    collection = db[COLLECTION_NAME]
-
+@app.route("/login", methods=["GET", "POST"])
+def login():
     if request.method == "POST":
-        new_company = {
-            "company_name": request.form["company_name"],
-            "address": request.form["address"],
-            "tel": request.form["tel"],
-            "ceo": request.form["ceo"],
-            "email": request.form["email"],
-        }
-        collection.insert_one(new_company)
-        return redirect(url_for("index"))
+        username = request.form.get("username")
+        password = request.form.get("password")
+        user = users_collection.find_one({"username": username})
+        if user and bcrypt.checkpw(password.encode('utf-8'), user["password_hash"]):
+            login_user(User(username))
+            return redirect(url_for("index"))
+        flash("ログイン失敗: ユーザー名またはパスワードが間違っています。")
+    return render_template("login.html")
 
-    return render_template("add.html")
-
-# 企業編集
-@app.route("/edit/<company_id>", methods=["GET", "POST"])
-def edit_company(company_id):
-    db = get_db()
-    if not db:
-        return "DB接続エラー", 500
-    collection = db[COLLECTION_NAME]
-
-    if request.method == "POST":
-        updated = {
-            "company_name": request.form["company_name"],
-            "address": request.form["address"],
-            "tel": request.form["tel"],
-            "ceo": request.form["ceo"],
-            "email": request.form["email"],
-        }
-        collection.update_one({"_id": ObjectId(company_id)}, {"$set": updated})
-        return redirect(url_for("index"))
-
-    company = collection.find_one({"_id": ObjectId(company_id)})
-    return render_template("edit.html", company=company)
-
-# 企業削除
-@app.route("/delete/<company_id>", methods=["POST"])
-def delete_company(company_id):
-    db = get_db()
-    if db:
-        db[COLLECTION_NAME].delete_one({"_id": ObjectId(company_id)})
-    return redirect(url_for("index"))
-
-# キーワード管理（一覧＋追加）
-@app.route("/manage_keywords", methods=["GET", "POST"])
-def manage_keywords():
-    db = get_db()
-    if not db:
-        return "MongoDB接続エラー", 500
-    collection = db[KEYWORDS_COLLECTION]
-
-    if request.method == "POST":
-        keyword = request.form.get("keyword", "").strip()
-        if keyword:
-            collection.insert_one({"keyword": keyword})
-        return redirect(url_for("manage_keywords"))
-
-    keywords = list(collection.find().sort("_id", -1))
-    return render_template("keywords.html", keywords=keywords)
-
-# キーワード削除
-@app.route("/delete_keyword/<keyword_id>", methods=["POST"])
-def delete_keyword(keyword_id):
-    db = get_db()
-    if db:
-        db[KEYWORDS_COLLECTION].delete_one({"_id": ObjectId(keyword_id)})
-    return redirect(url_for("manage_keywords"))
-
-# ログアウト（仮）
 @app.route("/logout")
+@login_required
 def logout():
-    session.clear()
+    logout_user()
     return redirect(url_for("login"))
 
-# ログイン画面（仮）
-@app.route("/login")
-def login():
-    return "<h1>🔐 ログイン画面（仮）</h1>"
+@app.route("/", methods=["GET", "HEAD"])
+@login_required
+def index():
+    forms = list(collection.find({"owner": current_user.id}).sort("_id", -1))
+    active_keywords = [k["keyword"] for k in keywords_collection.find({"active": True, "owner": current_user.id})]
+    return render_template("index.html", forms=forms, active_keywords=active_keywords)
 
-# Renderでは使用されないが、ローカルテスト用
+@app.route("/keywords", methods=["GET", "POST"])
+@login_required
+def manage_keywords():
+    if request.method == "POST":
+        new_keyword = request.form.get("keyword")
+        if new_keyword:
+            keywords_collection.insert_one({"keyword": new_keyword, "active": True, "owner": current_user.id})
+        return redirect("/keywords")
+
+    all_keywords = list(keywords_collection.find({"owner": current_user.id}))
+    return render_template("keywords.html", keywords=all_keywords)
+
+@app.route("/keywords/toggle/<keyword>")
+@login_required
+def toggle_keyword(keyword):
+    entry = keywords_collection.find_one({"keyword": keyword, "owner": current_user.id})
+    if entry:
+        keywords_collection.update_one({"_id": entry["_id"]}, {"$set": {"active": not entry.get("active", True)}})
+    return redirect("/keywords")
+
+@app.route("/keywords/delete/<keyword>")
+@login_required
+def delete_keyword(keyword):
+    keywords_collection.delete_one({"keyword": keyword, "owner": current_user.id})
+    return redirect("/keywords")
+
+@app.route("/keywords/only/<keyword>")
+@login_required
+def activate_only_keyword(keyword):
+    keywords_collection.update_many({"owner": current_user.id}, {"$set": {"active": False}})
+    keywords_collection.update_one({"keyword": keyword, "owner": current_user.id}, {"$set": {"active": True}})
+    return redirect("/keywords")
+
+@app.route("/keywords/update/<keyword>", methods=["POST"])
+@login_required
+def update_keyword(keyword):
+    new_keyword = request.form.get("new_keyword")
+    if new_keyword and new_keyword != keyword:
+        keywords_collection.update_one({"keyword": keyword, "owner": current_user.id}, {"$set": {"keyword": new_keyword}})
+    return redirect("/keywords")
+
 if __name__ == "__main__":
-    app.run(debug=True, host="0.0.0.0", port=10000)
+    app.run(debug=True)

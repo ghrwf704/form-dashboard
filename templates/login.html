@@ -3,9 +3,30 @@
 <head>
     <meta charset="UTF-8">
     <title>ログイン</title>
+    <style>
+        body { font-family: sans-serif; margin: 2em; }
+        form { max-width: 300px; margin: 0 auto; display: flex; flex-direction: column; gap: 1em; }
+        input { padding: 8px; font-size: 1em; }
+        button { padding: 8px; font-size: 1em; cursor: pointer; }
+        .error { color: red; text-align: center; }
+    </style>
 </head>
 <body>
-    <h1>🔐 ログイン</h1>
-    <p>これは仮のログイン画面です（今は何も処理しません）</p>
+    <h1>ログイン</h1>
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+        <div class="error">
+          {% for message in messages %}
+            <p>{{ message }}</p>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+
+    <form method="post">
+        <input type="text" name="username" placeholder="ユーザー名" required>
+        <input type="password" name="password" placeholder="パスワード" required>
+        <button type="submit">ログイン</button>
+    </form>
 </body>
 </html>

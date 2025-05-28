@@ -2,69 +2,52 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>企業一覧</title>
+    <title>フォーム一覧</title>
     <style>
-        body { font-family: Arial, sans-serif; margin: 40px; }
-        nav a {
-            margin-right: 20px;
-            text-decoration: none;
-            color: #007acc;
-            font-weight: bold;
-        }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th, td {
-            border: 1px solid #ccc;
-            padding: 8px;
-            text-align: left;
-            vertical-align: top;
-        }
-        th { background-color: #f0f0f0; }
-        form { display: inline; }
+        body { font-family: sans-serif; margin: 2em; }
+        table { border-collapse: collapse; width: 100%; }
+        th, td { padding: 8px; border: 1px solid #ccc; }
+        th { background-color: #f2f2f2; }
+        nav a { margin-right: 1em; }
     </style>
 </head>
 <body>
-    <h1>🏢 企業一覧</h1>
 
-    <nav>
-        <a href="{{ url_for('index') }}">🏠 ダッシュボード</a>
-        <a href="{{ url_for('manage_keywords') }}">🔧 キーワード管理</a>
-        <a href="{{ url_for('logout') }}">🚪 ログアウト</a>
-    </nav>
+<nav>
+    <a href="{{ url_for('index') }}">ダッシュボード</a>
+    <a href="{{ url_for('manage_keywords') }}">キーワード管理</a>
+    <a href="{{ url_for('logout') }}">ログアウト</a>
+</nav>
 
-    <p><a href="{{ url_for('add_company') }}">➕ 新規企業を追加</a></p>
+<p>こんにちは、{{ current_user.id }} さん！</p>
+<p><strong>現在有効なキーワード:</strong> {{ active_keywords | join(', ') }}</p>
 
-    {% if companies %}
-    <table>
-        <thead>
-            <tr>
-                <th>会社名</th>
-                <th>住所</th>
-                <th>電話番号</th>
-                <th>代表者</th>
-                <th>Email</th>
-                <th>操作</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for c in companies %}
-            <tr>
-                <td>{{ c['company_name'] }}</td>
-                <td>{{ c['address'] }}</td>
-                <td>{{ c['tel'] }}</td>
-                <td>{{ c['ceo'] }}</td>
-                <td>{{ c['email'] }}</td>
-                <td>
-                    <form method="POST" action="{{ url_for('delete_company', company_id=c['_id']) }}">
-                        <button type="submit">🗑 削除</button>
-                    </form>
-                    <a href="{{ url_for('edit_company', company_id=c['_id']) }}">✏️ 編集</a>
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-    {% else %}
-    <p>企業データがありません。</p>
-    {% endif %}
+<h1>フォーム一覧</h1>
+
+<table>
+    <tr>
+        <th>企業名</th>
+        <th>URL（トップ）</th>
+        <th>URL（問い合わせ）</th>
+        <th>住所</th>
+        <th>電話番号</th>
+        <th>FAX</th>
+        <th>カテゴリ</th>
+        <th>説明</th>
+    </tr>
+    {% for f in forms %}
+    <tr>
+        <td>{{ f.get("company_name", "") }}</td>
+        <td><a href="{{ f.get('url_top', '#') }}" target="_blank">トップ</a></td>
+        <td><a href="{{ f.get('url_form', '#') }}" target="_blank">フォーム</a></td>
+        <td>{{ f.get("address", "") }}</td>
+        <td>{{ f.get("tel", "") }}</td>
+        <td>{{ f.get("fax", "") }}</td>
+        <td>{{ f.get("category_keywords", "") }}</td>
+        <td>{{ f.get("description", "") }}</td>
+    </tr>
+    {% endfor %}
+</table>
+
 </body>
 </html>
