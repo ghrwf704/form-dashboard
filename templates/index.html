@@ -13,7 +13,8 @@
 
 <h1>🏢 企業一覧</h1>
 
-<table>
+<div class="table-container">
+    <table>
     <thead>
         <tr>
             <th>企業名</th>
@@ -29,36 +30,67 @@
     <tbody>
         {% for f in forms %}
         <tr>
-            <td><strong>{{ f.get("company_name", "未設定") }}</strong></td>
             <td>
-                {% if f.get('url_top') %}
-                    <a href="{{ f.get('url_top') }}" target="_blank">🌐</a>
+                {% if f.get("company_name") %}
+                    <span class="company-name">{{ f.get("company_name") }}</span>
                 {% else %}
-                    <span style="color: #999;">未設定</span>
+                    <span class="empty-data">未設定</span>
                 {% endif %}
             </td>
             <td>
-                {% if f.get('url_form') %}
-                    <a href="{{ f.get('url_form') }}" target="_blank">📝</a>
+                {% if f.get('url_top') and f.get('url_top') != '#' %}
+                    <a href="{{ f.get('url_top') }}" target="_blank" rel="noopener noreferrer">🌐 サイトを開く</a>
                 {% else %}
-                    <span style="color: #999;">未設定</span>
+                    <span class="empty-data">未設定</span>
                 {% endif %}
             </td>
-            <td>{{ f.get("address", "未設定") }}</td>
-            <td>{{ f.get("tel", "未設定") }}</td>
-            <td>{{ f.get("fax", "未設定") }}</td>
+            <td>
+                {% if f.get('url_form') and f.get('url_form') != '#' %}
+                    <a href="{{ f.get('url_form') }}" target="_blank" rel="noopener noreferrer">📝 フォームを開く</a>
+                {% else %}
+                    <span class="empty-data">未設定</span>
+                {% endif %}
+            </td>
+            <td>
+                {% if f.get("address") %}
+                    {{ f.get("address") }}
+                {% else %}
+                    <span class="empty-data">未設定</span>
+                {% endif %}
+            </td>
+            <td>
+                {% if f.get("tel") %}
+                    <a href="tel:{{ f.get('tel') }}">📞 {{ f.get("tel") }}</a>
+                {% else %}
+                    <span class="empty-data">未設定</span>
+                {% endif %}
+            </td>
+            <td>
+                {% if f.get("fax") %}
+                    📠 {{ f.get("fax") }}
+                {% else %}
+                    <span class="empty-data">未設定</span>
+                {% endif %}
+            </td>
             <td>
                 {% if f.get("category_keywords") %}
-                    <span class="keywords-tag">{{ f.get("category_keywords") }}</span>
+                    <span class="category-tag">{{ f.get("category_keywords") }}</span>
                 {% else %}
-                    <span style="color: #999;">未設定</span>
+                    <span class="empty-data">未設定</span>
                 {% endif %}
             </td>
-            <td>{{ f.get("description", "未設定") }}</td>
+            <td>
+                {% if f.get("description") %}
+                    {{ f.get("description") }}
+                {% else %}
+                    <span class="empty-data">未設定</span>
+                {% endif %}
+            </td>
         </tr>
         {% endfor %}
     </tbody>
-</table>
+    </table>
+</div>
 
 {% if not forms %}
 <div style="text-align: center; padding: 3rem; color: #999;">

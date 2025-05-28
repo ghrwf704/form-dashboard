@@ -139,6 +139,7 @@ table {
     border-radius: 15px;
     overflow: hidden;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    background: white;
 }
 
 th {
@@ -148,23 +149,34 @@ th {
     text-align: left;
     font-weight: 500;
     letter-spacing: 0.5px;
+    white-space: nowrap;
+    min-width: 120px;
 }
 
 td {
     padding: 1rem;
     border-bottom: 1px solid #e0e0e0;
     transition: background-color 0.3s ease;
+    vertical-align: top;
+    word-wrap: break-word;
+    max-width: 200px;
 }
 
-tr:hover td {
-    background-color: #f8f9ff;
+tbody tr {
+    background-color: white;
 }
 
-tr:nth-child(even) td {
+tbody tr:nth-child(even) {
     background-color: #fafbff;
 }
 
-tr:nth-child(even):hover td {
+tbody tr:hover {
+    background-color: #f8f9ff;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.1);
+}
+
+tbody tr:nth-child(even):hover {
     background-color: #f0f2ff;
 }
 
@@ -177,6 +189,9 @@ td a {
     padding: 0.5rem 1rem;
     border-radius: 8px;
     display: inline-block;
+    margin: 0.2rem;
+    background: rgba(102, 126, 234, 0.1);
+    border: 1px solid rgba(102, 126, 234, 0.2);
 }
 
 td a:hover {
@@ -184,6 +199,31 @@ td a:hover {
     color: white;
     transform: translateY(-2px);
     box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+}
+
+/* Empty data styling */
+.empty-data {
+    color: #999;
+    font-style: italic;
+    opacity: 0.7;
+}
+
+/* Company name styling */
+.company-name {
+    font-weight: 600;
+    color: #333;
+    font-size: 1.1rem;
+}
+
+/* Category tags */
+.category-tag {
+    display: inline-block;
+    padding: 0.3rem 0.8rem;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    border-radius: 15px;
+    font-size: 0.85rem;
+    margin: 0.2rem;
 }
 
 /* Forms */
@@ -349,12 +389,17 @@ button:active {
         text-align: center;
     }
     
+    /* Mobile table styling */
     table {
-        font-size: 0.9rem;
+        font-size: 0.8rem;
+        display: block;
+        overflow-x: auto;
+        white-space: nowrap;
     }
     
     th, td {
         padding: 0.5rem;
+        min-width: 100px;
     }
     
     .keyword-form {
@@ -367,6 +412,27 @@ button:active {
     
     h1 {
         font-size: 2rem;
+    }
+    
+    /* Horizontal scroll for table */
+    .table-container {
+        overflow-x: auto;
+        margin: 1rem 0;
+    }
+}
+
+/* Large screens optimization */
+@media (min-width: 1200px) {
+    .container {
+        max-width: 1400px;
+    }
+    
+    table {
+        font-size: 1rem;
+    }
+    
+    th, td {
+        padding: 1.2rem;
     }
 }
 
@@ -392,4 +458,24 @@ nav {
 
 .weather-box {
     animation: fadeInUp 0.5s ease;
+}
+
+/* Debug styles - remove in production */
+.debug-info {
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 1rem;
+    margin: 1rem 0;
+    font-family: monospace;
+    font-size: 0.9rem;
+    color: #495057;
+}
+
+/* Table wrapper for horizontal scroll */
+.table-container {
+    width: 100%;
+    overflow-x: auto;
+    border-radius: 15px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
 }
