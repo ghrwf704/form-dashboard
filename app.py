@@ -4,23 +4,21 @@ from pymongo.errors import ServerSelectionTimeoutError
 
 app = Flask(__name__)
 
-# MongoDB Atlas のURIとデータベース名
 MONGO_URI = "mongodb+srv://ykeikeikie:qMUerl78WgsEEOWA@cluster0.helfbov.mongodb.net/?retryWrites=true&w=majority"
 DB_NAME = "form_database"
 COLLECTION_NAME = "forms"
 
-# MongoDB に遅延で接続する関数
 def get_db():
     if "db" not in g:
         try:
             print("🌐 MongoDB接続初期化中...")
             client = MongoClient(
                 MONGO_URI,
-                serverSelectionTimeoutMS=5000,  # 接続待ちタイムアウト
+                serverSelectionTimeoutMS=5000,
                 socketTimeoutMS=5000,
                 retryWrites=True
             )
-            client.server_info()  # 実際に接続できるか確認
+            client.server_info()
             g.db = client[DB_NAME]
             print("✅ MongoDB接続成功")
         except ServerSelectionTimeoutError as e:
@@ -37,17 +35,21 @@ def index():
 
     collection = db[COLLECTION_NAME]
     try:
-        print("📥 データベースクエリ開始")
-        forms = list(collection.find().sort("_id", -1))  # ここで失敗してる可能性
+        forms = list(collection.find().sort("_id", -1))
         print(f"📦 フォームデータ {len(forms)} 件取得")
         return render_template("index.html", forms=forms)
     except Exception as e:
         import traceback
         print("❌ フォームデータ取得エラー:")
-        traceback.print_exc()  # ← これがログにスタックトレースを出す！
+        traceback.print_exc()
         return "🚨 データ取得に失敗しました", 500
 
+# 仮のキーワード登録画面
+@app.route("/manage_keywords")
+def manage_keywords():
+    return "<h1>🔧 キーワード登録画面（準備中）</h1>"
 
-# 必要に応じてポートとデバッグ設定
-if __name__ == "__main__":
-    app.run(debug=True, host="0.0.0.0", port=10000)
+# 仮のログアウト（本実装は未定）
+@app.route("/logout")
+def logout():
+    return "<h1>👋 ログアウトしました（仮）</h1>"

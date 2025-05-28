@@ -6,15 +6,33 @@
     <title>フォーム一覧</title>
     <style>
         body { font-family: Arial, sans-serif; margin: 40px; }
-        .form-block { margin-bottom: 20px; padding: 10px; border: 1px solid #ccc; }
-        .meta { color: #555; font-size: 0.9em; }
+        nav a {
+            margin-right: 20px;
+            text-decoration: none;
+            color: #007acc;
+            font-weight: bold;
+        }
+        .form-block {
+            margin-bottom: 20px;
+            padding: 10px;
+            border: 1px solid #ccc;
+        }
+        .meta {
+            color: #555;
+            font-size: 0.9em;
+        }
     </style>
 </head>
 <body>
     <h1>📋 フォーム一覧</h1>
 
-    <!-- ❌ 不正ルートをコメントアウト -->
-    {# <p><a href="{{ url_for('manage_keywords') }}">🔧 キーワード管理ページ</a></p> #}
+    <nav>
+        <a href="{{ url_for('index') }}">🏠 ダッシュボード</a>
+        <a href="{{ url_for('manage_keywords') }}">🔧 キーワード登録</a>
+        <a href="{{ url_for('logout') }}">🚪 ログアウト</a>
+    </nav>
+
+    <hr>
 
     {% for form in forms %}
         <div class="form-block">
