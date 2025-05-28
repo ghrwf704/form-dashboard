@@ -1,4 +1,3 @@
-#extract_company_info.py
 import configparser
 from pymongo import MongoClient
 import certifi
@@ -10,17 +9,20 @@ import random
 from urllib.parse import urlparse
 from search_engine import search_urls
 
+# 認証情報の読み込み
 def load_credentials():
     config = configparser.ConfigParser()
     config.read("setting.ini", encoding="utf-8")
     return config["auth"]["id"], config["auth"]["pass"]
 
+# DB接続
 def get_db():
     username, password = load_credentials()
     MONGO_URI = f"mongodb+srv://{username}:{password}@cluster0.helfbov.mongodb.net/?retryWrites=true&w=majority"
     client = MongoClient(MONGO_URI, tls=True, tlsCAFile=certifi.where())
     return client["form_database"]
 
+# 汎用フィールド抽出関数
 def extract_field(patterns, text):
     for pattern in patterns:
         match = re.search(pattern, text, re.IGNORECASE)
@@ -32,10 +34,12 @@ def extract_email(text):
     match = re.search(r"([a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+)", text)
     return match.group(1) if match else ""
 
+# HTMLから企業情報を抽出
 def extract_company_info(html):
     soup = BeautifulSoup(html, "html.parser")
     text = soup.get_text(separator="\n")
 
+    # 会社名
     company_name = (
         soup.title.string.strip() if soup.title and soup.title.string else ""
     )
@@ -47,6 +51,7 @@ def extract_company_info(html):
         if og_site and "content" in og_site.attrs:
             company_name = og_site["content"].strip()
 
+    # 各フィールド抽出
     employees = extract_field([r"従業員数[:：]?\s*([0-9,]+人?)", r"社員数[:：]?\s*([0-9,]+人?)"], text)
     capital = extract_field([r"資本金[:：]?\s*([0-9,億円万円]+)"], text)
     address = extract_field([r"(〒?\d{3}-\d{4}.+?[都道府県].+?市.+?区?.+)", r"住所[:：]?\s*(.+)"], text)
@@ -75,15 +80,18 @@ def extract_company_info(html):
         "description": description,
     }
 
+# URL→ドメイン取得
 def get_domain(url):
     parsed = urlparse(url)
     return parsed.netloc
 
+# 問い合わせフォームURLを検索
 def find_form_url(domain):
     query = f"site:{domain} お問い合わせ"
     results = search_urls(query, max_results=5)
     return results[0] if results else ""
 
+# メイン処理
 def run_extraction():
     db = get_db()
     urls = db["urls"].find({"status": "未収集"})
@@ -109,7 +117,7 @@ def run_extraction():
             print(f"✅ 保存成功: {info['company_name'] or domain}")
         except Exception as e:
             print(f"❌ エラー: {e} @ {url}")
-        time.sleep(random.uniform(1, 2))
+        time.sleep(random.uniform(1, 2))  # DoS対策
 
 if __name__ == "__main__":
     run_extraction()
