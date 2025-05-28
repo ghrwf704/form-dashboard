@@ -4,62 +4,55 @@
     <meta charset="UTF-8">
     <title>キーワード管理</title>
     <style>
-        body { font-family: sans-serif; margin: 2em; }
-        nav { margin-bottom: 1em; background: #f0f0f0; padding: 1em; }
-        nav a { margin-right: 1em; }
-        table { border-collapse: collapse; width: 100%; }
-        th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
-        form { margin-bottom: 1em; }
-        .active { color: green; font-weight: bold; }
-        .inactive { color: gray; }
+        body { font-family: Arial, sans-serif; margin: 40px; }
+        nav a {
+            margin-right: 20px;
+            text-decoration: none;
+            color: #007acc;
+            font-weight: bold;
+        }
+        table { border-collapse: collapse; width: 100%; margin-top: 20px; }
+        th, td { border: 1px solid #ccc; padding: 8px; }
+        th { background-color: #f0f0f0; }
+        form { display: inline; }
     </style>
 </head>
 <body>
+    <h1>🔧 キーワード管理</h1>
+
     <nav>
-        <a href="/">ダッシュボード</a>
-        <a href="/keywords">キーワード管理</a>
-        <a href="/logout">ログアウト</a>
+        <a href="{{ url_for('index') }}">🏠 ダッシュボード</a>
+        <a href="{{ url_for('logout') }}">🚪 ログアウト</a>
     </nav>
 
-    {% if current_user.is_authenticated %}
-        <p>こんにちは、{{ current_user.id }} さん！</p>
-    {% endif %}
-
-    <h1>キーワード管理</h1>
-
-    <form method="post">
+    <form method="POST">
         <input type="text" name="keyword" placeholder="新しいキーワード" required>
-        <button type="submit">追加</button>
+        <button type="submit">➕ 追加</button>
     </form>
 
+    {% if keywords %}
     <table>
         <thead>
             <tr>
                 <th>キーワード</th>
-                <th>状態</th>
                 <th>操作</th>
             </tr>
         </thead>
         <tbody>
-            {% for kw in keywords %}
+            {% for k in keywords %}
             <tr>
+                <td>{{ k['keyword'] }}</td>
                 <td>
-                    <form method="post" action="/keywords/update/{{ kw.keyword }}">
-                        <input type="text" name="new_keyword" value="{{ kw.keyword }}">
-                        <button type="submit">変更</button>
+                    <form method="POST" action="{{ url_for('delete_keyword', keyword_id=k['_id']) }}">
+                        <button type="submit">🗑 削除</button>
                     </form>
-                </td>
-                <td class="{{ 'active' if kw.active else 'inactive' }}">
-                    {{ '有効' if kw.active else '無効' }}
-                </td>
-                <td>
-                    <a href="/keywords/toggle/{{ kw.keyword }}">切り替え</a> |
-                    <a href="/keywords/only/{{ kw.keyword }}" onclick="return confirm('このキーワードのみを有効にしますか？');">これだけ有効</a> |
-                    <a href="/keywords/delete/{{ kw.keyword }}" onclick="return confirm('削除しますか？');">削除</a>
                 </td>
             </tr>
             {% endfor %}
         </tbody>
     </table>
+    {% else %}
+        <p>キーワードは登録されていません。</p>
+    {% endif %}
 </body>
 </html>
