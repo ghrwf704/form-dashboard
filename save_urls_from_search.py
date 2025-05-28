@@ -20,27 +20,28 @@ keywords = [
     doc["keyword"]
     for doc in db["keywords"].find({
         "active": True,
-        "user_id": username  # 🔑 ここが重要
+        "owner": username  # 🔑 ここが重要
     })
 ]
 
-print("検索対象キーワード:", keywords)
+keyword = " ".join(word.strip() for word in keywords if word and word.strip())
+print("検索対象キーワード:", keyword)
 
 # 🔍 検索＆URL保存
-for keyword in keywords:
-    urls = search_urls(keyword)
-    count = 0
-    for url in urls:
-        result = db["urls"].update_one(
-            {"url": url},
-            {
-                "$setOnInsert": {
-                    "keyword": keyword,
-                    "status": "未収集"
-                }
-            },
-            upsert=True
-        )
-        if result.upserted_id:
-            count += 1
-    print(f"➡ {keyword}: {count} 件保存完了")
+urls = search_urls(keyword, max_results=10, headless=False)
+count = 0
+for url in urls:
+    result = db["urls"].update_one(
+        {"url": url},
+        {
+            "$setOnInsert": {
+                "keyword": keyword,
+                "status": "未収集",
+                "owner": username
+            }
+        },
+        upsert=True
+    )
+    if result.upserted_id:
+        count += 1
+print(f"➡ {keyword}: {count} 件保存完了")
