@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}フォーム管理{% endblock %}</title>
+    <style>
+        body { font-family: sans-serif; margin: 2em; }
+        table { border-collapse: collapse; width: 100%; }
+        th, td { padding: 8px; border: 1px solid #ccc; }
+        th { background-color: #f2f2f2; }
+        nav a { margin-right: 1em; }
+    </style>
+</head>
+<body>
+
+<nav>
+    <a href="{{ url_for('index') }}">ダッシュボード</a>
+    <a href="{{ url_for('manage_keywords') }}">キーワード管理</a>
+    <a href="{{ url_for('logout') }}">ログアウト</a>
+</nav>
+
+<div class="weather-box">
+  <p>📍 地域: {{ weather.city }}</p>
+  <p>🌤 天気: {{ weather.description }}</p>
+  <p>🌡 気温: {{ weather.temp }}℃</p>
+  <p>💧 湿度: {{ weather.humidity }}%</p>
+</div>
+
+<hr>
+
+{% block content %}
+<!-- 各ページの中身がここに挿入される -->
+{% endblock %}
+
+</body>
+</html>

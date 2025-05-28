@@ -1,65 +1,525 @@
-<!DOCTYPE html>
-<html lang="ja">
-<head>
-    <meta charset="UTF-8">
-    <title>キーワード管理</title>
-    <style>
-        body { font-family: sans-serif; margin: 2em; }
-        nav { margin-bottom: 1em; background: #f0f0f0; padding: 1em; }
-        nav a { margin-right: 1em; }
-        table { border-collapse: collapse; width: 100%; }
-        th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
-        form { margin-bottom: 1em; }
-        .active { color: green; font-weight: bold; }
-        .inactive { color: gray; }
-    </style>
-</head>
-<body>
-    <nav>
-        <a href="/">ダッシュボード</a>
-        <a href="/keywords">キーワード管理</a>
-        <a href="/logout">ログアウト</a>
-    </nav>
+{% extends "base.html" %}
 
-    {% if current_user.is_authenticated %}
-        <p>こんにちは、{{ current_user.id }} さん！</p>
-    {% endif %}
+{% block title %}キーワード管理 - フォーム管理システム{% endblock %}
 
-    <h1>キーワード管理</h1>
+{% block content %}
+<div class="page-header">
+    <div class="header-content">
+        <div class="page-title">
+            <h1><i class="fas fa-tags"></i> キーワード管理</h1>
+            <p class="page-subtitle">検索キーワードを管理して、より効率的な企業検索を実現しましょう</p>
+        </div>
+        
+        {% if current_user.is_authenticated %}
+        <div class="user-info">
+            <div class="user-avatar">
+                <i class="fas fa-user"></i>
+            </div>
+            <span class="user-name">{{ current_user.id }} さん</span>
+        </div>
+        {% endif %}
+    </div>
+</div>
 
-    <form method="post">
-        <input type="text" name="keyword" placeholder="新しいキーワード" required>
-        <button type="submit">追加</button>
-    </form>
+<div class="keywords-section">
+    <div class="add-keyword-card">
+        <div class="card-header">
+            <h2><i class="fas fa-plus-circle"></i> 新しいキーワードを追加</h2>
+            <p>検索効率を向上させるために、関連するキーワードを追加してください</p>
+        </div>
+        
+        <form method="post" class="add-keyword-form">
+            <div class="input-group">
+                <div class="input-wrapper">
+                    <i class="fas fa-search input-icon"></i>
+                    <input type="text" name="keyword" class="keyword-input" placeholder="新しいキーワードを入力" required>
+                </div>
+                <button type="submit" class="btn btn-primary add-btn">
+                    <i class="fas fa-plus"></i>
+                    追加
+                </button>
+            </div>
+        </form>
+    </div>
 
-    <table>
-        <thead>
-            <tr>
-                <th>キーワード</th>
-                <th>状態</th>
-                <th>操作</th>
-            </tr>
-        </thead>
-        <tbody>
+    <div class="keywords-list-card">
+        <div class="card-header">
+            <h2><i class="fas fa-list"></i> キーワード一覧</h2>
+            <div class="keywords-stats">
+                <span class="stat-badge active-count">
+                    <i class="fas fa-check-circle"></i>
+                    有効: {{ keywords|selectattr('active')|list|length }}
+                </span>
+                <span class="stat-badge inactive-count">
+                    <i class="fas fa-times-circle"></i>
+                    無効: {{ keywords|rejectattr('active')|list|length }}
+                </span>
+            </div>
+        </div>
+
+        {% if keywords %}
+        <div class="keywords-grid">
             {% for kw in keywords %}
-            <tr>
-                <td>
-                    <form method="post" action="/keywords/update/{{ kw.keyword }}">
-                        <input type="text" name="new_keyword" value="{{ kw.keyword }}">
-                        <button type="submit">変更</button>
+            <div class="keyword-card {{ 'active' if kw.active else 'inactive' }}">
+                <div class="keyword-status">
+                    <div class="status-indicator {{ 'active' if kw.active else 'inactive' }}">
+                        <i class="fas {{ 'fa-check-circle' if kw.active else 'fa-times-circle' }}"></i>
+                    </div>
+                    <span class="status-text">{{ '有効' if kw.active else '無効' }}</span>
+                </div>
+
+                <div class="keyword-content">
+                    <form method="post" action="/keywords/update/{{ kw.keyword }}" class="keyword-edit-form">
+                        <div class="keyword-display">
+                            <i class="fas fa-tag"></i>
+                            <input type="text" name="new_keyword" value="{{ kw.keyword }}" class="keyword-edit-input">
+                        </div>
+                        <button type="submit" class="btn btn-sm btn-secondary update-btn">
+                            <i class="fas fa-save"></i>
+                            更新
+                        </button>
                     </form>
-                </td>
-                <td class="{{ 'active' if kw.active else 'inactive' }}">
-                    {{ '有効' if kw.active else '無効' }}
-                </td>
-                <td>
-                    <a href="/keywords/toggle/{{ kw.keyword }}">切り替え</a> |
-                    <a href="/keywords/only/{{ kw.keyword }}" onclick="return confirm('このキーワードのみを有効にしますか？');">これだけ有効</a> |
-                    <a href="/keywords/delete/{{ kw.keyword }}" onclick="return confirm('削除しますか？');">削除</a>
-                </td>
-            </tr>
+                </div>
+
+                <div class="keyword-actions">
+                    <a href="/keywords/toggle/{{ kw.keyword }}" class="action-btn toggle-btn" title="有効/無効を切り替え">
+                        <i class="fas fa-toggle-{{ 'on' if kw.active else 'off' }}"></i>
+                        切り替え
+                    </a>
+                    <a href="/keywords/only/{{ kw.keyword }}" class="action-btn only-btn" 
+                       onclick="return confirm('このキーワードのみを有効にしますか？');" title="このキーワードのみ有効">
+                        <i class="fas fa-star"></i>
+                        単独有効
+                    </a>
+                    <a href="/keywords/delete/{{ kw.keyword }}" class="action-btn delete-btn" 
+                       onclick="return confirm('「{{ kw.keyword }}」を削除しますか？');" title="削除">
+                        <i class="fas fa-trash-alt"></i>
+                        削除
+                    </a>
+                </div>
+            </div>
             {% endfor %}
-        </tbody>
-    </table>
-</body>
-</html>
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <div class="empty-icon">
+                <i class="fas fa-search"></i>
+            </div>
+            <h3>キーワードがありません</h3>
+            <p>まずは上のフォームから新しいキーワードを追加してみましょう</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+    .page-header {
+        margin-bottom: 2rem;
+    }
+
+    .header-content {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        color: white;
+        padding: 2rem;
+        border-radius: 1rem;
+        box-shadow: var(--shadow-lg);
+    }
+
+    .page-title h1 {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        font-size: 2rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .page-subtitle {
+        opacity: 0.9;
+        font-size: 1rem;
+        max-width: 600px;
+    }
+
+    .user-info {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        background: rgba(255, 255, 255, 0.1);
+        padding: 1rem 1.5rem;
+        border-radius: 0.75rem;
+        backdrop-filter: blur(10px);
+    }
+
+    .user-avatar {
+        width: 3rem;
+        height: 3rem;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.25rem;
+    }
+
+    .user-name {
+        font-weight: 600;
+        font-size: 1.125rem;
+    }
+
+    .keywords-section {
+        display: grid;
+        gap: 2rem;
+    }
+
+    .add-keyword-card,
+    .keywords-list-card {
+        background: var(--surface);
+        border: 1px solid var(--border-color);
+        border-radius: 1rem;
+        padding: 2rem;
+        box-shadow: var(--shadow);
+    }
+
+    .card-header {
+        margin-bottom: 2rem;
+    }
+
+    .card-header h2 {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        font-size: 1.5rem;
+        color: var(--text-primary);
+        margin-bottom: 0.5rem;
+    }
+
+    .card-header p {
+        color: var(--text-secondary);
+        line-height: 1.6;
+    }
+
+    .keywords-stats {
+        display: flex;
+        gap: 1rem;
+        margin-top: 1rem;
+    }
+
+    .stat-badge {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 1rem;
+        border-radius: 2rem;
+        font-size: 0.875rem;
+        font-weight: 500;
+    }
+
+    .stat-badge.active-count {
+        background: linear-gradient(135deg, #10b981, #059669);
+        color: white;
+    }
+
+    .stat-badge.inactive-count {
+        background: linear-gradient(135deg, #ef4444, #dc2626);
+        color: white;
+    }
+
+    .input-group {
+        display: flex;
+        gap: 1rem;
+        align-items: flex-end;
+    }
+
+    .input-wrapper {
+        flex: 1;
+        position: relative;
+    }
+
+    .input-icon {
+        position: absolute;
+        left: 1rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--text-secondary);
+        z-index: 1;
+    }
+
+    .keyword-input {
+        width: 100%;
+        padding: 0.75rem 1rem 0.75rem 3rem;
+        border: 2px solid var(--border-color);
+        border-radius: 0.75rem;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+        background: var(--surface);
+    }
+
+    .keyword-input:focus {
+        outline: none;
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    .add-btn {
+        padding: 0.75rem 2rem;
+        font-size: 1rem;
+        white-space: nowrap;
+    }
+
+    .keywords-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+        gap: 1.5rem;
+    }
+
+    .keyword-card {
+        background: var(--surface);
+        border: 2px solid var(--border-color);
+        border-radius: 1rem;
+        padding: 1.5rem;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .keyword-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+
+    .keyword-card:hover {
+        transform: translateY(-4px);
+        box-shadow: var(--shadow-lg);
+        border-color: var(--primary-color);
+    }
+
+    .keyword-card:hover::before {
+        opacity: 1;
+    }
+
+    .keyword-card.active {
+        border-color: #10b981;
+        background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+    }
+
+    .keyword-card.inactive {
+        border-color: #ef4444;
+        background: linear-gradient(135deg, #fef2f2, #fee2e2);
+        opacity: 0.8;
+    }
+
+    .keyword-status {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin-bottom: 1rem;
+    }
+
+    .status-indicator {
+        width: 2rem;
+        height: 2rem;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1rem;
+    }
+
+    .status-indicator.active {
+        background: #10b981;
+        color: white;
+    }
+
+    .status-indicator.inactive {
+        background: #ef4444;
+        color: white;
+    }
+
+    .status-text {
+        font-weight: 600;
+        font-size: 0.875rem;
+    }
+
+    .keyword-content {
+        margin-bottom: 1.5rem;
+    }
+
+    .keyword-edit-form {
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+    }
+
+    .keyword-display {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        flex: 1;
+    }
+
+    .keyword-display i {
+        color: var(--primary-color);
+        font-size: 1.125rem;
+    }
+
+    .keyword-edit-input {
+        flex: 1;
+        padding: 0.5rem 0.75rem;
+        border: 1px solid var(--border-color);
+        border-radius: 0.5rem;
+        font-size: 1rem;
+        font-weight: 500;
+        background: var(--surface);
+        transition: all 0.3s ease;
+    }
+
+    .keyword-edit-input:focus {
+        outline: none;
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.1);
+    }
+
+    .update-btn {
+        padding: 0.5rem 1rem;
+        font-size: 0.875rem;
+        white-space: nowrap;
+    }
+
+    .keyword-actions {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+    }
+
+    .action-btn {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 0.75rem;
+        border-radius: 0.5rem;
+        text-decoration: none;
+        font-size: 0.75rem;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        border: 1px solid transparent;
+    }
+
+    .toggle-btn {
+        background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+        color: white;
+    }
+
+    .toggle-btn:hover {
+        background: linear-gradient(135deg, #1d4ed8, #1e40af);
+        transform: translateY(-1px);
+    }
+
+    .only-btn {
+        background: linear-gradient(135deg, #f59e0b, #d97706);
+        color: white;
+    }
+
+    .only-btn:hover {
+        background: linear-gradient(135deg, #d97706, #b45309);
+        transform: translateY(-1px);
+    }
+
+    .delete-btn {
+        background: linear-gradient(135deg, #ef4444, #dc2626);
+        color: white;
+    }
+
+    .delete-btn:hover {
+        background: linear-gradient(135deg, #dc2626, #b91c1c);
+        transform: translateY(-1px);
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 4rem 2rem;
+        color: var(--text-secondary);
+    }
+
+    .empty-icon {
+        font-size: 4rem;
+        margin-bottom: 1rem;
+        opacity: 0.5;
+    }
+
+    .empty-state h3 {
+        font-size: 1.5rem;
+        margin-bottom: 0.5rem;
+        color: var(--text-primary);
+    }
+
+    .empty-state p {
+        font-size: 1rem;
+        line-height: 1.6;
+    }
+
+    @media (max-width: 1024px) {
+        .keywords-grid {
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        }
+    }
+
+    @media (max-width: 768px) {
+        .header-content {
+            flex-direction: column;
+            gap: 1.5rem;
+            text-align: center;
+        }
+
+        .page-title h1 {
+            font-size: 1.75rem;
+        }
+
+        .input-group {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .keywords-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .keyword-actions {
+            justify-content: center;
+        }
+
+        .keywords-stats {
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .add-keyword-card,
+        .keywords-list-card {
+            padding: 1rem;
+        }
+
+        .keyword-card {
+            padding: 1rem;
+        }
+
+        .keyword-edit-form {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .action-btn {
+            justify-content: center;
+        }
+    }
+</style>
+{% endblock %}
