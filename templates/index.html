@@ -17,6 +17,7 @@
     <table>
     <thead>
         <tr>
+            <th>操作</th>
             <th>企業名</th>
             <th>トップページ</th>
             <th>問い合わせ</th>
@@ -30,6 +31,20 @@
     <tbody>
         {% for f in forms %}
         <tr>
+            <td>
+                <!-- 編集ボタン -->
+                <a href="#" 
+                class="edit-btn"
+                data-id="{{ f['_id'] }}"
+                data-name="{{ f.get('company_name', '') }}"
+                data-address="{{ f.get('address', '') }}"
+                data-tel="{{ f.get('tel', '') }}"
+                data-fax="{{ f.get('fax', '') }}"
+                data-category="{{ f.get('category_keywords', '') }}"
+                data-description="{{ f.get('description', '') }}"
+                data-bs-toggle="modal"
+                data-bs-target="#editModal">✏️</a>
+            </td>
             <td>
                 {% if f.get("company_name") %}
                     <span class="company-name">{{ f.get("company_name") }}</span>
@@ -98,4 +113,43 @@
     <p>キーワードを設定して検索を開始してください。</p>
 </div>
 {% endif %}
-{% endblock %}
+{% endblock %}<script>
+    document.querySelectorAll(".edit-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        document.getElementById("edit_id").value = btn.dataset.id;
+        document.getElementById("edit_name").value = btn.dataset.name;
+        document.getElementById("edit_address").value = btn.dataset.address;
+        document.getElementById("edit_tel").value = btn.dataset.tel;
+        document.getElementById("edit_fax").value = btn.dataset.fax;
+        document.getElementById("edit_category").value = btn.dataset.category;
+        document.getElementById("edit_description").value = btn.dataset.description;
+      });
+    });
+    </script>
+<!-- 編集モーダル -->
+<div class="modal fade" id="editModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <form method="POST" action="/update_company">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">✏️ 企業情報を編集</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <input type="hidden" name="company_id" id="edit_id">
+            <div class="mb-2"><label>企業名: <input type="text" class="form-control" name="company_name" id="edit_name"></label></div>
+            <div class="mb-2"><label>住所: <input type="text" class="form-control" name="address" id="edit_address"></label></div>
+            <div class="mb-2"><label>電話番号: <input type="text" class="form-control" name="tel" id="edit_tel"></label></div>
+            <div class="mb-2"><label>FAX: <input type="text" class="form-control" name="fax" id="edit_fax"></label></div>
+            <div class="mb-2"><label>カテゴリ: <input type="text" class="form-control" name="category_keywords" id="edit_category"></label></div>
+            <div class="mb-2"><label>説明: <textarea class="form-control" name="description" id="edit_description"></textarea></label></div>
+          </div>
+          <div class="modal-footer">
+            <button type="submit" class="btn btn-primary">保存</button>
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">閉じる</button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+  

@@ -131,6 +131,59 @@ def get_weather_by_coords_api():
     except Exception as e:
         print("🌩️ 天気API処理エラー:", e)
         return jsonify({"error": "サーバーエラー"}), 500
-    
+
+from bson import ObjectId
+
+@app.route("/delete_company/<company_id>")
+@login_required
+def delete_company(company_id):
+    collection.delete_one({
+        "_id": ObjectId(company_id),
+        "owner": current_user.id
+    })
+    return redirect(url_for("index"))
+@app.route("/update_company", methods=["POST"])
+@login_required
+def update_company():
+    company_id = request.form.get("company_id")
+    if not company_id:
+        return redirect(url_for("index"))
+
+    updated = {
+        "company_name": request.form.get("company_name"),
+        "address": request.form.get("address"),
+        "tel": request.form.get("tel"),
+        "fax": request.form.get("fax"),
+        "category_keywords": request.form.get("category_keywords"),
+        "description": request.form.get("description")
+    }
+    collection.update_one({"_id": ObjectId(company_id), "owner": current_user.id}, {"$set": updated})
+    return redirect(url_for("index"))
+
+
+@app.route("/edit_company/<company_id>", methods=["GET", "POST"])
+@login_required
+def edit_company(company_id):
+    company = collection.find_one({"_id": ObjectId(company_id), "owner": current_user.id})
+    if not company:
+        return redirect(url_for("index"))
+
+    if request.method == "POST":
+        new_data = {
+            "company_name": request.form.get("company_name"),
+            "address": request.form.get("address"),
+            "tel": request.form.get("tel"),
+            "fax": request.form.get("fax"),
+            "category_keywords": request.form.get("category_keywords"),
+            "description": request.form.get("description")
+        }
+        collection.update_one(
+            {"_id": ObjectId(company_id)},
+            {"$set": new_data}
+        )
+        return redirect(url_for("index"))
+
+    return render_template("edit_company.html", company=company)
+
 if __name__ == "__main__":
     app.run(debug=True)

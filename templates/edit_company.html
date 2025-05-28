@@ -1,0 +1,16 @@
+{% extends "_base.html" %}
+
+{% block content %}
+<h2>✏️ 企業情報を編集</h2>
+<form method="POST">
+    <label>企業名:<br><input type="text" name="company_name" value="{{ company.company_name }}"></label><br><br>
+    <label>住所:<br><input type="text" name="address" value="{{ company.address }}"></label><br><br>
+    <label>電話番号:<br><input type="text" name="tel" value="{{ company.tel }}"></label><br><br>
+    <label>FAX:<br><input type="text" name="fax" value="{{ company.fax }}"></label><br><br>
+    <label>カテゴリ:<br><input type="text" name="category_keywords" value="{{ company.category_keywords }}"></label><br><br>
+    <label>説明:<br><textarea name="description">{{ company.description }}</textarea></label><br><br>
+    
+    <button type="submit">💾 保存</button>
+    <a href="{{ url_for('index') }}">キャンセル</a>
+</form>
+{% endblock %}
