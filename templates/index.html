@@ -1,31 +1,103 @@
-{% block scripts %}
-<script>
-  document.addEventListener("DOMContentLoaded", function () {
-    const modal = document.getElementById("editModal");
-    const editId = document.getElementById("edit_id");
-    const editName = document.getElementById("edit_name");
-    const editAddress = document.getElementById("edit_address");
-    const editTel = document.getElementById("edit_tel");
-    const editFax = document.getElementById("edit_fax");
-    const editCategory = document.getElementById("edit_category");
-    const editDescription = document.getElementById("edit_description");
+{% extends "_base.html" %}
 
-    document.querySelectorAll(".edit-btn").forEach(btn => {
-      btn.addEventListener("click", function () {
-        editId.value = this.dataset.id;
-        editName.value = this.dataset.name;
-        editAddress.value = this.dataset.address;
-        editTel.value = this.dataset.tel;
-        editFax.value = this.dataset.fax;
-        editCategory.value = this.dataset.category;
-        editDescription.value = this.dataset.description;
-      });
-    });
+{% block title %}企業一覧 - フォーム管理{% endblock %}
 
-    // モーダルが閉じられた時にフォームをリセット（backdropトラブル防止）
-    modal.addEventListener("hidden.bs.modal", function () {
-      modal.querySelector("form").reset();
-    });
-  });
-</script>
+{% block content %}
+<div class="user-greeting">
+  <p>こんにちは、<strong>{{ current_user.id }}</strong> さん！</p>
+</div>
+
+<div class="keywords-display">
+  <p>🔍 <strong>Bing検索キーワード:</strong> 「{{ active_keywords | join(' ') }}+ 概要 情報 -一覧 -ランキング -まとめ -比較」</p>
+</div>
+
+<h1>🏢 企業一覧</h1>
+
+<div class="table-container">
+  <table class="table">
+    <thead>
+      <tr>
+        <th>操作</th>
+        <th>企業名</th>
+        <th>トップページ</th>
+        <th>問い合わせ</th>
+        <th>住所</th>
+        <th>電話番号</th>
+        <th>FAX</th>
+        <th>カテゴリ</th>
+        <th>説明</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for f in forms %}
+      <tr>
+        <td>
+          <a href="#"
+            class="edit-btn btn btn-outline-primary btn-sm"
+            data-id="{{ f['_id'] }}"
+            data-name="{{ f.get('company_name', '') }}"
+            data-address="{{ f.get('address', '') }}"
+            data-tel="{{ f.get('tel', '') }}"
+            data-fax="{{ f.get('fax', '') }}"
+            data-category="{{ f.get('category_keywords', '') }}"
+            data-description="{{ f.get('description', '') }}"
+            data-bs-toggle="modal"
+            data-bs-target="#editModal">✏️</a>
+          <a href="{{ url_for('delete_company', company_id=f['_id']) }}"
+            onclick="return confirm('この企業データを削除してよろしいですか？');"
+            class="btn btn-outline-danger btn-sm">🗑️</a>
+        </td>
+        <td>{{ f.get("company_name", "未設定") }}</td>
+        <td>
+          {% if f.get('url_top') and f.get('url_top') != '#' %}
+            <a href="{{ f['url_top'] }}" target="_blank">🌐 サイトを開く</a>
+          {% else %}
+            <span class="empty-data">未設定</span>
+          {% endif %}
+        </td>
+        <td>
+          {% if f.get('url_form') and f.get('url_form') != '#' %}
+            <a href="{{ f['url_form'] }}" target="_blank">📝 フォームを開く</a>
+          {% else %}
+            <span class="empty-data">未設定</span>
+          {% endif %}
+        </td>
+        <td>{{ f.get("address", "未設定") }}</td>
+        <td>{{ f.get("tel", "未設定") }}</td>
+        <td>{{ f.get("fax", "未設定") }}</td>
+        <td>{{ f.get("category_keywords", "未設定") }}</td>
+        <td>{{ f.get("description", "未設定") }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<!-- 編集モーダル -->
+<div class="modal fade" id="editModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <form method="POST" action="/update_company">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">✏️ 企業情報を編集</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <input type="hidden" name="company_id" id="edit_id">
+          <div class="mb-2"><label>企業名: <input type="text" class="form-control" name="company_name" id="edit_name"></label></div>
+          <div class="mb-2"><label>住所: <input type="text" class="form-control" name="address" id="edit_address"></label></div>
+          <div class="mb-2"><label>電話番号: <input type="text" class="form-control" name="tel" id="edit_tel"></label></div>
+          <div class="mb-2"><label>FAX: <input type="text" class="form-control" name="fax" id="edit_fax"></label></div>
+          <div class="mb-2"><label>カテゴリ: <input type="text" class="form-control" name="category_keywords" id="edit_category"></label></div>
+          <div class="mb-2"><label>説明: <textarea class="form-control" name="description" id="edit_description"></textarea></label></div>
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-primary">保存</button>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">閉じる</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
 {% endblock %}
