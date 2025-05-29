@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <title>{% block title %}フォーム管理{% endblock %}</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
@@ -24,39 +24,38 @@
     </div>
 
     <div class="main-content">
-      {% block content %}
-      {% endblock %}
+      {% block content %}{% endblock %}
     </div>
   </div>
 
-  <!-- 🌐 天気取得 -->
-  <script>
-    navigator.geolocation.getCurrentPosition(function (pos) {
-      const lat = pos.coords.latitude;
-      const lon = pos.coords.longitude;
+  <!-- Bootstrap Bundle JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
-      fetch("/get_weather_by_coords", {
+  <!-- 天気取得スクリプト -->
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      navigator.geolocation.getCurrentPosition(function (pos) {
+        const lat = pos.coords.latitude;
+        const lon = pos.coords.longitude;
+
+        fetch("/get_weather_by_coords", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ lat, lon })
-      })
-      .then(res => res.json())
-      .then(data => {
+        })
+        .then(res => res.json())
+        .then(data => {
           document.getElementById("weather-city").textContent = data.city;
           document.getElementById("weather-description").textContent = data.description;
           document.getElementById("weather-temp").textContent = data.temp + "℃";
           document.getElementById("weather-date").textContent = data.date;
           document.getElementById("weather-weekday").textContent = data.weekday;
           document.getElementById("weather-time").textContent = data.time;
+        });
       });
     });
   </script>
 
-  <!-- Bootstrap 本体 -->
-   <!-- Bootstrap JS（バンドル） -->
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-  
-  <!-- 🔽 これがモーダルなどに必要な後置きJS用の挿入ポイント -->
   {% block scripts %}{% endblock %}
 </body>
 </html>
