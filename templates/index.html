@@ -13,6 +13,21 @@
 
 <h1>🏢 企業一覧</h1>
 
+<!-- フィルターフォーム -->
+<div class="filter-box mb-4">
+  <form id="filter-form" class="row g-2">
+    <div class="col-md-4">
+      <input type="text" class="form-control" placeholder="企業名でフィルター" id="filter-name">
+    </div>
+    <div class="col-md-4">
+      <input type="text" class="form-control" placeholder="住所でフィルター" id="filter-address">
+    </div>
+    <div class="col-md-4">
+      <input type="text" class="form-control" placeholder="カテゴリでフィルター" id="filter-category">
+    </div>
+  </form>
+</div>
+
 <div class="table-container">
   <table class="table">
     <thead>
@@ -47,7 +62,7 @@
             onclick="return confirm('この企業データを削除してよろしいですか？');"
             class="btn btn-outline-danger btn-sm">🗑️</a>
         </td>
-        <td>{{ f.get("company_name", "未設定") }}</td>
+        <td class="company-name">{{ f.get("company_name", "未設定") }}</td>
         <td>
           {% if f.get('url_top') and f.get('url_top') != '#' %}
             <a href="{{ f['url_top'] }}" target="_blank">🌐 サイトを開く</a>
@@ -65,7 +80,7 @@
         <td>{{ f.get("address", "未設定") }}</td>
         <td>{{ f.get("tel", "未設定") }}</td>
         <td>{{ f.get("fax", "未設定") }}</td>
-        <td>{{ f.get("category_keywords", "未設定") }}</td>
+        <td class="category-tag">{{ f.get("category_keywords", "未設定") }}</td>
         <td>{{ f.get("description", "未設定") }}</td>
       </tr>
       {% endfor %}
