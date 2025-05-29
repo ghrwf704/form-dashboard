@@ -115,4 +115,40 @@
   </div>
 </div>
 
+{% block scripts %}
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const nameInput = document.getElementById("filter-name");
+    const addressInput = document.getElementById("filter-address");
+    const categoryInput = document.getElementById("filter-category");
+    const rows = document.querySelectorAll("table tbody tr");
+
+    function filterTable() {
+      const nameFilter = nameInput.value.toLowerCase();
+      const addressFilter = addressInput.value.toLowerCase();
+      const categoryFilter = categoryInput.value.toLowerCase();
+
+      rows.forEach(row => {
+        const name = row.querySelector(".company-name")?.textContent.toLowerCase() || "";
+        const address = row.cells[4]?.textContent.toLowerCase() || "";
+        const category = row.querySelector(".category-tag")?.textContent.toLowerCase() || "";
+
+        const matchName = name.includes(nameFilter);
+        const matchAddress = address.includes(addressFilter);
+        const matchCategory = category.includes(categoryFilter);
+
+        if (matchName && matchAddress && matchCategory) {
+          row.style.display = "";
+        } else {
+          row.style.display = "none";
+        }
+      });
+    }
+
+    nameInput.addEventListener("input", filterTable);
+    addressInput.addEventListener("input", filterTable);
+    categoryInput.addEventListener("input", filterTable);
+  });
+</script>
+{% endblock %}
 {% endblock %}
