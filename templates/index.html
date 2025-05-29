@@ -66,6 +66,10 @@
 </div>
 {% endif %}
 
+{% endblock %}
+
+{% block scripts %}
+<script>
 <!-- ✅ モーダルを block content の末尾に含める -->
 <div class="modal fade" id="editModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-lg">
@@ -92,10 +96,6 @@
     </form>
   </div>
 </div>
-{% endblock %}
-
-{% block scripts %}
-<script>
 document.addEventListener("DOMContentLoaded", function () {
   document.querySelectorAll(".edit-btn").forEach(btn => {
     btn.addEventListener("click", () => {
