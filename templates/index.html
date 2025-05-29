@@ -65,27 +65,8 @@
     <p>キーワードを設定して検索を開始してください。</p>
 </div>
 {% endif %}
-{% endblock %}
 
-{% block scripts %}
-<script>
-document.addEventListener("DOMContentLoaded", function () {
-  document.querySelectorAll(".edit-btn").forEach(btn => {
-    btn.addEventListener("click", () => {
-      document.getElementById("edit_id").value = btn.dataset.id;
-      document.getElementById("edit_name").value = btn.dataset.name;
-      document.getElementById("edit_address").value = btn.dataset.address;
-      document.getElementById("edit_tel").value = btn.dataset.tel;
-      document.getElementById("edit_fax").value = btn.dataset.fax;
-      document.getElementById("edit_category").value = btn.dataset.category;
-      document.getElementById("edit_description").value = btn.dataset.description;
-    });
-  });
-});
-</script>
-{% endblock %}
-
-<!-- モーダルはbodyの最後に配置 -->
+<!-- ✅ モーダルを block content の末尾に含める -->
 <div class="modal fade" id="editModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-lg">
     <form method="POST" action="/update_company">
@@ -111,3 +92,26 @@ document.addEventListener("DOMContentLoaded", function () {
     </form>
   </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  document.querySelectorAll(".edit-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      try {
+        document.getElementById("edit_id").value = btn.dataset.id || "";
+        document.getElementById("edit_name").value = btn.dataset.name || "";
+        document.getElementById("edit_address").value = btn.dataset.address || "";
+        document.getElementById("edit_tel").value = btn.dataset.tel || "";
+        document.getElementById("edit_fax").value = btn.dataset.fax || "";
+        document.getElementById("edit_category").value = btn.dataset.category || "";
+        document.getElementById("edit_description").value = btn.dataset.description || "";
+      } catch (e) {
+        console.error("モーダル初期化エラー:", e);
+      }
+    });
+  });
+});
+</script>
+{% endblock %}
