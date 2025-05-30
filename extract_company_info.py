@@ -36,8 +36,29 @@ def extract_email(text):
     match = re.search(r"([a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+)", text)
     return match.group(1) if match else ""
 
+from selenium import webdriver
+from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.chrome.options import Options
+from webdriver_manager.chrome import ChromeDriverManager
+def resolve_redirect_url_selenium(bing_url):
+    options = Options()
+    options.add_argument("--headless")
+    options.add_argument("--disable-gpu")
+
+    service = Service(ChromeDriverManager().install())
+    driver = webdriver.Chrome(service=service, options=options)
+
+    try:
+        driver.get(bing_url)
+        time.sleep(5)  # ページ遷移待ち
+        return driver.current_url
+    finally:
+        driver.quit()
+
 # HTMLから企業情報を抽出
-def extract_company_info(html):
+def extract_company_info(url):
+    url = resolve_redirect_url_selenium(url)
+    html = requests.get(url).text
     soup = BeautifulSoup(html, "html.parser")
     text = soup.get_text(separator="\n")
 
@@ -63,7 +84,6 @@ def extract_company_info(html):
     meta_description = soup.find("meta", attrs={"name": "description"})
     keywords = meta_keywords["content"] if meta_keywords and meta_keywords.has_attr("content") else ""
     description = meta_description["content"] if meta_description and meta_description.has_attr("content") else ""
-
     return {
         "company_name": company_name,
         "employees": employees,
