@@ -66,12 +66,14 @@
         </td>
         <td class="company-name">{{ f.get("company_name", "未設定") }}</td>
         <td>
-          {% if f.get('url_top') and f.get('url_top') != '#' %}
-            <a href="{{ f['url_top'] }}" target="_blank">🌐 サイトを開く</a>
+          {% if f.get('eyecatch_image') and f.get('url_top') %}
+            <a href="{{ f['url_top'] }}" target="_blank">
+              <img src="{{ f['eyecatch_image'] }}" alt="アイキャッチ画像" style="max-height: 50px; max-width: 80px; object-fit: cover;">
+            </a>
           {% else %}
             <span class="empty-data">未設定</span>
           {% endif %}
-        </td>
+        </td>      
         <td>
           {% if f.get('url_form') and f.get('url_form') != '#' %}
             <a href="{{ f['url_form'] }}" target="_blank">📝 フォームを開く</a>

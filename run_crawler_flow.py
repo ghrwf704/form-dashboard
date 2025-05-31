@@ -14,6 +14,16 @@ from selenium.webdriver.support import expected_conditions as EC
 import time
 from datetime import datetime
 
+def get_og_image_from_url(url):
+    try:
+        headers = {"User-Agent": "Mozilla/5.0"}
+        response = requests.get(url, headers=headers, timeout=5)
+        soup = BeautifulSoup(response.text, "html.parser")
+        tag = soup.find("meta", property="og:image")
+        return tag["content"] if tag else None
+    except Exception:
+        return None
+
 # 定数
 MAX_NEW_URLS_PER_OWNER = 10
 MAX_TOTAL_URLS_PER_DAY = 100
@@ -71,9 +81,15 @@ def collect_company_info():
             driver.get(url_1)
             time.sleep(5)
             current_url = driver.current_url
+            topurl = urlparse(current_url)
+            topurl = f"{topurl.scheme}://{topurl.netloc}"
+            result["url_top"] = topurl
+            result["eyecatch_image"] = get_og_image_from_url(topurl)
             text = driver.page_source
             body_element = driver.find_element(By.TAG_NAME, "body")
             full_text = body_element.get_attribute("innerText")
+            driver.get(topurl)
+            top_text = driver.page_source
             form_data = {
                 "company_name": url_doc.get("pre_company_name"),
                 
@@ -112,13 +128,13 @@ def collect_company_info():
             
                 "category_keywords": extract_field([
                     r'<meta name="keywords" content="(.*?)"'
-                ], text),
+                ], top_text),
             
                 "description": extract_field([
                     r'<meta name="description" content="(.*?)"'
-                ], text),
+                ], top_text),
             
-                "url_top": current_url,
+                "url_top": topurl,
             
                 "url_form": extract_field([
                     r"(https?://[\w/:%#\$&\?\(\)~\.\=\+\-]+(contact|inquiry|form)[^\"'<>]*)"
