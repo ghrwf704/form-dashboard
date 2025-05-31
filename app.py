@@ -200,36 +200,49 @@ def update_company():
 
     return redirect(url_for("index"))
 
+import csv
+from io import StringIO
+from flask import Response
+from bson import ObjectId
+
 @app.route("/export_csv")
 @login_required
 def export_csv():
-    from io import StringIO
-    import csv
+    # MongoDB からデータを取得
+    companies = list(collection.find({"owner": current_user.id}))
 
+    # CSV の内容を構築
     output = StringIO()
     writer = csv.writer(output)
-
+    
     # ヘッダー
-    writer.writerow(["企業名", "トップページ", "フォーム", "住所", "電話番号", "FAX", "カテゴリ", "説明", "営業ステータス", "営業メモ"])
+    writer.writerow([
+        "企業名", "トップページURL", "フォームURL", "住所", "電話番号", "FAX",
+        "カテゴリ", "説明", "営業ステータス", "営業メモ"
+    ])
 
-    for f in forms_collection.find({"owner": current_user.id}):
+    # 各行データ
+    for company in companies:
         writer.writerow([
-            f.get("company_name", ""),
-            f.get("url_top", ""),
-            f.get("url_form", ""),
-            f.get("address", ""),
-            f.get("tel", ""),
-            f.get("fax", ""),
-            f.get("category_keywords", ""),
-            f.get("description", ""),
-            f.get("sales_status", ""),
-            f.get("sales_note", "")
+            company.get("company_name", ""),
+            company.get("url_top", ""),
+            company.get("url_form", ""),
+            company.get("address", ""),
+            company.get("tel", ""),
+            company.get("fax", ""),
+            company.get("category_keywords", ""),
+            company.get("description", ""),
+            company.get("sales_status", ""),
+            company.get("sales_note", "")
         ])
 
-    response = make_response(output.getvalue())
-    response.headers["Content-Disposition"] = "attachment; filename=companies.csv"
-    response.headers["Content-type"] = "text/csv"
-    return response
+    # HTTPレスポンスとして返却
+    output.seek(0)
+    return Response(
+        output,
+        mimetype="text/csv",
+        headers={"Content-Disposition": "attachment;filename=companies.csv"}
+    )
 
 if __name__ == "__main__":
     app.run(debug=True)
