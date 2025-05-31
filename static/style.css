@@ -407,7 +407,6 @@ h1::after {
 /* ===== TABLE STYLES ===== */
 .table-container {
     border-radius: var(--border-radius);
-    overflow: hidden;
     box-shadow: var(--shadow-lg);
     background: rgba(255, 255, 255, 0.95);
     backdrop-filter: blur(10px);
