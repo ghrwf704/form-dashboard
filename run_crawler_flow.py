@@ -1,3 +1,4 @@
+#run_crawler_flow.py
 import configparser
 import re
 import requests
@@ -70,63 +71,62 @@ def collect_company_info():
             driver.get(url_1)
             time.sleep(5)
             current_url = driver.current_url
-            html = driver.page_source
-            text = driver.find_element(By.TAG_NAME, "body").text
-            parsed = urlparse(current_url)
-            url_top = f"{parsed.scheme}://{parsed.netloc}"
+            text = driver.page_source
+            body_element = driver.find_element(By.TAG_NAME, "body")
+            full_text = body_element.get_attribute("innerText")
             form_data = {
-                "company_name": extract_field([
-                    r"^[>]*(医療法人|社会福祉法人|学校法人|合同会社|有限会社|株式会社|クリニック)^[<]*"
-                ], html) or url_doc.get("pre_company_name"),
+                "company_name": url_doc.get("pre_company_name"),
                 
                 "employees": extract_field([
                     r"従業員数[:：\s]*([0-9,]+人?)", 
                     r"社員数[:：\s]*([0-9,]+人?)"
-                ], text),
+                ], full_text),
             
                 "capital": extract_field([
                     r"資本金[:：\s]*([0-9,億円万円]+)"
-                ], text),
+                ], full_text),
             
                 "address": extract_field([
-                    r"〒?\d{3}-\d{4}\s*(.{8,100})",
-                    r"(?:adress|住所|ADRESS|Adress|address|AdDRESS|Address)[:：\s]*(.{8,100})",
-                    r"^(?<zip>[\d-]+)(?<pref>.+[都道府県])(?<city>[^\s]+)\s*(?:(?<town>[^\s]+))?\s*(?:(?<bldg>.+))?"
-                ], text),
+                    r"((北海道|青森県|岩手県|宮城県|秋田県|山形県|福島県|茨城県|栃木県|群馬県|埼玉県|千葉県|東京都|神奈川県|新潟県|富山県|石川県|福井県|山梨県|長野県|岐阜県|静岡県|愛知県|三重県|滋賀県|京都府|大阪府|兵庫県|奈良県|和歌山県|鳥取県|島根県|岡山県|広島県|山口県|徳島県|香川県|愛媛県|高知県|福岡県|佐賀県|長崎県|熊本県|大分県|宮崎県|鹿児島県|沖縄県)[^、。・1-9１-９一-九]+)"
+                ], full_text),
             
                 "tel": extract_field([
                     r"(?:Tel|TEL|電話番号|電話|tel)[^\d]*([0-9０-９\-\s]{10,15})",
                     r"(\d{2,4}[-‐－―\s]?\d{2,4}[-‐－―\s]?\d{3,4})"
-                ], text),
+                ], full_text),
             
                 "fax": extract_field([
                     r"(?:FAX|Fax|ファックス|fax)[^\d]*([0-9０-９\-\s]{10,15})"
-                ], text),
+                ], full_text),
             
                 "founded": extract_field([
                     r"(?:設立|創立|創業)[:：\s]*(\d{4}年\d{1,2}月?)"
-                ], text),
+                ], full_text),
             
                 "ceo": extract_field([
                     r"(代表取締役[^\n]{0,20})", 
                     r"(CEO[^\n]{0,20})"
-                ], text),
+                ], full_text),
             
                 "email": extract_email(text),
             
                 "category_keywords": extract_field([
                     r'<meta name="keywords" content="(.*?)"'
-                ], html),
+                ], text),
             
                 "description": extract_field([
                     r'<meta name="description" content="(.*?)"'
-                ], html),
+                ], text),
             
-                "url_top": url_top,
-                "url_form": current_url,
+                "url_top": current_url,
+            
+                "url_form": extract_field([
+                    r"(https?://[\w/:%#\$&\?\(\)~\.\=\+\-]+(contact|inquiry|form)[^\"'<>]*)"
+                ], text),
             
                 "owner": username
             }
+
 
             forms_collection.insert_one(form_data)
             urls_collection.update_one({"_id": url_doc["_id"]}, {"$set": {"status": "収集済"}})
@@ -148,7 +148,9 @@ while True:
     chrome_options.add_argument("--no-sandbox")
     chrome_options.add_argument("--disable-dev-shm-usage")
     driver = webdriver.Chrome(options=chrome_options)
-
+    driver.minimize_window()
+    # ブラウザを最小化
+    print("ブラウザを最小化しました")
     if maxCountPerDay >= MAX_TOTAL_URLS_PER_DAY:
         print("✅ 最大URL収集数に達しました。終了します。")
         break
@@ -184,22 +186,30 @@ while True:
             print("📥 検索結果からURLを収集しています...")
             while len(collected_urls) < MAX_NEW_URLS_PER_OWNER:
                 time.sleep(5)
-                results = driver.find_elements(By.CSS_SELECTOR, "li.b_algo h2 a")
-                for a in results:
-                    href = a.get_attribute("href")
-                    title = a.text.strip()
-                    if href and not urls_collection.find_one({"url": href}):
-                        print(f"✅ 新規URL発見: {href}（候補: {title}）")
-                        urls_collection.insert_one({
-                            "url": href,
-                            "owner": username,
-                            "keyword": search_query,
-                            "status": "未収集",
-                            "pre_company_name": title
-                        })
-                        collected_urls.add(href)
-                        if len(collected_urls) >= MAX_NEW_URLS_PER_OWNER:
-                            break
+                results = driver.find_elements(By.CSS_SELECTOR, "li.b_algo")
+                
+                for result in results:
+                    try:
+                        a_tag = result.find_element(By.CSS_SELECTOR, "h2 a")
+                        href = a_tag.get_attribute("href")
+                        company_elem = result.find_element(By.CLASS_NAME, "tptt")
+                        company_name = company_elem.text.strip() if company_elem else ""
+            
+                        if href and not urls_collection.find_one({"url": href}):
+                            print(f"✅ 新規URL発見: {href}（企業名候補: {company_name}）")
+                            urls_collection.insert_one({
+                                "url": href,
+                                "owner": username,
+                                "keyword": search_query,
+                                "status": "未収集",
+                                "pre_company_name": company_name
+                            })
+                            collected_urls.add(href)
+            
+                            if len(collected_urls) >= MAX_NEW_URLS_PER_OWNER:
+                                break
+                    except Exception as e:
+                        print("⚠️ 検索結果処理中にエラー:", e)
 
                 next_btn = driver.find_elements(By.CSS_SELECTOR, "a[title='次のページ']")
                 if next_btn:
