@@ -41,6 +41,8 @@
         <th>FAX</th>
         <th>カテゴリ</th>
         <th>説明</th>
+        <th>営業ステータス</th>
+        <th>営業メモ</th>
       </tr>
     </thead>
     <tbody>
@@ -48,18 +50,20 @@
       <tr>
         <td>
           <a href="#"
-          class="edit-btn btn btn-outline-primary btn-sm"
-          data-id="{{ f['_id'] }}"
-          data-name="{{ f.get('company_name', '') }}"
-          data-address="{{ f.get('address', '') }}"
-          data-tel="{{ f.get('tel', '') }}"
-          data-fax="{{ f.get('fax', '') }}"
-          data-category="{{ f.get('category_keywords', '') }}"
-          data-description="{{ f.get('description', '') }}"
-          data-url-top="{{ f.get('url_top', '') }}"
-          data-url-form="{{ f.get('url_form', '') }}"
-          data-bs-toggle="modal"
-          data-bs-target="#editModal">✏️</a>
+            class="edit-btn btn btn-outline-primary btn-sm"
+            data-id="{{ f['_id'] }}"
+            data-name="{{ f.get('company_name', '') }}"
+            data-address="{{ f.get('address', '') }}"
+            data-tel="{{ f.get('tel', '') }}"
+            data-fax="{{ f.get('fax', '') }}"
+            data-category="{{ f.get('category_keywords', '') }}"
+            data-description="{{ f.get('description', '') }}"
+            data-url-top="{{ f.get('url_top', '') }}"
+            data-url-form="{{ f.get('url_form', '') }}"
+            data-status="{{ f.get('sales_status', '未連絡') }}"
+            data-note="{{ f.get('sales_note', '') }}"
+            data-bs-toggle="modal"
+            data-bs-target="#editModal">✏️</a>
           <a href="{{ url_for('delete_company', company_id=f['_id']) }}"
             onclick="return confirm('この企業データを削除してよろしいですか？');"
             class="btn btn-outline-danger btn-sm">🗑️</a>
@@ -69,7 +73,7 @@
           {% if f.get('url_top') and f.get('url_top') != '#' %}
             <a href="{{ f['url_top'] }}" target="_blank">
               {% if f.get('eyecatch_image') %}
-              <img src="{{ f['eyecatch_image'] }}" alt="アイキャッチ" class="eyecatch-img" />
+                <img src="{{ f['eyecatch_image'] }}" alt="アイキャッチ" class="eyecatch-img" style="width: 64px; height: 64px; object-fit: cover;" />
               {% else %}
                 🌐 サイトを開く
               {% endif %}
@@ -77,7 +81,7 @@
           {% else %}
             <span class="empty-data">未設定</span>
           {% endif %}
-        </td>              
+        </td>
         <td>
           {% if f.get('url_form') and f.get('url_form') != '#' %}
             <a href="{{ f['url_form'] }}" target="_blank">📝 フォームを開く</a>
@@ -90,6 +94,8 @@
         <td>{{ f.get("fax", "未設定") }}</td>
         <td class="category-tag">{{ f.get("category_keywords", "未設定") }}</td>
         <td>{{ f.get("description", "未設定") }}</td>
+        <td>{{ f.get("sales_status", "未連絡") }}</td>
+        <td>{{ f.get("sales_note", "") }}</td>
       </tr>
       {% endfor %}
     </tbody>
@@ -115,6 +121,14 @@
           <div class="mb-2"><label>FAX: <input type="text" class="form-control" name="fax" id="edit_fax"></label></div>
           <div class="mb-2"><label>カテゴリ: <input type="text" class="form-control" name="category_keywords" id="edit_category"></label></div>
           <div class="mb-2"><label>説明: <textarea class="form-control" name="description" id="edit_description"></textarea></label></div>
+          <div class="mb-2"><label>営業ステータス:
+            <select class="form-control" name="sales_status" id="edit_status">
+              <option value="未連絡">未連絡</option>
+              <option value="連絡済">連絡済</option>
+              <option value="保留">保留</option>
+            </select>
+          </label></div>
+          <div class="mb-2"><label>メモ: <textarea class="form-control" name="sales_note" id="edit_note"></textarea></label></div>
         </div>
         <div class="modal-footer">
           <button type="submit" class="btn btn-primary">保存</button>
@@ -124,6 +138,7 @@
     </form>
   </div>
 </div>
+{% endblock %}
 
 {% block scripts %}
 <script>
@@ -147,32 +162,28 @@
         const matchAddress = address.includes(addressFilter);
         const matchCategory = category.includes(categoryFilter);
 
-        if (matchName && matchAddress && matchCategory) {
-          row.style.display = "";
-        } else {
-          row.style.display = "none";
-        }
+        row.style.display = (matchName && matchAddress && matchCategory) ? "" : "none";
       });
     }
 
     nameInput.addEventListener("input", filterTable);
     addressInput.addEventListener("input", filterTable);
     categoryInput.addEventListener("input", filterTable);
-  });
-</script>
-{% endblock %}
-<script>
-  document.querySelectorAll(".edit-btn").forEach(btn => {
-    btn.addEventListener("click", function () {
-      document.getElementById("edit_id").value = this.dataset.id || "";
-      document.getElementById("edit_name").value = this.dataset.name || "";
-      document.getElementById("edit_url_top").value = this.dataset.urlTop || "";
-      document.getElementById("edit_url_form").value = this.dataset.urlForm || "";      
-      document.getElementById("edit_address").value = this.dataset.address || "";
-      document.getElementById("edit_tel").value = this.dataset.tel || "";
-      document.getElementById("edit_fax").value = this.dataset.fax || "";
-      document.getElementById("edit_category").value = this.dataset.category || "";
-      document.getElementById("edit_description").value = this.dataset.description || "";
+
+    document.querySelectorAll(".edit-btn").forEach(btn => {
+      btn.addEventListener("click", function () {
+        document.getElementById("edit_id").value = this.dataset.id || "";
+        document.getElementById("edit_name").value = this.dataset.name || "";
+        document.getElementById("edit_url_top").value = this.dataset.urlTop || "";
+        document.getElementById("edit_url_form").value = this.dataset.urlForm || "";
+        document.getElementById("edit_address").value = this.dataset.address || "";
+        document.getElementById("edit_tel").value = this.dataset.tel || "";
+        document.getElementById("edit_fax").value = this.dataset.fax || "";
+        document.getElementById("edit_category").value = this.dataset.category || "";
+        document.getElementById("edit_description").value = this.dataset.description || "";
+        document.getElementById("edit_status").value = this.dataset.status || "未連絡";
+        document.getElementById("edit_note").value = this.dataset.note || "";
+      });
     });
   });
 </script>

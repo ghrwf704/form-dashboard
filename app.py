@@ -185,5 +185,30 @@ def edit_company(company_id):
 
     return render_template("edit_company.html", company=company)
 
+from bson import ObjectId
+
+@app.route("/update_company", methods=["POST"])
+def update_company():
+    company_id = request.form.get("company_id")
+    update_data = {
+        "company_name": request.form.get("company_name"),
+        "url_top": request.form.get("url_top"),
+        "url_form": request.form.get("url_form"),
+        "address": request.form.get("address"),
+        "tel": request.form.get("tel"),
+        "fax": request.form.get("fax"),
+        "category_keywords": request.form.get("category_keywords"),
+        "description": request.form.get("description"),
+        "sales_status": request.form.get("sales_status"),
+        "sales_note": request.form.get("sales_note")
+    }
+
+    forms_collection.update_one(
+        {"_id": ObjectId(company_id)},
+        {"$set": update_data}
+    )
+
+    return redirect(url_for("index"))
+
 if __name__ == "__main__":
     app.run(debug=True)
