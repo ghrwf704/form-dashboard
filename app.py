@@ -249,5 +249,43 @@ def export_csv():
 def export_excel():
     return redirect(url_for("export_excel_filtered"))
 
+from flask_login import login_required, current_user
+from io import BytesIO
+import pandas as pd
+from flask import send_file
+
+@app.route("/export_excel")
+@login_required
+def export_excel():
+    user_forms = list(forms_collection.find({"owner": current_user.id}))
+
+    if not user_forms:
+        return "No data available", 404
+
+    # 整形処理
+    data = []
+    for f in user_forms:
+        data.append({
+            "企業名": f.get("company_name", ""),
+            "トップページ": f.get("url_top", ""),
+            "フォームURL": f.get("url_form", ""),
+            "住所": f.get("address", ""),
+            "電話番号": f.get("tel", ""),
+            "FAX": f.get("fax", ""),
+            "カテゴリ": f.get("category_keywords", ""),
+            "説明": f.get("description", ""),
+            "営業ステータス": f.get("sales_status", ""),
+            "営業メモ": f.get("sales_note", "")
+        })
+
+    df = pd.DataFrame(data)
+    output = BytesIO()
+    with pd.ExcelWriter(output, engine="xlsxwriter") as writer:
+        df.to_excel(writer, sheet_name="企業情報", index=False)
+
+    output.seek(0)
+    return send_file(output, as_attachment=True, download_name="企業情報一覧.xlsx", mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+
+
 if __name__ == "__main__":
     app.run(debug=True)
