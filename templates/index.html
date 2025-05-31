@@ -11,7 +11,10 @@
   <p>🔍 <strong>Bing検索キーワード:</strong> 「{{ active_keywords | join(' ') }} 概要 情報 -一覧 -ランキング -まとめ -比較」</p>
 </div>
 
-<h1>🏢 企業一覧</h1>
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h1>🏢 企業一覧</h1>
+  <a href="{{ url_for('export_csv') }}" class="btn btn-outline-success">📥 CSV出力</a>
+</div>
 
 <!-- フィルターフォーム -->
 <div class="filter-box mb-4">

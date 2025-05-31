@@ -200,5 +200,36 @@ def update_company():
 
     return redirect(url_for("index"))
 
+@app.route("/export_csv")
+@login_required
+def export_csv():
+    from io import StringIO
+    import csv
+
+    output = StringIO()
+    writer = csv.writer(output)
+
+    # ヘッダー
+    writer.writerow(["企業名", "トップページ", "フォーム", "住所", "電話番号", "FAX", "カテゴリ", "説明", "営業ステータス", "営業メモ"])
+
+    for f in forms_collection.find({"owner": current_user.id}):
+        writer.writerow([
+            f.get("company_name", ""),
+            f.get("url_top", ""),
+            f.get("url_form", ""),
+            f.get("address", ""),
+            f.get("tel", ""),
+            f.get("fax", ""),
+            f.get("category_keywords", ""),
+            f.get("description", ""),
+            f.get("sales_status", ""),
+            f.get("sales_note", "")
+        ])
+
+    response = make_response(output.getvalue())
+    response.headers["Content-Disposition"] = "attachment; filename=companies.csv"
+    response.headers["Content-type"] = "text/csv"
+    return response
+
 if __name__ == "__main__":
     app.run(debug=True)
