@@ -48,16 +48,18 @@
       <tr>
         <td>
           <a href="#"
-            class="edit-btn btn btn-outline-primary btn-sm"
-            data-id="{{ f['_id'] }}"
-            data-name="{{ f.get('company_name', '') }}"
-            data-address="{{ f.get('address', '') }}"
-            data-tel="{{ f.get('tel', '') }}"
-            data-fax="{{ f.get('fax', '') }}"
-            data-category="{{ f.get('category_keywords', '') }}"
-            data-description="{{ f.get('description', '') }}"
-            data-bs-toggle="modal"
-            data-bs-target="#editModal">✏️</a>
+          class="edit-btn btn btn-outline-primary btn-sm"
+          data-id="{{ f['_id'] }}"
+          data-name="{{ f.get('company_name', '') }}"
+          data-address="{{ f.get('address', '') }}"
+          data-tel="{{ f.get('tel', '') }}"
+          data-fax="{{ f.get('fax', '') }}"
+          data-category="{{ f.get('category_keywords', '') }}"
+          data-description="{{ f.get('description', '') }}"
+          data-url-top="{{ f.get('url_top', '') }}"
+          data-url-form="{{ f.get('url_form', '') }}"
+          data-bs-toggle="modal"
+          data-bs-target="#editModal">✏️</a>
           <a href="{{ url_for('delete_company', company_id=f['_id']) }}"
             onclick="return confirm('この企業データを削除してよろしいですか？');"
             class="btn btn-outline-danger btn-sm">🗑️</a>
@@ -100,6 +102,8 @@
         <div class="modal-body">
           <input type="hidden" name="company_id" id="edit_id">
           <div class="mb-2"><label>企業名: <input type="text" class="form-control" name="company_name" id="edit_name"></label></div>
+          <div class="mb-2"><label>トップページURL: <input type="text" class="form-control" name="url_top" id="edit_url_top"></label></div>
+          <div class="mb-2"><label>フォームURL: <input type="text" class="form-control" name="url_form" id="edit_url_form"></label></div>
           <div class="mb-2"><label>住所: <input type="text" class="form-control" name="address" id="edit_address"></label></div>
           <div class="mb-2"><label>電話番号: <input type="text" class="form-control" name="tel" id="edit_tel"></label></div>
           <div class="mb-2"><label>FAX: <input type="text" class="form-control" name="fax" id="edit_fax"></label></div>
@@ -156,6 +160,8 @@
     btn.addEventListener("click", function () {
       document.getElementById("edit_id").value = this.dataset.id || "";
       document.getElementById("edit_name").value = this.dataset.name || "";
+      document.getElementById("edit_url_top").value = this.dataset.urlTop || "";
+      document.getElementById("edit_url_form").value = this.dataset.urlForm || "";      
       document.getElementById("edit_address").value = this.dataset.address || "";
       document.getElementById("edit_tel").value = this.dataset.tel || "";
       document.getElementById("edit_fax").value = this.dataset.fax || "";
