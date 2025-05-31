@@ -16,14 +16,22 @@
 <!-- フィルターフォーム -->
 <div class="filter-box mb-4">
   <form id="filter-form" class="row g-2">
-    <div class="col-md-4">
+    <div class="col-md-3">
       <input type="text" class="form-control" placeholder="企業名でフィルター" id="filter-name">
     </div>
-    <div class="col-md-4">
+    <div class="col-md-3">
       <input type="text" class="form-control" placeholder="住所でフィルター" id="filter-address">
     </div>
-    <div class="col-md-4">
+    <div class="col-md-3">
       <input type="text" class="form-control" placeholder="カテゴリでフィルター" id="filter-category">
+    </div>
+    <div class="col-md-3">
+      <select class="form-control" id="filter-status">
+        <option value="">営業ステータスでフィルター</option>
+        <option value="未連絡">未連絡</option>
+        <option value="連絡済">連絡済</option>
+        <option value="保留">保留</option>
+      </select>
     </div>
   </form>
 </div>
@@ -94,7 +102,7 @@
         <td>{{ f.get("fax", "未設定") }}</td>
         <td class="category-tag">{{ f.get("category_keywords", "未設定") }}</td>
         <td>{{ f.get("description", "未設定") }}</td>
-        <td>{{ f.get("sales_status", "未連絡") }}</td>
+        <td class="sales-status">{{ f.get("sales_status", "未連絡") }}</td>
         <td>{{ f.get("sales_note", "") }}</td>
       </tr>
       {% endfor %}
@@ -138,53 +146,44 @@
     </form>
   </div>
 </div>
-{% endblock %}
 
-{% block scripts %}
 <script>
   document.addEventListener("DOMContentLoaded", function () {
     const nameInput = document.getElementById("filter-name");
     const addressInput = document.getElementById("filter-address");
     const categoryInput = document.getElementById("filter-category");
+    const statusSelect = document.getElementById("filter-status");
     const rows = document.querySelectorAll("table tbody tr");
 
     function filterTable() {
       const nameFilter = nameInput.value.toLowerCase();
       const addressFilter = addressInput.value.toLowerCase();
       const categoryFilter = categoryInput.value.toLowerCase();
+      const statusFilter = statusSelect.value;
 
       rows.forEach(row => {
         const name = row.querySelector(".company-name")?.textContent.toLowerCase() || "";
         const address = row.cells[4]?.textContent.toLowerCase() || "";
         const category = row.querySelector(".category-tag")?.textContent.toLowerCase() || "";
+        const status = row.querySelector(".sales-status")?.textContent || "";
 
         const matchName = name.includes(nameFilter);
         const matchAddress = address.includes(addressFilter);
         const matchCategory = category.includes(categoryFilter);
+        const matchStatus = !statusFilter || status === statusFilter;
 
-        row.style.display = (matchName && matchAddress && matchCategory) ? "" : "none";
+        if (matchName && matchAddress && matchCategory && matchStatus) {
+          row.style.display = "";
+        } else {
+          row.style.display = "none";
+        }
       });
     }
 
     nameInput.addEventListener("input", filterTable);
     addressInput.addEventListener("input", filterTable);
     categoryInput.addEventListener("input", filterTable);
-
-    document.querySelectorAll(".edit-btn").forEach(btn => {
-      btn.addEventListener("click", function () {
-        document.getElementById("edit_id").value = this.dataset.id || "";
-        document.getElementById("edit_name").value = this.dataset.name || "";
-        document.getElementById("edit_url_top").value = this.dataset.urlTop || "";
-        document.getElementById("edit_url_form").value = this.dataset.urlForm || "";
-        document.getElementById("edit_address").value = this.dataset.address || "";
-        document.getElementById("edit_tel").value = this.dataset.tel || "";
-        document.getElementById("edit_fax").value = this.dataset.fax || "";
-        document.getElementById("edit_category").value = this.dataset.category || "";
-        document.getElementById("edit_description").value = this.dataset.description || "";
-        document.getElementById("edit_status").value = this.dataset.status || "未連絡";
-        document.getElementById("edit_note").value = this.dataset.note || "";
-      });
-    });
+    statusSelect.addEventListener("change", filterTable);
   });
 </script>
 {% endblock %}
