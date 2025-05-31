@@ -244,5 +244,10 @@ def export_csv():
         headers={"Content-Disposition": "attachment;filename=companies.csv"}
     )
 
+@app.route("/export_excel")
+@login_required
+def export_excel():
+    return redirect(url_for("export_excel_filtered"))
+
 if __name__ == "__main__":
     app.run(debug=True)
