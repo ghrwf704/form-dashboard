@@ -13,7 +13,10 @@
 
 <div class="d-flex justify-content-between align-items-center mb-3">
   <h1>🏢 企業一覧</h1>
-  <a href="{{ url_for('export_csv') }}" class="btn btn-outline-success">📥 CSV出力</a>
+  <div>
+    <a href="{{ url_for('export_csv') }}" class="btn btn-outline-success">📥 CSV出力</a>
+    <a href="#" class="btn btn-outline-secondary" id="export-visible-csv">📄 表示中のCSV出力</a>
+  </div>
 </div>
 
 <!-- フィルターフォーム -->
@@ -187,6 +190,36 @@
     addressInput.addEventListener("input", filterTable);
     categoryInput.addEventListener("input", filterTable);
     statusSelect.addEventListener("change", filterTable);
+
+    document.getElementById("export-visible-csv").addEventListener("click", function () {
+      const rows = document.querySelectorAll("table tbody tr");
+      let csv = "企業名,トップページ,フォームURL,住所,電話番号,FAX,カテゴリ,説明,営業ステータス,営業メモ\n";
+
+      rows.forEach(row => {
+        if (row.style.display !== "none") {
+          const cells = row.querySelectorAll("td");
+          const values = [
+            cells[1]?.innerText.trim() || "",
+            cells[2]?.innerText.trim() || "",
+            cells[3]?.innerText.trim() || "",
+            cells[4]?.innerText.trim() || "",
+            cells[5]?.innerText.trim() || "",
+            cells[6]?.innerText.trim() || "",
+            cells[7]?.innerText.trim() || "",
+            cells[8]?.innerText.trim() || "",
+            cells[9]?.innerText.trim() || "",
+            cells[10]?.innerText.trim() || ""
+          ];
+          csv += values.map(v => `"${v.replace(/\n/g, " ")}`").join(",") + "\n";
+        }
+      });
+
+      const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = "filtered_companies.csv";
+      link.click();
+    });
   });
 </script>
 {% endblock %}
