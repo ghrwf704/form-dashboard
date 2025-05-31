@@ -286,6 +286,65 @@ def export_excel():
     output.seek(0)
     return send_file(output, as_attachment=True, download_name="企業情報一覧.xlsx", mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
 
+from flask import send_file
+import io
+import pandas as pd
+
+@app.route("/export_excel")
+@login_required
+def export_excel():
+    # MongoDBからデータ取得
+    data = list(collection.find({"owner": current_user.id}))
+
+    # 任意のフィールドだけ抽出
+    for item in data:
+        item["_id"] = str(item["_id"])  # ObjectIdを文字列に変換
+
+    df = pd.DataFrame(data)
+
+    # 欲しい列だけに絞る（例）
+    df = df[[
+        "company_name", "address", "tel", "fax",
+        "category_keywords", "description", "sales_status", "sales_note"
+    ]]
+
+    output = io.BytesIO()
+    with pd.ExcelWriter(output, engine="xlsxwriter") as writer:
+        df.to_excel(writer, index=False, sheet_name="Companies")
+
+from flask import send_file
+import io
+import pandas as pd
+
+@app.route("/export_excel")
+@login_required
+def export_excel():
+    # MongoDBからデータ取得
+    data = list(collection.find({"owner": current_user.id}))
+
+    # 任意のフィールドだけ抽出
+    for item in data:
+        item["_id"] = str(item["_id"])  # ObjectIdを文字列に変換
+
+    df = pd.DataFrame(data)
+
+    # 欲しい列だけに絞る（例）
+    df = df[[
+        "company_name", "address", "tel", "fax",
+        "category_keywords", "description", "sales_status", "sales_note"
+    ]]
+
+    output = io.BytesIO()
+    with pd.ExcelWriter(output, engine="xlsxwriter") as writer:
+        df.to_excel(writer, index=False, sheet_name="Companies")
+
+    output.seek(0)
+    return send_file(
+        output,
+        download_name="company_list.xlsx",
+        as_attachment=True,
+        mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
 
 if __name__ == "__main__":
     app.run(debug=True)
