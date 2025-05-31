@@ -150,6 +150,13 @@ nav a:active {
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
 }
+.eyecatch-img {
+    width: 120px;
+    height: 80px;
+    object-fit: cover;
+    border-radius: 8px;
+    display: block;
+}
 
 .weather-box span {
     font-weight: 600;

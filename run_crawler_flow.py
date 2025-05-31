@@ -140,7 +140,8 @@ def collect_company_info():
                 "url_form": extract_field([
                     r"(https?://[\w/:%#\$&\?\(\)~\.\=\+\-]+(contact|inquiry|form)[^\"'<>]*)"
                 ], text),
-            
+                "eyecatch_image": result.get("eyecatch_image"),
+
                 "owner": username
             }
 
