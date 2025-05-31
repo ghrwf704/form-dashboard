@@ -159,13 +159,11 @@ nav a:active {
 /* ===== MAIN CONTENT STYLES ===== */
 .main-content {
     background: var(--glass-bg);
-    backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
     padding: 3rem;
     border-radius: var(--border-radius);
     box-shadow: var(--shadow-xl);
     border: 1px solid var(--glass-border);
-    position: relative;
     z-index: 10;
     animation: fadeInUp 0.8s cubic-bezier(0.4, 0, 0.2, 1);
 }
