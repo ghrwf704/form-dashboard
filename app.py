@@ -142,24 +142,6 @@ def delete_company(company_id):
         "owner": current_user.id
     })
     return redirect(url_for("index"))
-@app.route("/update_company", methods=["POST"])
-@login_required
-def update_company():
-    company_id = request.form.get("company_id")
-    if not company_id:
-        return redirect(url_for("index"))
-
-    updated = {
-        "company_name": request.form.get("company_name"),
-        "address": request.form.get("address"),
-        "tel": request.form.get("tel"),
-        "fax": request.form.get("fax"),
-        "category_keywords": request.form.get("category_keywords"),
-        "description": request.form.get("description")
-    }
-    collection.update_one({"_id": ObjectId(company_id), "owner": current_user.id}, {"$set": updated})
-    return redirect(url_for("index"))
-
 
 @app.route("/edit_company/<company_id>", methods=["GET", "POST"])
 @login_required
@@ -186,10 +168,13 @@ def edit_company(company_id):
     return render_template("edit_company.html", company=company)
 
 from bson import ObjectId
-
 @app.route("/update_company", methods=["POST"])
+@login_required
 def update_company():
     company_id = request.form.get("company_id")
+    if not company_id:
+        return redirect(url_for("index"))
+
     update_data = {
         "company_name": request.form.get("company_name"),
         "url_top": request.form.get("url_top"),
@@ -203,6 +188,11 @@ def update_company():
         "sales_note": request.form.get("sales_note")
     }
 
+    collection.update_one(
+        {"_id": ObjectId(company_id), "owner": current_user.id},
+        {"$set": update_data}
+    )
+    return redirect(url_for("index"))
     forms_collection.update_one(
         {"_id": ObjectId(company_id)},
         {"$set": update_data}
