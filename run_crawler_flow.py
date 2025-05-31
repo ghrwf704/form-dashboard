@@ -83,6 +83,7 @@ def collect_company_info():
             current_url = driver.current_url
             topurl = urlparse(current_url)
             topurl = f"{topurl.scheme}://{topurl.netloc}"
+            result = {}  # 空の辞書として初期化
             result["url_top"] = topurl
             result["eyecatch_image"] = get_og_image_from_url(topurl)
             text = driver.page_source
