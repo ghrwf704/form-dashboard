@@ -15,6 +15,7 @@
   <h1>🏢 企業一覧</h1>
   <div>
     <a href="{{ url_for('export_csv') }}" class="btn btn-outline-success">📥 CSV出力</a>
+    <a href="{{ url_for('export_excel') }}" class="btn btn-outline-primary">📊 Excel出力</a>
     <a href="#" class="btn btn-outline-secondary" id="export-visible-csv">📄 表示中のCSV出力</a>
   </div>
 </div>
@@ -210,7 +211,7 @@
             cells[9]?.innerText.trim() || "",
             cells[10]?.innerText.trim() || ""
           ];
-          csv += values.map(v => `"${v.replace(/\n/g, " ")}"`).join(",") + "\n";
+          csv += values.map(v => `"${v.replace(/\n/g, " ")}` ).join(",") + "\n";
         }
       });
 
