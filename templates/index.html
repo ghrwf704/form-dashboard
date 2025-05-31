@@ -151,4 +151,17 @@
   });
 </script>
 {% endblock %}
+<script>
+  document.querySelectorAll(".edit-btn").forEach(btn => {
+    btn.addEventListener("click", function () {
+      document.getElementById("edit_id").value = this.dataset.id || "";
+      document.getElementById("edit_name").value = this.dataset.name || "";
+      document.getElementById("edit_address").value = this.dataset.address || "";
+      document.getElementById("edit_tel").value = this.dataset.tel || "";
+      document.getElementById("edit_fax").value = this.dataset.fax || "";
+      document.getElementById("edit_category").value = this.dataset.category || "";
+      document.getElementById("edit_description").value = this.dataset.description || "";
+    });
+  });
+</script>
 {% endblock %}
