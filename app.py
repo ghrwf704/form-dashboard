@@ -247,10 +247,10 @@ def export_csv():
 
 from flask import Flask, send_file
 import io
-@app.route("/export_excel", methods=["POST"])
+@app.route("/export_excel", methods=["GET", "POST"])
 @login_required
 def export_excel():
-    filter_status = request.form.get("filter_status")
+    filter_status = request.values.get("filter_status", "全て")
     query = {"owner": current_user.id}
     if filter_status and filter_status != "全て":
         query["sales_status"] = filter_status
