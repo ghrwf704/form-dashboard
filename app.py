@@ -203,12 +203,18 @@ def update_company():
 
 from flask import request, send_file
 from io import BytesIO
+from flask import request, send_file
+from flask_login import login_required
+from io import BytesIO
+import pandas as pd
+
 @app.route("/export_excel_filtered", methods=["POST"])
 @login_required
 def export_excel_filtered():
-    filters = request.json
+    filters = request.get_json(force=True)
     query = {}
 
+    # フィルター条件に応じてMongoDBクエリを構築
     if filters.get("name"):
         query["company_name"] = {"$regex": filters["name"], "$options": "i"}
     if filters.get("address"):
@@ -218,8 +224,9 @@ def export_excel_filtered():
     if filters.get("status"):
         query["sales_status"] = filters["status"]
 
-    # MongoDBから条件付きでデータ取得
+    # データ取得
     results = list(mongo.db.forms.find(query, {
+        "_id": 0,
         "company_name": 1,
         "url_top": 1,
         "url_form": 1,
@@ -230,17 +237,18 @@ def export_excel_filtered():
         "description": 1,
         "sales_status": 1,
         "sales_note": 1,
-        "_id": 0
     }))
 
+    # DataFrameに変換
     df = pd.DataFrame(results)
 
-    # Excelファイルに出力
+    # Excel出力
     output = BytesIO()
     with pd.ExcelWriter(output, engine="xlsxwriter") as writer:
-        df.to_excel(writer, index=False, sheet_name="Companies")
+        df.to_excel(writer, sheet_name="Filtered", index=False)
 
-    output.seek(0)
+    output.seek(0)  # 重要: ファイル先頭に戻る
+
     return send_file(
         output,
         as_attachment=True,
