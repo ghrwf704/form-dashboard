@@ -252,6 +252,7 @@
       link.href = URL.createObjectURL(blob);
       link.download = "filtered_companies.csv";
       link.click();
+      console.log("Blob type:", blob.type); // ← これを確認
     });
   });
 </script>
