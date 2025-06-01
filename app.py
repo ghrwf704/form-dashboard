@@ -5,6 +5,7 @@ import pymongo
 import certifi
 import bcrypt
 import configparser
+import pandas as pd
 
 # 設定ファイル読み込み
 config = configparser.ConfigParser()
@@ -244,74 +245,27 @@ def export_csv():
         headers={"Content-Disposition": "attachment;filename=companies.csv"}
     )
 
-@app.route("/export_excel")
-@login_required
-def export_excel():
-    return redirect(url_for("export_excel_filtered"))
-
-from flask_login import login_required, current_user
-from io import BytesIO
-import pandas as pd
-from flask import send_file
-
-@app.route("/export_excel")
-@login_required
-def export_excel():
-    user_forms = list(forms_collection.find({"owner": current_user.id}))
-
-    if not user_forms:
-        return "No data available", 404
-
-    # 整形処理
-    data = []
-    for f in user_forms:
-        data.append({
-            "企業名": f.get("company_name", ""),
-            "トップページ": f.get("url_top", ""),
-            "フォームURL": f.get("url_form", ""),
-            "住所": f.get("address", ""),
-            "電話番号": f.get("tel", ""),
-            "FAX": f.get("fax", ""),
-            "カテゴリ": f.get("category_keywords", ""),
-            "説明": f.get("description", ""),
-            "営業ステータス": f.get("sales_status", ""),
-            "営業メモ": f.get("sales_note", "")
-        })
-
-    df = pd.DataFrame(data)
-    output = BytesIO()
-    with pd.ExcelWriter(output, engine="xlsxwriter") as writer:
-        df.to_excel(writer, sheet_name="企業情報", index=False)
-
-    output.seek(0)
-    return send_file(output, as_attachment=True, download_name="企業情報一覧.xlsx", mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
-
-from flask import send_file
+from flask import Flask, send_file
 import io
-import pandas as pd
-
-@app.route("/export_excel")
+@app.route("/export_excel", methods=["POST"])
 @login_required
 def export_excel():
-    # MongoDBからデータ取得
-    data = list(collection.find({"owner": current_user.id}))
+    filter_status = request.form.get("filter_status")
+    query = {"owner": current_user.id}
+    if filter_status and filter_status != "全て":
+        query["sales_status"] = filter_status
 
-    # 任意のフィールドだけ抽出
+    data = list(collection.find(query))
     for item in data:
-        item["_id"] = str(item["_id"])  # ObjectIdを文字列に変換
-
+        item["_id"] = str(item["_id"])
     df = pd.DataFrame(data)
-
-    # 欲しい列だけに絞る（例）
     df = df[[
-        "company_name", "address", "tel", "fax",
+        "company_name", "url_top", "url_form", "address", "tel", "fax",
         "category_keywords", "description", "sales_status", "sales_note"
     ]]
-
     output = io.BytesIO()
     with pd.ExcelWriter(output, engine="xlsxwriter") as writer:
         df.to_excel(writer, index=False, sheet_name="Companies")
-
     output.seek(0)
     return send_file(
         output,
