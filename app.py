@@ -6,12 +6,16 @@ import certifi
 import bcrypt
 import configparser
 import pandas as pd
+from flask_pymongo import PyMongo
 
 # 設定ファイル読み込み
 config = configparser.ConfigParser()
 config.read("setting.ini", encoding="utf-8")
 
 app = Flask(__name__)
+app.config["MONGO_URI"] = os.environ.get("MONGO_URI")  # または直接MongoDBのURLを書く
+mongo = PyMongo(app)
+
 app.secret_key = config["auth"].get("secret_key", "fallback_key")
 
 MONGO_URI = "mongodb+srv://ykeikeikie:qMUerl78WgsEEOWA@cluster0.helfbov.mongodb.net/?retryWrites=true&w=majority"
