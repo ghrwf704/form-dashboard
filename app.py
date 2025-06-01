@@ -201,101 +201,24 @@ def update_company():
 
     return redirect(url_for("index"))
 
-import csv
-from io import StringIO
-from flask import Response
-from bson import ObjectId
-
-@app.route("/export_csv")
+@app.route("/export_excel_from_view", methods=["POST"])
 @login_required
-def export_csv():
-    # MongoDB からデータを取得
-    companies = list(collection.find({"owner": current_user.id}))
+def export_excel_from_view():
+    json_data = request.get_json()
+    rows = json_data.get("rows", [])
 
-    # CSV の内容を構築
-    output = StringIO()
-    writer = csv.writer(output)
-    
-    # ヘッダー
-    writer.writerow([
-        "企業名", "トップページURL", "フォームURL", "住所", "電話番号", "FAX",
-        "カテゴリ", "説明", "営業ステータス", "営業メモ"
-    ])
+    if not rows:
+        return "データがありません", 400
 
-    # 各行データ
-    for company in companies:
-        writer.writerow([
-            company.get("company_name", ""),
-            company.get("url_top", ""),
-            company.get("url_form", ""),
-            company.get("address", ""),
-            company.get("tel", ""),
-            company.get("fax", ""),
-            company.get("category_keywords", ""),
-            company.get("description", ""),
-            company.get("sales_status", ""),
-            company.get("sales_note", "")
-        ])
-
-    # HTTPレスポンスとして返却
-    output.seek(0)
-    return Response(
-        output,
-        mimetype="text/csv",
-        headers={"Content-Disposition": "attachment;filename=companies.csv"}
-    )
-
-from flask import Flask, send_file
-import io
-@app.route("/export_excel", methods=["GET", "POST"])
-@login_required
-def export_excel():
-    filter_status = request.values.get("filter_status", "全て")
-    query = {"owner": current_user.id}
-    if filter_status and filter_status != "全て":
-        query["sales_status"] = filter_status
-
-    data = list(collection.find(query))
-    for item in data:
-        item["_id"] = str(item["_id"])
-    df = pd.DataFrame(data)
-    df = df[[
-        "company_name", "url_top", "url_form", "address", "tel", "fax",
-        "category_keywords", "description", "sales_status", "sales_note"
-    ]]
+    df = pd.DataFrame(rows)
     output = io.BytesIO()
     with pd.ExcelWriter(output, engine="xlsxwriter") as writer:
-        df.to_excel(writer, index=False, sheet_name="Companies")
-    output.seek(0)
-    return send_file(
-        output,
-        download_name="company_list.xlsx",
-        as_attachment=True,
-        mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-    )
-
-@app.route("/export_excel_all", methods=["GET"])
-@login_required
-def export_excel_all():
-    query = {"owner": current_user.id}
-    data = list(collection.find(query))
-    for item in data:
-        item["_id"] = str(item["_id"])
-
-    df = pd.DataFrame(data)
-    df = df[[
-        "company_name", "url_top", "url_form", "address", "tel", "fax",
-        "category_keywords", "description", "sales_status", "sales_note"
-    ]]
-
-    output = io.BytesIO()
-    with pd.ExcelWriter(output, engine="xlsxwriter") as writer:
-        df.to_excel(writer, index=False, sheet_name="全企業一覧")
+        df.to_excel(writer, index=False, sheet_name="Filtered")
 
     output.seek(0)
     return send_file(
         output,
-        download_name="全企業一覧.xlsx",
+        download_name="filtered_companies.xlsx",
         as_attachment=True,
         mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     )
