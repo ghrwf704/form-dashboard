@@ -143,10 +143,28 @@ from bson import ObjectId
 @app.route("/delete_company/<company_id>")
 @login_required
 def delete_company(company_id):
+    # 削除対象の企業情報を取得
+    company = collection.find_one({
+        "_id": ObjectId(company_id),
+        "owner": current_user.id
+    })
+    if not company:
+        return redirect(url_for("index"))
+
+    # 企業データをformsコレクションから削除
     collection.delete_one({
         "_id": ObjectId(company_id),
         "owner": current_user.id
     })
+
+    # urlsコレクションからも削除（企業名とownerが一致するもの）
+    company_name = company.get("company_name")
+    if company_name:
+        mongo.db.urls.delete_many({
+            "owner": current_user.id,
+            "pre_company_name": company_name
+        })
+
     return redirect(url_for("index"))
 
 @app.route("/edit_company/<company_id>", methods=["GET", "POST"])

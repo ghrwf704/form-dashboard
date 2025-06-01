@@ -70,6 +70,25 @@ if not counter_doc or counter_doc.get("date") != today:
 else:
     maxCountPerDay = counter_doc["count"]
 
+def find_contact_page_by_query(top_url):
+    import requests
+    from bs4 import BeautifulSoup
+
+    query_url = f"https://www.bing.com/search?q=site:{top_url}+お問い合わせ"
+    headers = {"User-Agent": "Mozilla/5.0"}
+
+    try:
+        res = requests.get(query_url, headers=headers, timeout=10)
+        if res.status_code == 200:
+            soup = BeautifulSoup(res.text, "html.parser")
+            for a in soup.select("li.b_algo h2 a"):
+                href = a.get("href", "")
+                if any(x in href.lower() for x in ["contact", "form", "inquiry", "otoiawase"]):
+                    return href
+    except Exception as e:
+        print(f"フォーム再取得失敗: {e}")
+    return ""
+
 # 企業情報収集関数
 def collect_company_info():
     global maxCountPerDay
@@ -145,6 +164,10 @@ def collect_company_info():
                 "owner": username
             }
 
+            if not form_data["url_form"] or form_data["url_form"].endswith((".css", ".js", ".ico", ".svg")):
+                corrected_url = find_contact_page_by_query(topurl)
+                if corrected_url:
+                    form_data["url_form"] = corrected_url
 
             forms_collection.insert_one(form_data)
             urls_collection.update_one({"_id": url_doc["_id"]}, {"$set": {"status": "収集済"}})
