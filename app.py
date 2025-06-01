@@ -201,35 +201,52 @@ def update_company():
 
     return redirect(url_for("index"))
 
-@app.route("/export_excel_from_view", methods=["POST"])
+from flask import request, send_file
+from io import BytesIO
+@app.route("/export_excel_filtered", methods=["POST"])
 @login_required
-def export_excel_from_view():
-    from flask import request, send_file
-    import pandas as pd
-    import io
+def export_excel_filtered():
+    filters = request.json
+    query = {}
 
-    json_data = request.get_json()
-    rows = json_data.get("rows", [])
+    if filters.get("name"):
+        query["company_name"] = {"$regex": filters["name"], "$options": "i"}
+    if filters.get("address"):
+        query["address"] = {"$regex": filters["address"], "$options": "i"}
+    if filters.get("category"):
+        query["category_keywords"] = {"$regex": filters["category"], "$options": "i"}
+    if filters.get("status"):
+        query["sales_status"] = filters["status"]
 
-    if not rows:
-        return "データがありません", 400
+    # MongoDBから条件付きでデータ取得
+    results = list(mongo.db.forms.find(query, {
+        "company_name": 1,
+        "url_top": 1,
+        "url_form": 1,
+        "address": 1,
+        "tel": 1,
+        "fax": 1,
+        "category_keywords": 1,
+        "description": 1,
+        "sales_status": 1,
+        "sales_note": 1,
+        "_id": 0
+    }))
 
-    try:
-        df = pd.DataFrame(rows)
-        output = io.BytesIO()
-        with pd.ExcelWriter(output, engine="xlsxwriter") as writer:
-            df.to_excel(writer, index=False, sheet_name="Filtered")
-        output.seek(0)
-        return send_file(
-            output,
-            download_name="filtered_companies.xlsx",
-            as_attachment=True,
-            mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-        )
-    except Exception as e:
-        print("🛑 Excel書き出しエラー:", e)
-        return "Excel出力時にエラーが発生しました", 500
+    df = pd.DataFrame(results)
 
+    # Excelファイルに出力
+    output = BytesIO()
+    with pd.ExcelWriter(output, engine="xlsxwriter") as writer:
+        df.to_excel(writer, index=False, sheet_name="Companies")
+
+    output.seek(0)
+    return send_file(
+        output,
+        as_attachment=True,
+        download_name="filtered_companies.xlsx",
+        mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
 
 if __name__ == "__main__":
     app.run(debug=True)
