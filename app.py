@@ -204,24 +204,32 @@ def update_company():
 @app.route("/export_excel_from_view", methods=["POST"])
 @login_required
 def export_excel_from_view():
+    from flask import request, send_file
+    import pandas as pd
+    import io
+
     json_data = request.get_json()
     rows = json_data.get("rows", [])
 
     if not rows:
         return "データがありません", 400
 
-    df = pd.DataFrame(rows)
-    output = io.BytesIO()
-    with pd.ExcelWriter(output, engine="xlsxwriter") as writer:
-        df.to_excel(writer, index=False, sheet_name="Filtered")
+    try:
+        df = pd.DataFrame(rows)
+        output = io.BytesIO()
+        with pd.ExcelWriter(output, engine="xlsxwriter") as writer:
+            df.to_excel(writer, index=False, sheet_name="Filtered")
+        output.seek(0)
+        return send_file(
+            output,
+            download_name="filtered_companies.xlsx",
+            as_attachment=True,
+            mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        )
+    except Exception as e:
+        print("🛑 Excel書き出しエラー:", e)
+        return "Excel出力時にエラーが発生しました", 500
 
-    output.seek(0)
-    return send_file(
-        output,
-        download_name="filtered_companies.xlsx",
-        as_attachment=True,
-        mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-    )
 
 if __name__ == "__main__":
     app.run(debug=True)
