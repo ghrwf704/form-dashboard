@@ -230,7 +230,7 @@ def export_excel_filtered():
         query["sales_status"] = filters["status"]
 
     # データ取得
-    results = list(mongo.db.forms.find(query, {
+    results = list(collection.find(query, {
         "_id": 0,
         "company_name": 1,
         "url_top": 1,
