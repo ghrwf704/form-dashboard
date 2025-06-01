@@ -11,3 +11,4 @@ requests
 pytz
 webdriver-manager
 pandas
+xlsxwriter
