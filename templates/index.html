@@ -120,7 +120,7 @@
           {% if f.get('url_top') and f.get('url_top') != '#' %}
             <a href="{{ f['url_top'] }}" target="_blank">
               {% if f.get('eyecatch_image') %}
-                <img src="{{ f['eyecatch_image'] }}" alt="アイキャッチ" class="eyecatch-img" style="width: 64px; height: 64px; object-fit: cover;" />
+                <img src="{{ f['eyecatch_image'].replace('http://', 'https://') }}" alt="アイキャッチ" class="eyecatch-img" style="width: 64px; height: 64px; object-fit: cover;" />
               {% else %}
                 🌐 サイトを開く
               {% endif %}
