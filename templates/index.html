@@ -15,10 +15,14 @@
   <h1>🏢 企業一覧</h1>
   <div>
     <a href="{{ url_for('export_csv') }}" class="btn btn-outline-success">📥 CSV出力</a>
-    <a href="{{ url_for('export_excel') }}" class="btn btn-outline-primary">📊 Excel出力</a>
     <a href="#" class="btn btn-outline-secondary" id="export-visible-csv">📄 表示中のCSV出力</a>
   </div>
 </div>
+<form action="{{ url_for('export_excel') }}" method="post" class="d-inline">
+  <input type="hidden" name="filter_status" id="excel_filter_status">
+  <button type="submit" class="btn btn-outline-primary">📊 表示中のExcel出力</button>
+</form>
+<a href="{{ url_for('export_excel') }}" class="btn btn-outline-primary">📊 Excel出力（全件）</a>
 
 <!-- フィルターフォーム -->
 <div class="filter-box mb-4">

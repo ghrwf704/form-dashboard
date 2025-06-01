@@ -274,5 +274,31 @@ def export_excel():
         mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     )
 
+@app.route("/export_excel_all", methods=["GET"])
+@login_required
+def export_excel_all():
+    query = {"owner": current_user.id}
+    data = list(collection.find(query))
+    for item in data:
+        item["_id"] = str(item["_id"])
+
+    df = pd.DataFrame(data)
+    df = df[[
+        "company_name", "url_top", "url_form", "address", "tel", "fax",
+        "category_keywords", "description", "sales_status", "sales_note"
+    ]]
+
+    output = io.BytesIO()
+    with pd.ExcelWriter(output, engine="xlsxwriter") as writer:
+        df.to_excel(writer, index=False, sheet_name="全企業一覧")
+
+    output.seek(0)
+    return send_file(
+        output,
+        download_name="全企業一覧.xlsx",
+        as_attachment=True,
+        mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
+
 if __name__ == "__main__":
     app.run(debug=True)
