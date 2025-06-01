@@ -12,3 +12,5 @@ pytz
 webdriver-manager
 pandas
 xlsxwriter
+flask_login
+flask_pymongo
