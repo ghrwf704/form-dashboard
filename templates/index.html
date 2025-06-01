@@ -13,43 +13,8 @@
 
 <div class="d-flex justify-content-between align-items-center mb-3">
   <h1>🏢 企業一覧</h1>
-<!-- 表示中データだけをExcel出力するボタン -->
-<button id="exportVisible" style="margin-top: 10px;">表示中データをExcel出力</button>
-
-<script>
-    document.getElementById("exportVisible").addEventListener("click", () => {
-        const rows = Array.from(document.querySelectorAll("table tbody tr"));
-        const data = rows.map(row => {
-            const cells = row.querySelectorAll("td");
-            return {
-                company_name: cells[1]?.textContent.trim(),
-                url_top: cells[2]?.textContent.trim(),
-                url_form: cells[3]?.textContent.trim(),
-                address: cells[4]?.textContent.trim(),
-                tel: cells[5]?.textContent.trim(),
-                fax: cells[6]?.textContent.trim(),
-                category_keywords: cells[7]?.textContent.trim(),
-                description: cells[8]?.textContent.trim(),
-                sales_status: cells[9]?.textContent.trim(),
-                sales_note: cells[10]?.textContent.trim()
-            };
-        });
-
-        fetch("/export_excel_from_view", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ rows: data })
-        })
-        .then(res => res.blob())
-        .then(blob => {
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement("a");
-            a.href = url;
-            a.download = "filtered_companies.xlsx";
-            a.click();
-        });
-    });
-</script>
+  <!-- 表示中データだけをExcel出力するボタン -->
+  <button id="exportVisible" style="margin-top: 10px;" class="btn btn-success">表示中データをExcel出力</button>
 </div>
 
 <!-- フィルターフォーム -->
@@ -96,24 +61,8 @@
       {% for f in forms %}
       <tr>
         <td>
-          <a href="#"
-            class="edit-btn btn btn-outline-primary btn-sm"
-            data-id="{{ f['_id'] }}"
-            data-name="{{ f.get('company_name', '') }}"
-            data-address="{{ f.get('address', '') }}"
-            data-tel="{{ f.get('tel', '') }}"
-            data-fax="{{ f.get('fax', '') }}"
-            data-category="{{ f.get('category_keywords', '') }}"
-            data-description="{{ f.get('description', '') }}"
-            data-url-top="{{ f.get('url_top', '') }}"
-            data-url-form="{{ f.get('url_form', '') }}"
-            data-status="{{ f.get('sales_status', '未連絡') }}"
-            data-note="{{ f.get('sales_note', '') }}"
-            data-bs-toggle="modal"
-            data-bs-target="#editModal">✏️</a>
-          <a href="{{ url_for('delete_company', company_id=f['_id']) }}"
-            onclick="return confirm('この企業データを削除してよろしいですか？');"
-            class="btn btn-outline-danger btn-sm">🗑️</a>
+          <a href="#" class="edit-btn btn btn-outline-primary btn-sm" data-id="{{ f['_id'] }}" data-name="{{ f.get('company_name', '') }}" data-address="{{ f.get('address', '') }}" data-tel="{{ f.get('tel', '') }}" data-fax="{{ f.get('fax', '') }}" data-category="{{ f.get('category_keywords', '') }}" data-description="{{ f.get('description', '') }}" data-url-top="{{ f.get('url_top', '') }}" data-url-form="{{ f.get('url_form', '') }}" data-status="{{ f.get('sales_status', '未連絡') }}" data-note="{{ f.get('sales_note', '') }}" data-bs-toggle="modal" data-bs-target="#editModal">✏️</a>
+          <a href="{{ url_for('delete_company', company_id=f['_id']) }}" onclick="return confirm('この企業データを削除してよろしいですか？');" class="btn btn-outline-danger btn-sm">🗑️</a>
         </td>
         <td class="company-name">{{ f.get("company_name", "未設定") }}</td>
         <td>
@@ -223,37 +172,28 @@
     categoryInput.addEventListener("input", filterTable);
     statusSelect.addEventListener("change", filterTable);
 
-    document.getElementById("export-visible-csv").addEventListener("click", function () {
-      const rows = document.querySelectorAll("table tbody tr");
-      let csv = "企業名,トップページ,フォームURL,住所,電話番号,FAX,カテゴリ,説明,営業ステータス,営業メモ\n";
+    // Excel出力ボタンが押されたとき、現在のフィルター値をサーバーに送信
+    const exportBtn = document.getElementById("exportVisible");
+    exportBtn.addEventListener("click", () => {
+      const name = nameInput.value.trim();
+      const address = addressInput.value.trim();
+      const category = categoryInput.value.trim();
+      const status = statusSelect.value.trim();
 
-      rows.forEach(row => {
-        if (row.style.display !== "none") {
-          const cells = row.querySelectorAll("td");
-          const values = [
-            cells[1]?.innerText.trim() || "",
-            cells[2]?.innerText.trim() || "",
-            cells[3]?.innerText.trim() || "",
-            cells[4]?.innerText.trim() || "",
-            cells[5]?.innerText.trim() || "",
-            cells[6]?.innerText.trim() || "",
-            cells[7]?.innerText.trim() || "",
-            cells[8]?.innerText.trim() || "",
-            cells[9]?.innerText.trim() || "",
-            cells[10]?.innerText.trim() || ""
-          ];
-          csv += values.map(v => `"${v.replace(/\n/g, " ")}` ).join(",") + "\n";
-        }
+      fetch("/export_excel_filtered", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, address, category, status })
+      })
+      .then(res => res.blob())
+      .then(blob => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "filtered_companies.xlsx";
+        a.click();
       });
-
-      const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
-      const link = document.createElement("a");
-      link.href = URL.createObjectURL(blob);
-      link.download = "filtered_companies.csv";
-      link.click();
-      console.log("Blob type:", blob.type); // ← これを確認
     });
   });
 </script>
 {% endblock %}
-
