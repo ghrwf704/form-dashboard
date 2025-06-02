@@ -11,6 +11,7 @@ import os
 from flask import send_from_directory
 from bson import ObjectId
 from io import BytesIO
+from datetime import datetime, timedelta
 # 設定ファイル読み込み
 config = configparser.ConfigParser()
 config.read("setting.ini", encoding="utf-8")
@@ -357,6 +358,62 @@ def receive_log():
 
     return "OK", 200
 
+@app.route("/logs/<user>")
+def view_log(user):
+    date_str = datetime.now().strftime("%Y-%m-%d")
+    log_path = f"logs/{user}/log_{date_str}.txt"
+
+    if not os.path.exists(log_path):
+        return f"<h3>ログが存在しません: {user} / {date_str}</h3>", 404
+
+    with open(log_path, encoding="utf-8") as f:
+        content = f.read().replace("\n", "<br>")
+
+    return f"<h2>ログ表示（{user} / {date_str}）</h2><div>{content}</div>"
+
+def clean_old_logs(base_dir="logs", days_to_keep=7):
+    """logs/以下のユーザーディレクトリ内で、指定日数より古いログファイルを削除"""
+    cutoff_date = datetime.now() - timedelta(days=days_to_keep)
+
+    for user_dir in os.listdir(base_dir):
+        user_path = os.path.join(base_dir, user_dir)
+        if not os.path.isdir(user_path):
+            continue
+
+        for log_file in os.listdir(user_path):
+            file_path = os.path.join(user_path, log_file)
+            try:
+                log_date_str = os.path.splitext(log_file)[0]
+                log_date = datetime.strptime(log_date_str, "%Y-%m-%d")
+                if log_date < cutoff_date:
+                    os.remove(file_path)
+                    print(f"[CLEANUP] 削除済み: {file_path}")
+            except Exception as e:
+                print(f"[CLEANUP ERROR] ファイルスキップ: {file_path} - {e}")
+
+@app.route("/logs/<user>")
+def show_logs(user):
+    import os
+    from flask import render_template
+
+    log_dir = os.path.join("logs", user)
+    if not os.path.exists(log_dir):
+        return f"ログディレクトリが存在しません: {user}", 404
+
+    # 最新日付のログファイルを取得
+    files = sorted(os.listdir(log_dir), reverse=True)
+    if not files:
+        return "ログファイルが存在しません", 404
+
+    latest_file = files[0]
+    log_path = os.path.join(log_dir, latest_file)
+
+    with open(log_path, "r", encoding="utf-8") as f:
+        lines = f.readlines()
+
+    return render_template("logs.html", user=user, log_lines=lines, filename=latest_file)
+
 
 if __name__ == "__main__":
+    clean_old_logs(days_to_keep=7)  # 起動時に古いログを削除
     app.run(host="0.0.0.0", port=10000)

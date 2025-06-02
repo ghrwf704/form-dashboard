@@ -2,7 +2,7 @@
 import configparser
 import re
 import requests
-from urllib.parse import urlparse
+from urllib.parse import urlparse, urljoin
 from pymongo import MongoClient
 import certifi
 from bs4 import BeautifulSoup
@@ -15,15 +15,41 @@ import time
 from datetime import datetime
 from tkinter import Tk, simpledialog
 import os
+from urllib.robotparser import RobotFileParser
+
 # .iniみ込み
 config = configparser.ConfigParser()
 config.read("setting.ini", encoding="utf-8")
 
+# 企業名をドメインごとに記録してスキップ判断
+processed_domains = {}
+
+def is_same_company(domain, company_name):
+    if not company_name:
+        return False  # 空欄企業名は常に通す
+    if domain not in processed_domains:
+        processed_domains[domain] = set()
+    if company_name in processed_domains[domain]:
+        return True
+    processed_domains[domain].add(company_name)
+    return False
+
+def is_allowed_by_robots(url, user_agent='*'):
+    try:
+        robots_url = urljoin(url, "/robots.txt")
+        rp = RobotFileParser()
+        rp.set_url(robots_url)
+        rp.read()
+        return rp.can_fetch(user_agent, url)
+    except Exception as e:
+        send_log_to_server(f"⚠️ robots.txt の確認エラー: {e}")
+        return True  # エラー時は許可扱い
+
 def send_log_to_server(message):
-    # setting.ini からユーザーIDを取得
+    import configparser
     config = configparser.ConfigParser()
     config.read("setting.ini", encoding="utf-8")
-    user = config.get("USER", "id", fallback="unknown")
+    user = config["USER"].get("id", "unknown")
 
     print(message)
     try:
@@ -50,7 +76,7 @@ if not config["USER"].get("pass"):
         with open("setting.ini", "w", encoding="utf-8") as f:
             config.write(f)
     else:
-        send_log_to_server("パスワードが設定されませんでした。終了します。", user=username)
+        send_log_to_server("パスワードが設定されませんでした。終了します。")
         exit()
 
 INI_URL = "https://form-dashboard.onrender.com/version/latest_setting.ini"  # ← 実際のURLに変更してください
@@ -65,10 +91,10 @@ def download_file(url, dest_path):
         r.raise_for_status()
         with open(dest_path, 'wb') as f:
             f.write(r.content)
-        send_log_to_server(f"Downloaded: {url}", user=username)
+        send_log_to_server(f"Downloaded: {url}")
         return True
     except Exception as e:
-        send_log_to_server(f"[ERROR] Download failed: {url}\n{e}", user=username)
+        send_log_to_server(f"[ERROR] Download failed: {url}\n{e}")
         return False
 
 def check_and_update():
@@ -87,16 +113,16 @@ def check_and_update():
 
     # 3. 比較
     if latest_ver != current_ver:
-        send_log_to_server(f"[INFO] アップデートあり：{current_ver} → {latest_ver}", user=username)
+        send_log_to_server(f"[INFO] アップデートあり：{current_ver} → {latest_ver}")
         # exeダウンロード
         if download_file(EXE_URL, EXE_PATH):
             # ini更新
             current.set("USER", "version", latest_ver)
             with open(LOCAL_INI_PATH, 'w') as f:
                 current.write(f)
-            send_log_to_server("[INFO] EXEとINIを更新しました", user=username)
+            send_log_to_server("[INFO] EXEとINIを更新しました")
     else:
-        send_log_to_server("[INFO] 現在のバージョンは最新版です", user=username)
+        send_log_to_server("[INFO] 現在のバージョンは最新版です")
 
 # 起動時にチェック
 check_and_update()
@@ -197,6 +223,18 @@ def collect_company_info():
     for url_doc in urls_collection.find({"owner": username, "status": "未収集"}):
         try:
             url_1 = url_doc["url"]
+            if not is_allowed_by_robots(url_1):
+                send_log_to_server(f"⛔ robots.txt によりアクセス拒否: {url_1}")
+                urls_collection.update_one({"_id": url_doc["_id"]}, {"$set": {"status": "robots拒否"}})
+                continue
+            company_name = url_doc.get("pre_company_name", "").strip()
+            domain = urlparse(url_1).netloc
+
+            if is_same_company(domain, company_name):
+                send_log_to_server(f"⏭️ スキップ（重複企業: {company_name} @ {domain}）")
+                urls_collection.update_one({"_id": url_doc["_id"]}, {"$set": {"status": "重複スキップ"}})
+                continue
+
             send_log_to_server(f"🌐 アクセス中: {url_1}")
 
             driver.get(url_1)
@@ -204,62 +242,53 @@ def collect_company_info():
             current_url = driver.current_url
             topurl = urlparse(current_url)
             topurl = f"{topurl.scheme}://{topurl.netloc}"
-            result = {}  # 空の辞書として初期化
+
+            result = {}
             result["url_top"] = topurl
             result["eyecatch_image"] = get_og_image_from_url(topurl)
+
             text = driver.page_source
             body_element = driver.find_element(By.TAG_NAME, "body")
             full_text = body_element.get_attribute("innerText")
+
             driver.get(topurl)
             top_text = driver.page_source
+
             form_data = {
-                "company_name": url_doc.get("pre_company_name"),
-                
+                "company_name": company_name,
                 "employees": extract_field([
                     r"従業員数[:：\s]*([0-9,]+人?)", 
                     r"社員数[:：\s]*([0-9,]+人?)"
                 ], full_text),
-            
                 "capital": extract_field([
                     r"資本金[:：\s]*([0-9,億円万円]+)"
                 ], full_text),
-            
                 "address": extract_field([
                     r"((北海道|青森県|岩手県|宮城県|秋田県|山形県|福島県|茨城県|栃木県|群馬県|埼玉県|千葉県|東京都|神奈川県|新潟県|富山県|石川県|福井県|山梨県|長野県|岐阜県|静岡県|愛知県|三重県|滋賀県|京都府|大阪府|兵庫県|奈良県|和歌山県|鳥取県|島根県|岡山県|広島県|山口県|徳島県|香川県|愛媛県|高知県|福岡県|佐賀県|長崎県|熊本県|大分県|宮崎県|鹿児島県|沖縄県)[^、。・1-9１-９一-九]+)"
                 ], full_text),
-            
                 "tel": extract_field([
                     r"(?:Tel|TEL|電話番号|電話|tel)[^\d]*([0-9０-９\-\s]{10,15})",
                     r"(\d{2,4}[-‐－―\s]?\d{2,4}[-‐－―\s]?\d{3,4})"
                 ], full_text),
-            
                 "fax": extract_field([
                     r"(?:FAX|Fax|ファックス|fax)[^\d]*([0-9０-９\-\s]{10,15})"
                 ], full_text),
-            
                 "founded": extract_field([
                     r"(?:設立|創立|創業)[:：\s]*(\d{4}年\d{1,2}月?)"
                 ], full_text),
-            
                 "ceo": extract_field([
                     r"(代表取締役[^\n]{0,20})", 
                     r"(CEO[^\n]{0,20})"
                 ], full_text),
-            
                 "email": extract_email(text),
-            
                 "category_keywords": extract_field([
                     r'<meta name="keywords" content="(.*?)"'
                 ], top_text),
-            
                 "description": extract_field([
                     r'<meta name="description" content="(.*?)"'
                 ], top_text),
-            
                 "url_top": topurl,
-            
                 "eyecatch_image": result.get("eyecatch_image"),
-
                 "owner": username
             }
 
@@ -269,6 +298,7 @@ def collect_company_info():
 
             forms_collection.insert_one(form_data)
             urls_collection.update_one({"_id": url_doc["_id"]}, {"$set": {"status": "収集済"}})
+
             maxCountPerDay += 1
             db["crawl_counter"].update_one(
                 {"owner": username},
@@ -276,9 +306,11 @@ def collect_company_info():
                 upsert=True
             )
             send_log_to_server(f"✅ 情報収集完了: {form_data['company_name']} ({current_url})")
+
         except Exception as ex:
-            send_log_to_server(f"❌ URL処理エラー:{ex}")
+            send_log_to_server(f"❌ URL処理エラー: {ex}")
             urls_collection.update_one({"_id": url_doc["_id"]}, {"$set": {"status": "収集済"}})
+
 
 # メインループで収集と検索を切り替え
 while True:

@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="ja">
+<head>
+    <meta charset="utf-8">
+    <title>ログ表示 - {{ user }}</title>
+    <style>
+        body { font-family: monospace; background: #f4f4f4; padding: 20px; }
+        pre { background: #fff; padding: 15px; border: 1px solid #ccc; }
+    </style>
+</head>
+<body>
+    <h2>ログファイル: {{ filename }}（ユーザー: {{ user }}）</h2>
+    <pre>
+{% for line in log_lines %}
+{{ line.strip() }}
+{% endfor %}
+    </pre>
+</body>
+</html>
