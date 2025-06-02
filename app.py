@@ -295,7 +295,6 @@ def update_company():
 from flask import Flask, request, render_template_string
 from datetime import datetime
 
-app = Flask(__name__)
 log_file_path = "runtime.log"
 
 # ログを受け取るエンドポイント
@@ -353,18 +352,7 @@ from flask import request
 import os
 from datetime import datetime
 
-@app.route("/logs/<user>")
-def view_log(user):
-    date_str = datetime.now().strftime("%Y-%m-%d")
-    log_path = f"logs/{user}/log_{date_str}.txt"
 
-    if not os.path.exists(log_path):
-        return f"<h3>ログが存在しません: {user} / {date_str}</h3>", 404
-
-    with open(log_path, encoding="utf-8") as f:
-        content = f.read().replace("\n", "<br>")
-
-    return f"<h2>ログ表示（{user} / {date_str}）</h2><div>{content}</div>"
 
 def clean_old_logs(base_dir="logs", days_to_keep=7):
     """logs/以下のユーザーディレクトリ内で、指定日数より古いログファイルを削除"""
@@ -385,6 +373,19 @@ def clean_old_logs(base_dir="logs", days_to_keep=7):
                     print(f"[CLEANUP] 削除済み: {file_path}")
             except Exception as e:
                 print(f"[CLEANUP ERROR] ファイルスキップ: {file_path} - {e}")
+
+@app.route("/logs/raw/<user>")
+def view_log(user):
+    date_str = datetime.now().strftime("%Y-%m-%d")
+    log_path = f"logs/{user}/log_{date_str}.txt"
+
+    if not os.path.exists(log_path):
+        return f"<h3>ログが存在しません: {user} / {date_str}</h3>", 404
+
+    with open(log_path, encoding="utf-8") as f:
+        content = f.read().replace("\n", "<br>")
+
+    return f"<h2>ログ表示（{user} / {date_str}）</h2><div>{content}</div>"
 
 @app.route("/logs/<user>")
 def show_logs(user):
