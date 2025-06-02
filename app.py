@@ -138,7 +138,7 @@ def get_weather_by_coords_api():
         print("🌩️ 天気API処理エラー:", e)
         return jsonify({"error": "サーバーエラー"}), 500
 
-rom bson.objectid import ObjectId, InvalidId
+from bson.objectid import ObjectId, InvalidId
 
 @app.route("/delete_company/<company_id>")
 @login_required
