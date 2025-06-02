@@ -149,37 +149,43 @@ def get_weather_by_coords_api():
 
 from bson.objectid import ObjectId, InvalidId
 
+from bson.objectid import ObjectId, InvalidId
+from flask import flash
+
 @app.route("/delete_company/<company_id>")
 @login_required
 def delete_company(company_id):
     try:
         obj_id = ObjectId(company_id)
-    except (InvalidId, TypeError) as e:
-        return f"不正なIDです: {e}", 400
+        company = collection.find_one({"_id": obj_id, "owner": current_user.id})
+        if not company:
+            flash("企業データが見つかりませんでした。", "warning")
+            return redirect(url_for("index"))
 
-    # 削除対象の企業情報を取得
-    company = collection.find_one({
-        "_id": obj_id,
-        "owner": current_user.id
-    })
-    if not company:
+        # forms から削除
+        collection.delete_one({"_id": obj_id, "owner": current_user.id})
+
+        # urls から関連企業を削除（企業名一致）
+        company_name = company.get("company_name")
+        if company_name:
+            mongo.db.urls.delete_many({
+                "owner": current_user.id,
+                "pre_company_name": company_name
+            })
+
+        flash("企業データを削除しました。", "success")
         return redirect(url_for("index"))
 
-    # 企業データを削除
-    collection.delete_one({
-        "_id": obj_id,
-        "owner": current_user.id
-    })
+    except InvalidId:
+        flash("無効なIDが指定されました。", "danger")
+        return redirect(url_for("index"))
 
-    # 関連URLも削除
-    company_name = company.get("company_name")
-    if company_name:
-        mongo.db.urls.delete_many({
-            "owner": current_user.id,
-            "pre_company_name": company_name
-        })
+    except Exception as e:
+        # ログに出す or print する
+        print(f"[ERROR] 削除時の例外: {e}")
+        flash("削除中にエラーが発生しました。", "danger")
+        return redirect(url_for("index"))
 
-    return redirect(url_for("index"))
 
 @app.route("/edit_company/<company_id>", methods=["GET", "POST"])
 @login_required
