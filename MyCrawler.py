@@ -44,8 +44,8 @@ if not config["USER"].get("pass"):
         print("パスワードが設定されませんでした。終了します。")
         exit()
 
-INI_URL = "https://https://form-dashboard.onrender.com/version/latest_setting.ini"  # ← 実際のURLに変更してください
-EXE_URL = "https://https://form-dashboard.onrender.com/downloads/MyCrawler.exe"
+INI_URL = "https://form-dashboard.onrender.com/version/latest_setting.ini"  # ← 実際のURLに変更してください
+EXE_URL = "https://form-dashboard.onrender.com/downloads/MyCrawler.exe"
 LOCAL_INI_PATH = "setting.ini"
 EXE_PATH = "MyCrawler.exe"
 

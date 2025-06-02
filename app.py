@@ -8,6 +8,7 @@ import configparser
 import pandas as pd
 from flask_pymongo import PyMongo
 import os
+from flask import send_from_directory
 
 # 設定ファイル読み込み
 config = configparser.ConfigParser()
@@ -33,6 +34,14 @@ login_manager.login_view = "login"
 class User(UserMixin):
     def __init__(self, username):
         self.id = username
+
+@app.route("/downloads/<filename>")
+def serve_downloads(filename):
+    return send_from_directory("downloads", filename)
+
+@app.route("/version/<filename>")
+def serve_version(filename):
+    return send_from_directory("version", filename)
 
 @login_manager.user_loader
 def load_user(username):
