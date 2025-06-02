@@ -1,4 +1,4 @@
-#run_crawler_flow.py
+#MyCrawler.py
 import configparser
 import re
 import requests
@@ -13,6 +13,83 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 import time
 from datetime import datetime
+import requests
+import configparser
+import os
+import configparser
+import os
+from tkinter import Tk, simpledialog
+
+# .ini読み込み
+config = configparser.ConfigParser()
+config.read("setting.ini", encoding="utf-8")
+
+# USERセクション確認
+if "USER" not in config:
+    config["USER"] = {}
+
+# passチェック
+if not config["USER"].get("pass"):
+    # GUIで入力（バックグラウンドTk無効化）
+    root = Tk()
+    root.withdraw()
+    pw = simpledialog.askstring("初回パスワード設定", "ログイン用パスワードを入力してください。（自動的に保存されます）")
+    root.destroy()
+
+    if pw:
+        config["USER"]["pass"] = pw
+        with open("setting.ini", "w", encoding="utf-8") as f:
+            config.write(f)
+    else:
+        print("パスワードが設定されませんでした。終了します。")
+        exit()
+
+INI_URL = "https://https://form-dashboard.onrender.com/version/latest_setting.ini"  # ← 実際のURLに変更してください
+EXE_URL = "https://https://form-dashboard.onrender.com/downloads/MyCrawler.exe"
+LOCAL_INI_PATH = "setting.ini"
+EXE_PATH = "MyCrawler.exe"
+
+def download_file(url, dest_path):
+    try:
+        r = requests.get(url)
+        r.raise_for_status()
+        with open(dest_path, 'wb') as f:
+            f.write(r.content)
+        print(f"Downloaded: {url}")
+        return True
+    except Exception as e:
+        print(f"[ERROR] Download failed: {url}\n{e}")
+        return False
+
+def check_and_update():
+    # 1. 最新INIを取得
+    if not download_file(INI_URL, "latest.ini"):
+        return  # 通信失敗などで終了
+
+    # 2. バージョン読み込み
+    latest = configparser.ConfigParser()
+    current = configparser.ConfigParser()
+    latest.read("latest.ini")
+    current.read(LOCAL_INI_PATH)
+
+    latest_ver = latest.get("USER", "version", fallback="0.0.0")
+    current_ver = current.get("USER", "version", fallback="0.0.0")
+
+    # 3. 比較
+    if latest_ver != current_ver:
+        print(f"[INFO] アップデートあり：{current_ver} → {latest_ver}")
+        # exeダウンロード
+        if download_file(EXE_URL, EXE_PATH):
+            # ini更新
+            current.set("USER", "version", latest_ver)
+            with open(LOCAL_INI_PATH, 'w') as f:
+                current.write(f)
+            print("[INFO] EXEとINIを更新しました")
+    else:
+        print("[INFO] 現在のバージョンは最新版です")
+
+# 起動時にチェック
+check_and_update()
 
 def get_og_image_from_url(url):
     try:
@@ -32,7 +109,7 @@ maxCountPerDay = 0
 # 設定ファイルからユーザーIDを取得
 config = configparser.ConfigParser()
 config.read("setting.ini", encoding="utf-8")
-username = config["auth"]["id"]
+username = config["USER"]["id"]
 
 # MongoDB接続
 MONGO_URI = "mongodb+srv://ykeikeikie:qMUerl78WgsEEOWA@cluster0.helfbov.mongodb.net/?retryWrites=true&w=majority"

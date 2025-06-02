@@ -18,7 +18,7 @@ app.config["MONGO_URI"] = os.environ.get("MONGO_URI")  # または直接MongoDB�
 MONGO_URI = app.config["MONGO_URI"]
 mongo = PyMongo(app)
 
-app.secret_key = config["auth"].get("secret_key", "fallback_key")
+app.secret_key = os.environ.get("SECRET_KEY")
 
 client = pymongo.MongoClient(MONGO_URI, tls=True, tlsCAFile=certifi.where())
 db = client["form_database"]
