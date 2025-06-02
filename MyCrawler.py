@@ -14,9 +14,9 @@ from selenium.webdriver.support import expected_conditions as EC
 import time
 from datetime import datetime
 from tkinter import Tk, simpledialog
-from your_module import urls_collection
+from app import urls_collection
 
-# .ini読み込み
+# .iniみ込み
 config = configparser.ConfigParser()
 config.read("setting.ini", encoding="utf-8")
 
@@ -144,31 +144,38 @@ else:
     maxCountPerDay = counter_doc["count"]
 
 def find_contact_page_by_query(top_url):
-    import requests
-    from bs4 import BeautifulSoup
-    from urllib.parse import urlparse
+    from selenium.webdriver.common.by import By
+    from selenium.webdriver.support.ui import WebDriverWait
+    from selenium.webdriver.support import expected_conditions as EC
 
-    query_url = f"https://www.bing.com/search?q=site:{top_url}+お問い合わせ"
-    headers = {"User-Agent": "Mozilla/5.0"}
+    # お問い合わせに関するクエリを構築
+    query = f"site:{top_url} お問い合わせ"
+    driver.get("https://www.bing.com")
 
     try:
-        res = requests.get(query_url, headers=headers, timeout=10)
-        if res.status_code == 200:
-            soup = BeautifulSoup(res.text, "html.parser")
-            for a in soup.select("li.b_algo h2 a"):
-                href = a.get("href", "")
-                parsed_candidate = urlparse(href)
-                parsed_top = urlparse(top_url)
+        # 検索フォームに入力
+        search_box = WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located((By.NAME, "q"))
+        )
+        search_box.clear()
+        search_box.send_keys(query)
+        search_box.submit()
+        time.sleep(3)
 
-                # 👇 ドメインが異なるものはスキップ
-                if parsed_candidate.netloc != parsed_top.netloc:
-                    continue
+        # 検索結果からリンクを取得（上位最大10件）
+        a_tags = driver.find_elements(By.CSS_SELECTOR, "li.b_algo h2 a")
+        for a in a_tags:
+            href = a.get_attribute("href")
+            if href and top_url in href and any(x in href.lower() for x in [
+                "contact", "form", "inquiry", "otoiawase", "お問い合わせ", "support", "contactus"
+            ]):
+                return href
 
-                if any(x in href.lower() for x in ["contact", "form", "inquiry", "otoiawase"]):
-                    return href
     except Exception as e:
-        print(f"フォーム再取得失敗: {e}")
-    return ""
+        print(f"❌ お問い合わせリンク抽出エラー: {e}")
+
+    return ""  # 見つからない場合は空文字を返す
+
 
 
 # 企業情報収集関数

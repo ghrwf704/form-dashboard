@@ -26,7 +26,7 @@ db = client["form_database"]
 collection = db["forms"]
 keywords_collection = db["keywords"]
 users_collection = db["users"]
-
+urls_collection = db["urls"]
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = "login"
@@ -146,8 +146,6 @@ def get_weather_by_coords_api():
     except Exception as e:
         print("🌩️ 天気API処理エラー:", e)
         return jsonify({"error": "サーバーエラー"}), 500
-
-from bson.objectid import ObjectId, InvalidId
 
 from bson.objectid import ObjectId, InvalidId
 from flask import flash
