@@ -14,10 +14,24 @@ from selenium.webdriver.support import expected_conditions as EC
 import time
 from datetime import datetime
 from tkinter import Tk, simpledialog
-
+import os
 # .iniみ込み
 config = configparser.ConfigParser()
 config.read("setting.ini", encoding="utf-8")
+
+def send_log_to_server(message):
+    # setting.ini からユーザーIDを取得
+    config = configparser.ConfigParser()
+    config.read("setting.ini", encoding="utf-8")
+    user = config.get("USER", "id", fallback="unknown")
+
+    print(message)
+    try:
+        res = requests.get("https://form-dashboard.onrender.com/log", params={"msg": message, "user": user}, timeout=5)
+        if res.status_code == 200:
+            print("[SERVER] ログ送信成功")
+    except Exception as e:
+        print(f"[ERROR] ログ送信失敗: {e}")
 
 # USERセクション確認
 if "USER" not in config:
@@ -36,7 +50,7 @@ if not config["USER"].get("pass"):
         with open("setting.ini", "w", encoding="utf-8") as f:
             config.write(f)
     else:
-        print("パスワードが設定されませんでした。終了します。")
+        send_log_to_server("パスワードが設定されませんでした。終了します。", user=username)
         exit()
 
 INI_URL = "https://form-dashboard.onrender.com/version/latest_setting.ini"  # ← 実際のURLに変更してください
@@ -44,16 +58,17 @@ EXE_URL = "https://form-dashboard.onrender.com/downloads/MyCrawler.exe"
 LOCAL_INI_PATH = "setting.ini"
 EXE_PATH = "MyCrawler.exe"
 
+
 def download_file(url, dest_path):
     try:
         r = requests.get(url)
         r.raise_for_status()
         with open(dest_path, 'wb') as f:
             f.write(r.content)
-        print(f"Downloaded: {url}")
+        send_log_to_server(f"Downloaded: {url}", user=username)
         return True
     except Exception as e:
-        print(f"[ERROR] Download failed: {url}\n{e}")
+        send_log_to_server(f"[ERROR] Download failed: {url}\n{e}", user=username)
         return False
 
 def check_and_update():
@@ -72,16 +87,16 @@ def check_and_update():
 
     # 3. 比較
     if latest_ver != current_ver:
-        print(f"[INFO] アップデートあり：{current_ver} → {latest_ver}")
+        send_log_to_server(f"[INFO] アップデートあり：{current_ver} → {latest_ver}", user=username)
         # exeダウンロード
         if download_file(EXE_URL, EXE_PATH):
             # ini更新
             current.set("USER", "version", latest_ver)
             with open(LOCAL_INI_PATH, 'w') as f:
                 current.write(f)
-            print("[INFO] EXEとINIを更新しました")
+            send_log_to_server("[INFO] EXEとINIを更新しました", user=username)
     else:
-        print("[INFO] 現在のバージョンは最新版です")
+        send_log_to_server("[INFO] 現在のバージョンは最新版です", user=username)
 
 # 起動時にチェック
 check_and_update()
@@ -107,7 +122,7 @@ config.read("setting.ini", encoding="utf-8")
 username = config["USER"]["id"]
 
 # MongoDB接続
-MONGO_URI = "mongodb+srv://ykeikeikie:qMUerl78WgsEEOWA@cluster0.helfbov.mongodb.net/?retryWrites=true&w=majority"
+MONGO_URI = os.environ.get("MONGO_URI")
 client = MongoClient(MONGO_URI, tls=True, tlsCAFile=certifi.where())
 db = client["form_database"]
 forms_collection = db["forms"]
@@ -170,7 +185,7 @@ def find_contact_page_by_query(top_url):
                 return href
 
     except Exception as e:
-        print(f"❌ お問い合わせリンク抽出エラー: {e}")
+        send_log_to_server(f"❌ お問い合わせリンク抽出エラー: {e}")
 
     return ""  # 見つからない場合は空文字を返す
 
@@ -182,7 +197,7 @@ def collect_company_info():
     for url_doc in urls_collection.find({"owner": username, "status": "未収集"}):
         try:
             url_1 = url_doc["url"]
-            print(f"🌐 アクセス中: {url_1}")
+            send_log_to_server(f"🌐 アクセス中: {url_1}")
 
             driver.get(url_1)
             time.sleep(5)
@@ -260,9 +275,9 @@ def collect_company_info():
                 {"$set": {"count": maxCountPerDay, "date": today}},
                 upsert=True
             )
-            print(f"✅ 情報収集完了: {form_data['company_name']} ({current_url})")
+            send_log_to_server(f"✅ 情報収集完了: {form_data['company_name']} ({current_url})")
         except Exception as ex:
-            print("❌ URL処理エラー:", ex)
+            send_log_to_server(f"❌ URL処理エラー:{ex}")
             urls_collection.update_one({"_id": url_doc["_id"]}, {"$set": {"status": "収集済"}})
 
 # メインループで収集と検索を切り替え
@@ -274,40 +289,40 @@ while True:
     driver = webdriver.Chrome(options=chrome_options)
     driver.minimize_window()
     # ブラウザを最小化
-    print("ブラウザを最小化しました")
+    send_log_to_server("ブラウザを最小化しました")
     if maxCountPerDay >= MAX_TOTAL_URLS_PER_DAY:
-        print("✅ 最大URL収集数に達しました。終了します。")
+        send_log_to_server("✅ 最大URL収集数に達しました。終了します。")
         break
 
     if urls_collection.find_one({"owner": username, "status": "未収集"}):
-        print("🔁 未収集URLが存在するため、企業情報の抽出を実行します。")
+        send_log_to_server("🔁 未収集URLが存在するため、企業情報の抽出を実行します。")
         collect_company_info()
     else:
-        print("🔍 未収集URLが無いため、キーワード検索を開始します。")
+        send_log_to_server("🔍 未収集URLが無いため、キーワード検索を開始します。")
         keyword_docs = keywords_collection.find({"owner": username})
         keyword_list = [doc["keyword"] for doc in keyword_docs if "keyword" in doc]
 
         if not keyword_list:
-            print("⚠️ キーワードが見つかりません。Bing検索をスキップします。")
+            send_log_to_server("⚠️ キーワードが見つかりません。Bing検索をスキップします。")
             break
 
         search_query = " ".join(keyword_list) + " 概要 情報 -一覧 -ランキング -まとめ -比較"
-        print(f"🔎 検索クエリ: {search_query}")
+        send_log_to_server(f"🔎 検索クエリ: {search_query}")
 
         driver.get("https://www.bing.com")
         try:
-            print("⌛ Bingトップページを開いています...")
+            send_log_to_server("⌛ Bingトップページを開いています...")
             search_box = WebDriverWait(driver, 15).until(
                 EC.element_to_be_clickable((By.NAME, "q"))
             )
-            print("✅ 検索ボックスが見つかりました。クエリを入力中...")
+            send_log_to_server("✅ 検索ボックスが見つかりました。クエリを入力中...")
             search_box.clear()
             search_box.send_keys(search_query)
             search_box.submit()
             time.sleep(5)
 
             collected_urls = set()
-            print("📥 検索結果からURLを収集しています...")
+            send_log_to_server("📥 検索結果からURLを収集しています...")
             while len(collected_urls) < MAX_NEW_URLS_PER_OWNER:
                 time.sleep(5)
                 results = driver.find_elements(By.CSS_SELECTOR, "li.b_algo")
@@ -320,7 +335,7 @@ while True:
                         company_name = company_elem.text.strip() if company_elem else ""
             
                         if href and not urls_collection.find_one({"url": href}):
-                            print(f"✅ 新規URL発見: {href}（企業名候補: {company_name}）")
+                            send_log_to_server(f"✅ 新規URL発見: {href}（企業名候補: {company_name}）")
                             urls_collection.insert_one({
                                 "url": href,
                                 "owner": username,
@@ -333,22 +348,22 @@ while True:
                             if len(collected_urls) >= MAX_NEW_URLS_PER_OWNER:
                                 break
                     except Exception as e:
-                        print("⚠️ 検索結果処理中にエラー:", e)
+                        send_log_to_server(f"⚠️ 検索結果処理中にエラー:{e}")
 
                 next_btn = driver.find_elements(By.CSS_SELECTOR, "a[title='次のページ']")
                 if next_btn:
-                    print("➡️ 次ページへ遷移します...")
+                    send_log_to_server("➡️ 次ページへ遷移します...")
                     try:
                         driver.execute_script("arguments[0].scrollIntoView(true);", next_btn[0])
                         time.sleep(1)
                         next_btn[0].click()
                     except Exception as click_error:
-                        print("⚠️ 次ページクリック時にエラー:", click_error)
+                        send_log_to_server(f"⚠️ 次ページクリック時にエラー:{click_error}")
                         break
                 else:
-                    print("⛔ 次ページが存在しないため、検索終了。")
+                    send_log_to_server("⛔ 次ページが存在しないため、検索終了。")
                     break
         except Exception as e:
-            print("❌ Bing検索中にエラー:", e)
+            send_log_to_server(f"❌ Bing検索中にエラー:{e}")
         # Bing検索後に再度収集フェーズに戻るためcontinue
         continue

@@ -291,7 +291,71 @@ def update_company():
 
     return redirect(url_for("index"))
 
+from flask import Flask, request, render_template_string
+from datetime import datetime
 
+app = Flask(__name__)
+log_file_path = "runtime.log"
+
+# ログを受け取るエンドポイント
+@app.route("/log", methods=["POST"])
+def receive_log():
+    data = request.get_json()
+    msg = data.get("message", "")
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    with open(log_file_path, "a", encoding="utf-8") as f:
+        f.write(f"[{timestamp}] {msg}\n")
+    return {"status": "ok"}
+
+# ログをブラウザから確認するページ
+@app.route("/logs")
+def view_logs():
+    try:
+        with open(log_file_path, "r", encoding="utf-8") as f:
+            log_content = f.read()
+    except FileNotFoundError:
+        log_content = "ログはまだありません。"
+
+    # 簡易テンプレート
+    return render_template_string("""
+    <html>
+    <head>
+        <meta charset="utf-8">
+        <title>実行ログ</title>
+        <meta http-equiv="refresh" content="5"> <!-- 5秒ごとに自動更新 -->
+        <style>
+            body { font-family: monospace; background: #f5f5f5; padding: 20px; }
+            pre { background: white; padding: 10px; border: 1px solid #ccc; }
+        </style>
+    </head>
+    <body>
+        <h1>📝 実行ログ</h1>
+        <pre>{{ log }}</pre>
+    </body>
+    </html>
+    """, log=log_content)
+
+from flask import request
+import os
+from datetime import datetime
+
+@app.route("/log")
+def receive_log():
+    msg = request.args.get("msg", "")
+    user = request.args.get("user", "unknown")
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+    # ユーザーごとのディレクトリに変更
+    log_dir = os.path.join("logs", user)
+    os.makedirs(log_dir, exist_ok=True)
+
+    # 日付別ログファイル名（または固定でも可）
+    log_file = os.path.join(log_dir, f"{datetime.now().strftime('%Y-%m-%d')}.txt")
+
+    with open(log_file, "a", encoding="utf-8") as f:
+        f.write(f"[{timestamp}] {msg}\n")
+
+    return "OK", 200
 
 
 if __name__ == "__main__":
