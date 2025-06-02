@@ -13,12 +13,8 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 import time
 from datetime import datetime
-import requests
-import configparser
-import os
-import configparser
-import os
 from tkinter import Tk, simpledialog
+from your_module import urls_collection
 
 # .ini読み込み
 config = configparser.ConfigParser()
@@ -150,6 +146,7 @@ else:
 def find_contact_page_by_query(top_url):
     import requests
     from bs4 import BeautifulSoup
+    from urllib.parse import urlparse
 
     query_url = f"https://www.bing.com/search?q=site:{top_url}+お問い合わせ"
     headers = {"User-Agent": "Mozilla/5.0"}
@@ -160,11 +157,19 @@ def find_contact_page_by_query(top_url):
             soup = BeautifulSoup(res.text, "html.parser")
             for a in soup.select("li.b_algo h2 a"):
                 href = a.get("href", "")
+                parsed_candidate = urlparse(href)
+                parsed_top = urlparse(top_url)
+
+                # 👇 ドメインが異なるものはスキップ
+                if parsed_candidate.netloc != parsed_top.netloc:
+                    continue
+
                 if any(x in href.lower() for x in ["contact", "form", "inquiry", "otoiawase"]):
                     return href
     except Exception as e:
         print(f"フォーム再取得失敗: {e}")
     return ""
+
 
 # 企業情報収集関数
 def collect_company_info():

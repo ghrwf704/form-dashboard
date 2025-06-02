@@ -168,7 +168,7 @@ def delete_company(company_id):
         # urls から関連企業を削除（企業名一致）
         company_name = company.get("company_name")
         if company_name:
-            mongo.db.urls.delete_many({
+            urls_collection.delete_many({
                 "owner": current_user.id,
                 "pre_company_name": company_name
             })
