@@ -14,7 +14,6 @@ from selenium.webdriver.support import expected_conditions as EC
 import time
 from datetime import datetime
 from tkinter import Tk, simpledialog
-from app import urls_collection
 
 # .iniみ込み
 config = configparser.ConfigParser()
@@ -111,10 +110,9 @@ username = config["USER"]["id"]
 MONGO_URI = "mongodb+srv://ykeikeikie:qMUerl78WgsEEOWA@cluster0.helfbov.mongodb.net/?retryWrites=true&w=majority"
 client = MongoClient(MONGO_URI, tls=True, tlsCAFile=certifi.where())
 db = client["form_database"]
-urls_collection = db["urls"]
 forms_collection = db["forms"]
 keywords_collection = db["keywords"]
-
+urls_collection = db["urls"]
 # 抽出関数
 def extract_field(patterns, text):
     for pattern in patterns:

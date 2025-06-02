@@ -297,5 +297,24 @@ def export_excel_filtered():
         mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     )
 
+@app.route("/update_company", methods=["POST"])
+@login_required
+def update_company():
+    company_id = request.form.get("company_id")
+    url_top = request.form.get("url_top")
+    url_form = request.form.get("url_form")
+
+    collection.update_one(
+        {"_id": ObjectId(company_id), "owner": current_user.id},
+        {"$set": {
+            "url_top": url_top,
+            "url_form": url_form,
+        }}
+    )
+
+    flash("企業情報を更新しました。", "success")
+    return redirect(url_for("index"))
+
+
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=10000)

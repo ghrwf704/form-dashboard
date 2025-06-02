@@ -61,7 +61,11 @@
       {% for f in forms %}
       <tr>
         <td>
-          <a href="#" class="edit-btn btn btn-outline-primary btn-sm" data-id="{{ f['_id'] }}" data-name="{{ f.get('company_name', '') }}" data-address="{{ f.get('address', '') }}" data-tel="{{ f.get('tel', '') }}" data-fax="{{ f.get('fax', '') }}" data-category="{{ f.get('category_keywords', '') }}" data-description="{{ f.get('description', '') }}" data-url-top="{{ f.get('url_top', '') }}" data-url-form="{{ f.get('url_form', '') }}" data-status="{{ f.get('sales_status', '未連絡') }}" data-note="{{ f.get('sales_note', '') }}" data-bs-toggle="modal" data-bs-target="#editModal">✏️</a>
+          <a href="#" class="edit-btn btn btn-outline-primary btn-sm"
+       data-id="{{ f['_id'] }}"
+       data-url-top="{{ f.get('url_top', '') }}"
+       data-url-form="{{ f.get('url_form', '') }}"
+       data-bs-toggle="modal" data-bs-target="#editModal">✏️</a>
           <a href="{{ url_for('delete_company', company_id=f['_id']) }}"
    onclick="return confirm('この企業データを削除してよろしいですか？');"
    class="btn btn-outline-danger btn-sm">
@@ -114,8 +118,15 @@
         <div class="modal-body">
           <input type="hidden" name="company_id" id="edit_id">
           <div class="mb-2"><label>企業名: <input type="text" class="form-control" name="company_name" id="edit_name"></label></div>
-          <div class="mb-2"><label>トップページURL: <input type="text" class="form-control" name="url_top" id="edit_url_top"></label></div>
-          <div class="mb-2"><label>フォームURL: <input type="text" class="form-control" name="url_form" id="edit_url_form"></label></div>
+          <!-- URLトップ -->
+          <div class="mb-3">
+            <label for="edit-url-top" class="form-label">トップページURL</label>
+            <input type="text" class="form-control" id="edit-url-top" name="url_top">
+          </div>
+          <div class="mb-3">
+            <label for="edit-url-form" class="form-label">フォームURL</label>
+            <input type="text" class="form-control" id="edit-url-form" name="url_form">
+          </div>
           <div class="mb-2"><label>住所: <input type="text" class="form-control" name="address" id="edit_address"></label></div>
           <div class="mb-2"><label>電話番号: <input type="text" class="form-control" name="tel" id="edit_tel"></label></div>
           <div class="mb-2"><label>FAX: <input type="text" class="form-control" name="fax" id="edit_fax"></label></div>
@@ -201,3 +212,12 @@
   });
 </script>
 {% endblock %}
+<script>
+  document.querySelectorAll('.edit-btn').forEach(button => {
+    button.addEventListener('click', function () {
+      document.getElementById('company-id').value = this.dataset.id || '';
+      document.getElementById('edit-url-top').value = this.dataset.urlTop || '';
+      document.getElementById('edit-url-form').value = this.dataset.urlForm || '';
+    });
+  });
+</script>
