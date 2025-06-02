@@ -1,5 +1,5 @@
 #app.py
-from flask import Flask, render_template, request, redirect, url_for, flash
+from flask import Flask, render_template, request, redirect, url_for, flash, send_file
 from flask_login import LoginManager, login_user, logout_user, login_required, UserMixin, current_user
 import pymongo
 import certifi
@@ -9,7 +9,8 @@ import pandas as pd
 from flask_pymongo import PyMongo
 import os
 from flask import send_from_directory
-
+from bson import ObjectId
+from io import BytesIO
 # 設定ファイル読み込み
 config = configparser.ConfigParser()
 config.read("setting.ini", encoding="utf-8")
@@ -209,46 +210,6 @@ def edit_company(company_id):
 
     return render_template("edit_company.html", company=company)
 
-from bson import ObjectId
-@app.route("/update_company", methods=["POST"])
-@login_required
-def update_company():
-    company_id = request.form.get("company_id")
-    if not company_id:
-        return redirect(url_for("index"))
-
-    update_data = {
-        "company_name": request.form.get("company_name"),
-        "url_top": request.form.get("url_top"),
-        "url_form": request.form.get("url_form"),
-        "address": request.form.get("address"),
-        "tel": request.form.get("tel"),
-        "fax": request.form.get("fax"),
-        "category_keywords": request.form.get("category_keywords"),
-        "description": request.form.get("description"),
-        "sales_status": request.form.get("sales_status"),
-        "sales_note": request.form.get("sales_note")
-    }
-
-    collection.update_one(
-        {"_id": ObjectId(company_id), "owner": current_user.id},
-        {"$set": update_data}
-    )
-    return redirect(url_for("index"))
-    forms_collection.update_one(
-        {"_id": ObjectId(company_id)},
-        {"$set": update_data}
-    )
-
-    return redirect(url_for("index"))
-
-from flask import request, send_file
-from io import BytesIO
-from flask import request, send_file
-from flask_login import login_required
-from io import BytesIO
-import pandas as pd
-
 @app.route("/export_excel_filtered", methods=["POST"])
 @login_required
 def export_excel_filtered():
@@ -301,19 +262,36 @@ def export_excel_filtered():
 @login_required
 def update_company():
     company_id = request.form.get("company_id")
-    url_top = request.form.get("url_top")
-    url_form = request.form.get("url_form")
+    if not company_id:
+        flash("企業IDが見つかりません。", "danger")
+        return redirect(url_for("index"))
 
-    collection.update_one(
+    update_data = {
+        "company_name": request.form.get("company_name"),
+        "url_top": request.form.get("url_top"),
+        "url_form": request.form.get("url_form"),
+        "address": request.form.get("address"),
+        "tel": request.form.get("tel"),
+        "fax": request.form.get("fax"),
+        "category_keywords": request.form.get("category_keywords"),
+        "description": request.form.get("description"),
+        "sales_status": request.form.get("sales_status"),
+        "sales_note": request.form.get("sales_note")
+    }
+
+    result = collection.update_one(
         {"_id": ObjectId(company_id), "owner": current_user.id},
-        {"$set": {
-            "url_top": url_top,
-            "url_form": url_form,
-        }}
+        {"$set": update_data}
     )
 
-    flash("企業情報を更新しました。", "success")
+    if result.modified_count > 0:
+        flash("企業情報を更新しました。", "success")
+    else:
+        flash("変更内容がありませんでした。", "info")
+
     return redirect(url_for("index"))
+
+
 
 
 if __name__ == "__main__":
