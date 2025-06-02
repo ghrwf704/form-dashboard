@@ -233,18 +233,14 @@ def collect_company_info():
             
                 "url_top": topurl,
             
-                "url_form": extract_field([
-                    r"(https?://[\w/:%#\$&\?\(\)~\.\=\+\-]+(contact|inquiry|form)[^\"'<>]*)"
-                ], text),
                 "eyecatch_image": result.get("eyecatch_image"),
 
                 "owner": username
             }
 
-            if not form_data["url_form"] or form_data["url_form"].endswith((".css", ".js", ".ico", ".svg")):
-                corrected_url = find_contact_page_by_query(topurl)
-                if corrected_url:
-                    form_data["url_form"] = corrected_url
+            form_url = find_contact_page_by_query(topurl)
+            if form_url:
+                form_data["url_form"] = form_url
 
             forms_collection.insert_one(form_data)
             urls_collection.update_one({"_id": url_doc["_id"]}, {"$set": {"status": "収集済"}})
