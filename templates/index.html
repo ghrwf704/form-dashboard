@@ -62,7 +62,7 @@
       <tr>
         <td>
           <a href="#" class="edit-btn btn btn-outline-primary btn-sm" data-id="{{ f['_id'] }}" data-name="{{ f.get('company_name', '') }}" data-address="{{ f.get('address', '') }}" data-tel="{{ f.get('tel', '') }}" data-fax="{{ f.get('fax', '') }}" data-category="{{ f.get('category_keywords', '') }}" data-description="{{ f.get('description', '') }}" data-url-top="{{ f.get('url_top', '') }}" data-url-form="{{ f.get('url_form', '') }}" data-status="{{ f.get('sales_status', '未連絡') }}" data-note="{{ f.get('sales_note', '') }}" data-bs-toggle="modal" data-bs-target="#editModal">✏️</a>
-          <a href="{{ url_for('delete_company', company_id=str(f['_id'])) }}"
+          <a href="{{ url_for('delete_company', company_id=f['_id']) }}"
    onclick="return confirm('この企業データを削除してよろしいですか？');"
    class="btn btn-outline-danger btn-sm">
    🗑️
