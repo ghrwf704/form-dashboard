@@ -12,6 +12,9 @@ from flask import send_from_directory
 from bson import ObjectId
 from io import BytesIO
 from datetime import datetime, timedelta
+
+if not os.path.exists("logs"):
+    os.makedirs("logs")
 # 設定ファイル読み込み
 config = configparser.ConfigParser()
 config.read("setting.ini", encoding="utf-8")
