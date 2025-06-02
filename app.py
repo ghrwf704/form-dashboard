@@ -299,14 +299,27 @@ app = Flask(__name__)
 log_file_path = "runtime.log"
 
 # ログを受け取るエンドポイント
-@app.route("/log", methods=["POST"])
+@app.route("/log", methods=["GET", "POST"])
 def receive_log():
-    data = request.get_json()
-    msg = data.get("message", "")
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    with open(log_file_path, "a", encoding="utf-8") as f:
+    
+    if request.method == "POST":
+        data = request.get_json()
+        msg = data.get("message", "")
+        user = data.get("user", "unknown")  # POSTでもuserを指定できるように
+    else:
+        msg = request.args.get("msg", "")
+        user = request.args.get("user", "unknown")
+
+    # ユーザー別ディレクトリ
+    log_dir = os.path.join("logs", user)
+    os.makedirs(log_dir, exist_ok=True)
+
+    log_file = os.path.join(log_dir, f"{datetime.now().strftime('%Y-%m-%d')}.txt")
+    with open(log_file, "a", encoding="utf-8") as f:
         f.write(f"[{timestamp}] {msg}\n")
-    return {"status": "ok"}
+
+    return jsonify(status="ok")
 
 # ログをブラウザから確認するページ
 @app.route("/logs")
@@ -339,24 +352,6 @@ def view_logs():
 from flask import request
 import os
 from datetime import datetime
-
-@app.route("/log")
-def receive_log():
-    msg = request.args.get("msg", "")
-    user = request.args.get("user", "unknown")
-    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-
-    # ユーザーごとのディレクトリに変更
-    log_dir = os.path.join("logs", user)
-    os.makedirs(log_dir, exist_ok=True)
-
-    # 日付別ログファイル名（または固定でも可）
-    log_file = os.path.join(log_dir, f"{datetime.now().strftime('%Y-%m-%d')}.txt")
-
-    with open(log_file, "a", encoding="utf-8") as f:
-        f.write(f"[{timestamp}] {msg}\n")
-
-    return "OK", 200
 
 @app.route("/logs/<user>")
 def view_log(user):
