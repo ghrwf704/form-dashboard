@@ -138,26 +138,31 @@ def get_weather_by_coords_api():
         print("🌩️ 天気API処理エラー:", e)
         return jsonify({"error": "サーバーエラー"}), 500
 
-from bson import ObjectId
+rom bson.objectid import ObjectId, InvalidId
 
 @app.route("/delete_company/<company_id>")
 @login_required
 def delete_company(company_id):
+    try:
+        obj_id = ObjectId(company_id)
+    except (InvalidId, TypeError) as e:
+        return f"不正なIDです: {e}", 400
+
     # 削除対象の企業情報を取得
     company = collection.find_one({
-        "_id": ObjectId(company_id),
+        "_id": obj_id,
         "owner": current_user.id
     })
     if not company:
         return redirect(url_for("index"))
 
-    # 企業データをformsコレクションから削除
+    # 企業データを削除
     collection.delete_one({
-        "_id": ObjectId(company_id),
+        "_id": obj_id,
         "owner": current_user.id
     })
 
-    # urlsコレクションからも削除（企業名とownerが一致するもの）
+    # 関連URLも削除
     company_name = company.get("company_name")
     if company_name:
         mongo.db.urls.delete_many({
