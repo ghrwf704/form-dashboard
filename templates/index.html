@@ -51,10 +51,10 @@
         <th>住所</th>
         <th>電話番号</th>
         <th>FAX</th>
-        <th>カテゴリ</th>
-        <th>説明</th>
         <th>営業ステータス</th>
-        <th>営業メモ</th>
+        <th>🔍</th>  <!-- カテゴリ -->
+        <th>📝</th>  <!-- 説明 -->
+        <th>🗒️</th> <!-- メモ -->                
       </tr>
     </thead>
     <tbody>
@@ -104,8 +104,21 @@
         <td>{{ f.get("address", "未設定") }}</td>
         <td>{{ f.get("tel", "未設定") }}</td>
         <td>{{ f.get("fax", "未設定") }}</td>
-        <td class="category-tag">{{ f.get("category_keywords", "未設定") }}</td>
-        <td>{{ f.get("description", "未設定") }}</td>
+        <td>
+          <span class="hover-tooltip">🔍
+            <span class="tooltip-text">{{ f.get("category_keywords", "") }}</span>
+          </span>
+        </td>
+        <td>
+          <span class="hover-tooltip">📝
+            <span class="tooltip-text">{{ f.get("description", "") }}</span>
+          </span>
+        </td>
+        <td>
+          <span class="hover-tooltip">🗒️
+            <span class="tooltip-text">{{ f.get("sales_note", "") }}</span>
+          </span>
+        </td>        
         <td class="sales-status">{{ f.get("sales_status", "未連絡") }}</td>
         <td>{{ f.get("sales_note", "") }}</td>
       </tr>

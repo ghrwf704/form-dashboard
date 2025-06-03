@@ -50,6 +50,9 @@ def send_log_to_server(message):
     config = configparser.ConfigParser()
     config.read("setting.ini", encoding="utf-8")
     user = config["USER"].get("id", "unknown")
+    if maxCountPerDay >= MAX_TOTAL_URLS_PER_DAY:
+        send_log_to_server("✅ 最大URL収集数に達しました。終了します。")
+        return
 
     print(message)
     try:
@@ -248,23 +251,25 @@ def collect_company_info():
             result["eyecatch_image"] = get_og_image_from_url(topurl)
 
             text = driver.page_source
+            text = re.sub(r'<[^>]+>', '', text)
             body_element = driver.find_element(By.TAG_NAME, "body")
             full_text = body_element.get_attribute("innerText")
 
             driver.get(topurl)
             top_text = driver.page_source
             text = text.replace("\n", "")  # ← 修正ポイント
-            form_data = form_data = {
+            
+            form_data = {
                 "company_name": company_name,
 
                 # 従業員数（社員数）
                 "employees": extract_field([
-                    r"(従業員|社員)[^0-9０-９]{0,5}([1-9１-９][0-9０-９,]{1,6})人?"
+                    r"(?:従業員|社員)[^\d0-9０-９]{0,20}([0-9０-９,、百千万]{1,20})(人|名)?"
                 ], text),
 
                 # 資本金
                 "capital": extract_field([
-                    r"資本金[^0-9０-９]{0,5}([0-9０-９,億万円]+)"
+                    r"(?:資本金)[^\d0-9０-９]{0,20}([0-9０-９,億万円]{1,20})"
                 ], text),
 
                 # 住所（都道府県名で開始）
@@ -274,12 +279,12 @@ def collect_company_info():
 
                 # 電話番号
                 "tel": extract_field([
-                    r"(?:Tel|TEL|電話番号|電話|tel)[^\d０-９]{0,5}([0-9０-９]{2,4}[-‐－―ー―\s]?[0-9０-９]{2,4}[-‐－―ー―\s]?[0-9０-９]{3,4})"
+                    r"(?:Tel|TEL|電話番号|電話|tel)[^\d0-9０-９]{0,20}([0-9０-９]{2,4}[-‐－―ー―\s]?[0-9０-９]{2,4}[-‐－―ー―\s]?[0-9０-９]{3,4})"
                 ], text),
 
                 # FAX番号
                 "fax": extract_field([
-                    r"(?:FAX|Fax|ファックス|fax)[^\d０-９]{0,5}([0-9０-９]{2,4}[-‐－―ー―\s]?[0-9０-９]{2,4}[-‐－―ー―\s]?[0-9０-９]{3,4})"
+                    r"(?:FAX|Fax|ファックス|fax)[^\d0-9０-９]{0,20}([0-9０-９]{2,4}[-‐－―ー―\s]?[0-9０-９]{2,4}[-‐－―ー―\s]?[0-9０-９]{3,4})"
                 ], text),
 
                 # 設立年月
@@ -349,9 +354,6 @@ while True:
     # ブラウザを最小化
     send_log_to_server("ブラウザを最小化しました")
     try:
-        if maxCountPerDay >= MAX_TOTAL_URLS_PER_DAY:
-            send_log_to_server("✅ 最大URL収集数に達しました。終了します。")
-            break
     
         if urls_collection.find_one({"owner": username, "status": "未収集"}):
             send_log_to_server("🔁 未収集URLが存在するため、企業情報の抽出を実行します。")
