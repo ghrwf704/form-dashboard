@@ -20,7 +20,7 @@ from urllib.robotparser import RobotFileParser
 # .iniみ込み
 config = configparser.ConfigParser()
 config.read("setting.ini", encoding="utf-8")
-
+username = config["USER"]["id"]
 # 企業名をドメインごとに記録してスキップ判断
 processed_domains = {}
 
@@ -148,7 +148,7 @@ config.read("setting.ini", encoding="utf-8")
 username = config["USER"]["id"]
 
 # MongoDB接続
-MONGO_URI = os.environ.get("MONGO_URI")
+MONGO_URI = config["USER"]["mongo_uri"]
 client = MongoClient(MONGO_URI, tls=True, tlsCAFile=certifi.where())
 db = client["form_database"]
 forms_collection = db["forms"]
