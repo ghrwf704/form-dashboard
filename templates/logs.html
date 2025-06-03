@@ -9,7 +9,7 @@
 <div class="log-container">
   <div class="log-header">
     <h2>🗂 ログファイル: {{ filename }}</h2>
-    <a href="{{ url_for('view_log', user=user) }}" class="log-download">📥 ダウンロード</a>
+    <a href="{{ url_for('download_log', user=user, filename=filename) }}" class="log-download">📥 ダウンロード</a>
   </div>
 
   <div class="log-box">
