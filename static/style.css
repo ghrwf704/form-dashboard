@@ -939,4 +939,138 @@ td a:hover {
     transform: translateY(-2px);
     box-shadow: 0 2px 8px rgba(0,0,0,0.1);
   }
-  
+  /* Login Form */
+.login-form {
+    max-width: 400px;
+    margin: 5rem auto;
+    padding: 2.5rem 2rem;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+
+.login-form h1 {
+    color: #333;
+    margin-bottom: 1rem;
+}
+
+.login-form .form-group {
+    margin-bottom: 1.5rem;
+}
+
+.login-form input[type="text"],
+.login-form input[type="password"] {
+    width: 100%;
+    padding: 0.8rem 1rem;
+    font-size: 1rem;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    box-sizing: border-box;
+}
+
+.login-form button[type="submit"] {
+    padding: 0.9rem 1rem;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    font-weight: bold;
+    font-size: 1rem;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+.login-form button[type="submit"]:hover {
+    background-color: #0056b3;
+}
+
+/* Error Messages */
+.login-form .error {
+    background: #f8d7da;
+    padding: 0.8rem 1rem;
+    border-radius: 6px;
+    color: #721c24;
+    margin-bottom: 1rem;
+    border: 1px solid #f5c6cb;
+}
+
+/* Container */
+.container {
+    padding: 2rem;
+}
+/* キーワード管理ページ */
+.keyword-form {
+    margin: 2rem 0;
+    display: flex;
+    gap: 0.5rem;
+}
+
+.keyword-form input[type="text"] {
+    flex: 1;
+    padding: 0.8rem;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+}
+
+.keyword-form button {
+    padding: 0.8rem 1.2rem;
+    background-color: #28a745;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.keyword-form button:hover {
+    background-color: #218838;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 2rem;
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+table th,
+table td {
+    padding: 1rem;
+    text-align: left;
+    border-bottom: 1px solid #eee;
+}
+
+table th {
+    background-color: #f8f9fa;
+    font-weight: bold;
+}
+
+.status-active {
+    color: green;
+    font-weight: bold;
+}
+
+.status-inactive {
+    color: #888;
+    font-weight: bold;
+}
+
+.keyword-actions a {
+    display: inline-block;
+    margin-right: 1rem;
+    text-decoration: none;
+    font-weight: bold;
+    color: #007bff;
+}
+
+.keyword-actions a:hover {
+    text-decoration: underline;
+}
+
+.keyword-actions a[style*="background"] {
+    padding: 0.4rem 0.8rem;
+    border-radius: 6px;
+    display: inline-block;
+    margin-top: 0.3rem;
+}

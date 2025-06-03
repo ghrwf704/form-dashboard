@@ -337,84 +337,98 @@ while True:
     chrome_options = Options()
     chrome_options.add_argument("--no-sandbox")
     chrome_options.add_argument("--disable-dev-shm-usage")
+    chrome_options.add_argument("--start-minimized")  # ✅ 最小化起動
+    
     driver = webdriver.Chrome(options=chrome_options)
-    driver.minimize_window()
+    
+    # OSにより効かない場合もあるので手動で画面外へ
+    driver.set_window_position(-10000, 0)
+    driver.set_window_size(800, 600)
+    
+    send_log_to_server("✅ ブラウザを最小化し画面外へ移動しました")
     # ブラウザを最小化
     send_log_to_server("ブラウザを最小化しました")
-    if maxCountPerDay >= MAX_TOTAL_URLS_PER_DAY:
-        send_log_to_server("✅ 最大URL収集数に達しました。終了します。")
-        break
-
-    if urls_collection.find_one({"owner": username, "status": "未収集"}):
-        send_log_to_server("🔁 未収集URLが存在するため、企業情報の抽出を実行します。")
-        collect_company_info()
-    else:
-        send_log_to_server("🔍 未収集URLが無いため、キーワード検索を開始します。")
-        keyword_docs = keywords_collection.find({"owner": username})
-        keyword_list = [doc["keyword"] for doc in keyword_docs if "keyword" in doc]
-
-        if not keyword_list:
-            send_log_to_server("⚠️ キーワードが見つかりません。Bing検索をスキップします。")
+    try:
+        if maxCountPerDay >= MAX_TOTAL_URLS_PER_DAY:
+            send_log_to_server("✅ 最大URL収集数に達しました。終了します。")
             break
-
-        search_query = " ".join(keyword_list) + " 概要 情報 -一覧 -ランキング -まとめ -比較"
-        send_log_to_server(f"🔎 検索クエリ: {search_query}")
-
-        driver.get("https://www.bing.com")
-        try:
-            send_log_to_server("⌛ Bingトップページを開いています...")
-            search_box = WebDriverWait(driver, 15).until(
-                EC.element_to_be_clickable((By.NAME, "q"))
-            )
-            send_log_to_server("✅ 検索ボックスが見つかりました。クエリを入力中...")
-            search_box.clear()
-            search_box.send_keys(search_query)
-            search_box.submit()
-            time.sleep(5)
-
-            collected_urls = set()
-            send_log_to_server("📥 検索結果からURLを収集しています...")
-            while len(collected_urls) < MAX_NEW_URLS_PER_OWNER:
+    
+        if urls_collection.find_one({"owner": username, "status": "未収集"}):
+            send_log_to_server("🔁 未収集URLが存在するため、企業情報の抽出を実行します。")
+            collect_company_info()
+        else:
+            send_log_to_server("🔍 未収集URLが無いため、キーワード検索を開始します。")
+            keyword_docs = keywords_collection.find({"owner": username})
+            keyword_list = [doc["keyword"] for doc in keyword_docs if "keyword" in doc]
+    
+            if not keyword_list:
+                send_log_to_server("⚠️ キーワードが見つかりません。Bing検索をスキップします。")
+                break
+    
+            search_query = " ".join(keyword_list) + " 概要 情報 -一覧 -ランキング -まとめ -比較"
+            send_log_to_server(f"🔎 検索クエリ: {search_query}")
+    
+            driver.get("https://www.bing.com")
+            try:
+                send_log_to_server("⌛ Bingトップページを開いています...")
+                search_box = WebDriverWait(driver, 15).until(
+                    EC.element_to_be_clickable((By.NAME, "q"))
+                )
+                send_log_to_server("✅ 検索ボックスが見つかりました。クエリを入力中...")
+                search_box.clear()
+                search_box.send_keys(search_query)
+                search_box.submit()
                 time.sleep(5)
-                results = driver.find_elements(By.CSS_SELECTOR, "li.b_algo")
+    
+                collected_urls = set()
+                send_log_to_server("📥 検索結果からURLを収集しています...")
+                while len(collected_urls) < MAX_NEW_URLS_PER_OWNER:
+                    time.sleep(5)
+                    results = driver.find_elements(By.CSS_SELECTOR, "li.b_algo")
+                    
+                    for result in results:
+                        try:
+                            a_tag = result.find_element(By.CSS_SELECTOR, "h2 a")
+                            href = a_tag.get_attribute("href")
+                            company_elem = result.find_element(By.CLASS_NAME, "tptt")
+                            company_name = company_elem.text.strip() if company_elem else ""
                 
-                for result in results:
-                    try:
-                        a_tag = result.find_element(By.CSS_SELECTOR, "h2 a")
-                        href = a_tag.get_attribute("href")
-                        company_elem = result.find_element(By.CLASS_NAME, "tptt")
-                        company_name = company_elem.text.strip() if company_elem else ""
-            
-                        if href and not urls_collection.find_one({"url": href}):
-                            send_log_to_server(f"✅ 新規URL発見: {href}（企業名候補: {company_name}）")
-                            urls_collection.insert_one({
-                                "url": href,
-                                "owner": username,
-                                "keyword": search_query,
-                                "status": "未収集",
-                                "pre_company_name": company_name
-                            })
-                            collected_urls.add(href)
-            
-                            if len(collected_urls) >= MAX_NEW_URLS_PER_OWNER:
-                                break
-                    except Exception as e:
-                        send_log_to_server(f"⚠️ 検索結果処理中にエラー:{e}")
-
-                next_btn = driver.find_elements(By.CSS_SELECTOR, "a[title='次のページ']")
-                if next_btn:
-                    send_log_to_server("➡️ 次ページへ遷移します...")
-                    try:
-                        driver.execute_script("arguments[0].scrollIntoView(true);", next_btn[0])
-                        time.sleep(1)
-                        next_btn[0].click()
-                    except Exception as click_error:
-                        send_log_to_server(f"⚠️ 次ページクリック時にエラー:{click_error}")
+                            if href and not urls_collection.find_one({"url": href}):
+                                send_log_to_server(f"✅ 新規URL発見: {href}（企業名候補: {company_name}）")
+                                urls_collection.insert_one({
+                                    "url": href,
+                                    "owner": username,
+                                    "keyword": search_query,
+                                    "status": "未収集",
+                                    "pre_company_name": company_name
+                                })
+                                collected_urls.add(href)
+                
+                                if len(collected_urls) >= MAX_NEW_URLS_PER_OWNER:
+                                    break
+                        except Exception as e:
+                            send_log_to_server(f"⚠️ 検索結果処理中にエラー:{e}")
+    
+                    next_btn = driver.find_elements(By.CSS_SELECTOR, "a[title='次のページ']")
+                    if next_btn:
+                        send_log_to_server("➡️ 次ページへ遷移します...")
+                        try:
+                            driver.execute_script("arguments[0].scrollIntoView(true);", next_btn[0])
+                            time.sleep(1)
+                            next_btn[0].click()
+                        except Exception as click_error:
+                            send_log_to_server(f"⚠️ 次ページクリック時にエラー:{click_error}")
+                            break
+                    else:
+                        send_log_to_server("⛔ 次ページが存在しないため、検索終了。")
                         break
-                else:
-                    send_log_to_server("⛔ 次ページが存在しないため、検索終了。")
-                    break
-        except Exception as e:
-            send_log_to_server(f"❌ Bing検索中にエラー:{e}")
-        # Bing検索後に再度収集フェーズに戻るためcontinue
-        continue
+            except Exception as e:
+                send_log_to_server(f"❌ Bing検索中にエラー:{e}")
+            # Bing検索後に再度収集フェーズに戻るためcontinue
+            continue
+    except Exception as e:
+        send_log_to_server(f"🔥 処理中に例外発生: {e}")
+
+    finally:
+        driver.quit()  # ✅ これでゾンビChrome退治！
+        send_log_to_server("🧼 Chromeドライバを終了しました")
