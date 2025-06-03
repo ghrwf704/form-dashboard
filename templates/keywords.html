@@ -1,93 +1,113 @@
-{% extends "_base.html" %}
+{% extends "base.html" %}
 
-{% block title %}キーワード管理 - フォーム管理{% endblock %}
+{% block title %}キーワード管理 - フォーム管理システム{% endblock %}
 
 {% block content %}
-{% if current_user.is_authenticated %}
-<div class="user-greeting">
-    <p>こんにちは、<strong>{{ current_user.id }}</strong> さん！</p>
+<div class="page-header">
+    <div class="header-content">
+        <div class="page-title">
+            <h1><i class="fas fa-tags"></i> キーワード管理</h1>
+            <p class="page-subtitle">検索キーワードを管理して、より効率的な企業検索を実現しましょう</p>
+        </div>
+        
+        {% if current_user.is_authenticated %}
+        <div class="user-info">
+            <div class="user-avatar">
+                <i class="fas fa-user"></i>
+            </div>
+            <span class="user-name">{{ current_user.id }} さん</span>
+        </div>
+        {% endif %}
+    </div>
 </div>
-{% endif %}
 
-<h1>🏷️ キーワード管理</h1>
+<div class="keywords-section">
+    <div class="add-keyword-card">
+        <div class="card-header">
+            <h2><i class="fas fa-plus-circle"></i> 新しいキーワードを追加</h2>
+            <p>検索効率を向上させるために、関連するキーワードを追加してください</p>
+        </div>
+        
+        <form method="post" class="add-keyword-form">
+            <div class="input-group">
+                <div class="input-wrapper">
+                    <i class="fas fa-search input-icon"></i>
+                    <input type="text" name="keyword" class="keyword-input" placeholder="新しいキーワードを入力" required>
+                </div>
+                <button type="submit" class="btn btn-primary add-btn">
+                    <i class="fas fa-plus"></i>
+                    追加
+                </button>
+            </div>
+        </form>
+    </div>
 
-<form method="post" class="keyword-form">
-    <input type="text" name="keyword" placeholder="新しいキーワードを入力..." required>
-    <button type="submit">➕ 追加</button>
-</form>
+    <div class="keywords-list-card">
+        <div class="card-header">
+            <h2><i class="fas fa-list"></i> キーワード一覧</h2>
+            <div class="keywords-stats">
+                <span class="stat-badge active-count">
+                    <i class="fas fa-check-circle"></i>
+                    有効: {{ keywords|selectattr('active')|list|length }}
+                </span>
+                <span class="stat-badge inactive-count">
+                    <i class="fas fa-times-circle"></i>
+                    無効: {{ keywords|rejectattr('active')|list|length }}
+                </span>
+            </div>
+        </div>
 
-<table>
-    <thead>
-        <tr>
-            <th>キーワード</th>
-            <th>状態</th>
-            <th>操作</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for kw in keywords %}
-        <tr>
-            <td>
-                <form method="post" action="/keywords/update/{{ kw.keyword }}" style="display: flex; gap: 0.5rem; align-items: center;">
-                    <input type="text" name="new_keyword" value="{{ kw.keyword }}" style="margin-bottom: 0; flex: 1;">
-                    <button type="submit" style="padding: 0.5rem 1rem; font-size: 0.9rem;">✏️ 変更</button>
-                </form>
-            </td>
-            <td>
-                {% if kw.active %}
-                    <span class="status-active">✅ 有効</span>
-                {% else %}
-                    <span class="status-inactive">❌ 無効</span>
-                {% endif %}
-            </td>
-            <td>
+        {% if keywords %}
+        <div class="keywords-grid">
+            {% for kw in keywords %}
+            <div class="keyword-card {{ 'active' if kw.active else 'inactive' }}">
+                <div class="keyword-status">
+                    <div class="status-indicator {{ 'active' if kw.active else 'inactive' }}">
+                        <i class="fas {{ 'fa-check-circle' if kw.active else 'fa-times-circle' }}"></i>
+                    </div>
+                    <span class="status-text">{{ '有効' if kw.active else '無効' }}</span>
+                </div>
+
+                <div class="keyword-content">
+                    <form method="post" action="/keywords/update/{{ kw.keyword }}" class="keyword-edit-form">
+                        <div class="keyword-display">
+                            <i class="fas fa-tag"></i>
+                            <input type="text" name="new_keyword" value="{{ kw.keyword }}" class="keyword-edit-input">
+                        </div>
+                        <button type="submit" class="btn btn-sm btn-secondary update-btn">
+                            <i class="fas fa-save"></i>
+                            更新
+                        </button>
+                    </form>
+                </div>
+
                 <div class="keyword-actions">
-                    <a href="/keywords/toggle/{{ kw.keyword }}">
-                        {% if kw.active %}🔄 無効にする{% else %}🔄 有効にする{% endif %}
+                    <a href="/keywords/toggle/{{ kw.keyword }}" class="action-btn toggle-btn" title="有効/無効を切り替え">
+                        <i class="fas fa-toggle-{{ 'on' if kw.active else 'off' }}"></i>
+                        切り替え
                     </a>
-                    <a href="/keywords/only/{{ kw.keyword }}" 
-                       onclick="return confirm('「{{ kw.keyword }}」のみを有効にして、他を無効にしますか？');">
-                        🎯 これだけ有効
+                    <a href="/keywords/only/{{ kw.keyword }}" class="action-btn only-btn" 
+                       onclick="return confirm('このキーワードのみを有効にしますか？');" title="このキーワードのみ有効">
+                        <i class="fas fa-star"></i>
+                        単独有効
                     </a>
-                    <a href="/keywords/delete/{{ kw.keyword }}" 
-                       onclick="return confirm('「{{ kw.keyword }}」を削除しますか？この操作は取り消せません。');"
-                       style="background: #dc3545; color: white;">
-                        🗑️ 削除
+                    <a href="/keywords/delete/{{ kw.keyword }}" class="action-btn delete-btn" 
+                       onclick="return confirm('「{{ kw.keyword }}」を削除しますか？');" title="削除">
+                        <i class="fas fa-trash-alt"></i>
+                        削除
                     </a>
                 </div>
-            </td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
-
-{% if not keywords %}
-<div style="text-align: center; padding: 3rem; color: #999;">
-    <p style="font-size: 1.2rem;">🏷️ キーワードがまだ登録されていません</p>
-    <p>上のフォームから新しいキーワードを追加してください。</p>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <div class="empty-icon">
+                <i class="fas fa-search"></i>
+            </div>
+            <h3>キーワードがありません</h3>
+            <p>まずは上のフォームから新しいキーワードを追加してみましょう</p>
+        </div>
+        {% endif %}
+    </div>
 </div>
-{% endif %}
-
-<div style="margin-top: 2rem; padding: 1.5rem; background: rgba(102, 126, 234, 0.1); border-radius: 15px; border-left: 4px solid #667eea;">
-    <h3 style="color: #667eea; margin-bottom: 1rem;">💡 使い方のヒント</h3>
-    <ul style="color: #555; line-height: 1.6;">
-        <li><strong>キーワード追加:</strong> 検索に使用したいキーワードを入力して追加ボタンを押します。</li>
-        <li><strong>状態切り替え:</strong> キーワードの有効/無効を個別に切り替えできます。</li>
-        <li><strong>これだけ有効:</strong> 選択したキーワードのみを有効にし、他を全て無効にします。</li>
-        <li><strong>キーワード編集:</strong> 既存のキーワードの内容を変更できます。</li>
-        <li>
-          <strong>入力ルール:</strong> 法人属性、地域、業種 をスペース区切りで入力してください。
-          <br><br>
-          <strong>入力例：</strong>
-          <ul style="margin-top: 4px; margin-bottom: 4px;">
-            <li>医療法人 町田市 美容</li>
-            <li>NPO法人 八王子市 介護</li>
-            <li>株式会社 渋谷区 IT</li>
-            <li>合同会社 横浜市 飲食</li>
-            <li>有限会社 新宿区 建設</li>
-          </ul>
-          ※ 固定キーワード（<code>概要 情報</code>）と除外ワード（<code>-一覧 -ランキング -まとめ -比較</code>）は自動で追加されます。
-        </li>
-      </ul>     
-</div>
-{% endblock %}
