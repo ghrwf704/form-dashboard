@@ -1,4 +1,5 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, send_file, send_from_directory, jsonify, abort
+#app.py
+from flask import Flask, render_template, request, redirect, url_for, flash, send_file, session
 from flask_login import LoginManager, login_user, logout_user, login_required, UserMixin, current_user
 import pymongo
 import certifi
@@ -6,81 +7,42 @@ import bcrypt
 import configparser
 import pandas as pd
 from flask_pymongo import PyMongo
+import os
+from flask import send_from_directory
 from bson import ObjectId
-from bson.errors import InvalidId  # 👈 これが正解！
 from io import BytesIO
 from datetime import datetime, timedelta
-import os
-import re
 
-# 初期化
+if not os.path.exists("logs"):
+    os.makedirs("logs")
+# 設定ファイル読み込み
+config = configparser.ConfigParser()
+config.read("setting.ini", encoding="utf-8")
+
 app = Flask(__name__)
-app.secret_key = os.environ.get("SECRET_KEY")
-app.config["MONGO_URI"] = os.environ.get("MONGO_URI")
-
-# Mongo接続
+app.config["MONGO_URI"] = os.environ.get("MONGO_URI")  # または直接MongoDBのURLを書く
+MONGO_URI = app.config["MONGO_URI"]
 mongo = PyMongo(app)
-client = pymongo.MongoClient(app.config["MONGO_URI"], tls=True, tlsCAFile=certifi.where())
+
+app.secret_key = os.environ.get("SECRET_KEY")
+
+client = pymongo.MongoClient(MONGO_URI, tls=True, tlsCAFile=certifi.where())
 db = client["form_database"]
 collection = db["forms"]
 keywords_collection = db["keywords"]
 users_collection = db["users"]
 urls_collection = db["urls"]
-
-# Flask-Login構成
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = "login"
 
-# ログ用ディレクトリ
-os.makedirs("logs", exist_ok=True)
-
-# Userモデル
 class User(UserMixin):
     def __init__(self, user_doc):
         self.id = user_doc["username"]
         self.display_name = user_doc.get("display_name", self.id)
         self.email = user_doc.get("email", "")
-        self.role = user_doc.get("role", "user")
+        self.role = user_doc.get("role", "user")  # 任意
 
-@login_manager.user_loader
-def load_user(username):
-    user_doc = users_collection.find_one({"username": username})
-    return User(user_doc) if user_doc else None
-
-@app.route("/login", methods=["GET", "POST"])
-def login():
-    if request.method == "POST":
-        username = request.form.get("username")
-        password = request.form.get("password")
-        user_doc = users_collection.find_one({"username": username})
-
-        # ✅ password → password_hash に修正
-        if user_doc and bcrypt.checkpw(password.encode(), user_doc["password_hash"]):
-            login_user(User(user_doc))  # ✅ user_doc 丸ごと渡す
-            return redirect(url_for("index"))
-
-        flash("ログイン失敗: ユーザー名またはパスワードが間違っています", "danger")
-
-    return render_template("login.html")
-
-@app.route("/logout")
-@login_required
-def logout():
-    logout_user()
-    return redirect(url_for("login"))
-
-@app.route("/")
-@login_required
-def index():
-    user = current_user.id
-    forms = list(collection.find({"owner": user}).sort("_id", -1))
-    active_keywords = [k["keyword"] for k in keywords_collection.find({"active": True, "owner": user})]
-
-    from weather import get_weather
-    weather_info = get_weather()
-
-    return render_template("index.html", user=current_user.display_name, forms=forms, active_keywords=active_keywords, weather=weather_info)
 
 @app.route("/downloads/<filename>")
 def serve_downloads(filename):
@@ -89,6 +51,38 @@ def serve_downloads(filename):
 @app.route("/version/<filename>")
 def serve_version(filename):
     return send_from_directory("version", filename)
+
+@login_manager.user_loader
+def load_user(username):
+    user_doc = users_collection.find_one({"username": username})
+    if user_doc:
+        return User(user_doc)
+    return None
+
+
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    if request.method == "POST":
+        username = request.form.get("username")
+        password = request.form.get("password")
+
+        user_doc = users_collection.find_one({"username": username})
+        if user_doc and bcrypt.checkpw(password.encode(), user_doc["password"]):
+            login_user(User(user_doc))  # user_doc全体を渡すのがポイント
+            return redirect(url_for("index"))
+
+        flash("ログイン失敗: ユーザー名またはパスワードが間違っています", "danger")
+
+    return render_template("login.html")
+
+
+
+@app.route("/logout")
+@login_required
+def logout():
+    logout_user()
+    return redirect(url_for("login"))
+
 
 @app.route("/keywords", methods=["GET", "POST"])
 @login_required
@@ -100,8 +94,9 @@ def manage_keywords():
         return redirect("/keywords")
 
     all_keywords = list(keywords_collection.find({"owner": current_user.id}))
-    from weather import get_weather
-    return render_template("keywords.html", keywords=all_keywords, weather=get_weather())
+    weather_info = get_weather()  # 🌤 追加
+    return render_template("keywords.html", keywords=all_keywords, weather=weather_info)  # ✅ weather追加
+
 
 @app.route("/keywords/toggle/<keyword>")
 @login_required
@@ -132,6 +127,84 @@ def update_keyword(keyword):
         keywords_collection.update_one({"keyword": keyword, "owner": current_user.id}, {"$set": {"keyword": new_keyword}})
     return redirect("/keywords")
 
+from weather import get_weather
+
+@app.route("/")
+@login_required
+def index():
+    user = current_user.id  # ✅ ここをFlask-Login基準に統一！
+
+    forms = list(collection.find({"owner": user}).sort("_id", -1))
+    active_keywords = [k["keyword"] for k in keywords_collection.find({"active": True, "owner": user})]
+    weather_info = get_weather()
+
+    return render_template(
+        "index.html",
+        user=user,
+        forms=forms,
+        active_keywords=active_keywords,
+        weather=weather_info
+    )
+
+
+
+from flask import request, jsonify
+from weather import get_weather_by_coords  # weather.pyからインポート
+@app.route("/get_weather_by_coords", methods=["POST"])
+def get_weather_by_coords_api():
+    try:
+        data = request.get_json()
+        lat = data.get("lat")
+        lon = data.get("lon")
+
+        if not lat or not lon:
+            return jsonify({"error": "緯度経度が不足しています"}), 400
+
+        weather_data = get_weather_by_coords(lat, lon)
+        return jsonify(weather_data)
+
+    except Exception as e:
+        print("🌩️ 天気API処理エラー:", e)
+        return jsonify({"error": "サーバーエラー"}), 500
+
+from bson.objectid import ObjectId, InvalidId
+from flask import flash
+
+@app.route("/delete_company/<company_id>")
+@login_required
+def delete_company(company_id):
+    try:
+        obj_id = ObjectId(company_id)
+        company = collection.find_one({"_id": obj_id, "owner": current_user.id})
+        if not company:
+            flash("企業データが見つかりませんでした。", "warning")
+            return redirect(url_for("index"))
+
+        # forms から削除
+        collection.delete_one({"_id": obj_id, "owner": current_user.id})
+
+        # urls から関連企業を削除（企業名一致）
+        company_name = company.get("company_name")
+        if company_name:
+            urls_collection.delete_many({
+                "owner": current_user.id,
+                "pre_company_name": company_name
+            })
+
+        flash("企業データを削除しました。", "success")
+        return redirect(url_for("index"))
+
+    except InvalidId:
+        flash("無効なIDが指定されました。", "danger")
+        return redirect(url_for("index"))
+
+    except Exception as e:
+        # ログに出す or print する
+        print(f"[ERROR] 削除時の例外: {e}")
+        flash("削除中にエラーが発生しました。", "danger")
+        return redirect(url_for("index"))
+
+
 @app.route("/edit_company/<company_id>", methods=["GET", "POST"])
 @login_required
 def edit_company(company_id):
@@ -148,15 +221,70 @@ def edit_company(company_id):
             "category_keywords": request.form.get("category_keywords"),
             "description": request.form.get("description")
         }
-        collection.update_one({"_id": ObjectId(company_id)}, {"$set": new_data})
+        collection.update_one(
+            {"_id": ObjectId(company_id)},
+            {"$set": new_data}
+        )
         return redirect(url_for("index"))
 
     return render_template("edit_company.html", company=company)
+
+@app.route("/export_excel_filtered", methods=["POST"])
+@login_required
+def export_excel_filtered():
+    filters = request.get_json(force=True)
+    query = {}
+
+    # フィルター条件に応じてMongoDBクエリを構築
+    if filters.get("name"):
+        query["company_name"] = {"$regex": filters["name"], "$options": "i"}
+    if filters.get("address"):
+        query["address"] = {"$regex": filters["address"], "$options": "i"}
+    if filters.get("category"):
+        query["category_keywords"] = {"$regex": filters["category"], "$options": "i"}
+    if filters.get("status"):
+        query["sales_status"] = filters["status"]
+
+    # データ取得
+    results = list(collection.find(query, {
+        "_id": 0,
+        "company_name": 1,
+        "url_top": 1,
+        "url_form": 1,
+        "address": 1,
+        "tel": 1,
+        "fax": 1,
+        "category_keywords": 1,
+        "description": 1,
+        "sales_status": 1,
+        "sales_note": 1,
+    }))
+
+    # DataFrameに変換
+    df = pd.DataFrame(results)
+
+    # Excel出力
+    output = BytesIO()
+    with pd.ExcelWriter(output, engine="xlsxwriter") as writer:
+        df.to_excel(writer, sheet_name="Filtered", index=False)
+
+    output.seek(0)  # 重要: ファイル先頭に戻る
+
+    return send_file(
+        output,
+        as_attachment=True,
+        download_name="filtered_companies.xlsx",
+        mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
 
 @app.route("/update_company", methods=["POST"])
 @login_required
 def update_company():
     company_id = request.form.get("company_id")
+    if not company_id:
+        flash("企業IDが見つかりません。", "danger")
+        return redirect(url_for("index"))
+
     update_data = {
         "company_name": request.form.get("company_name"),
         "url_top": request.form.get("url_top"),
@@ -175,93 +303,117 @@ def update_company():
         {"$set": update_data}
     )
 
-    flash("企業情報を更新しました。" if result.modified_count else "変更内容がありませんでした。", "success" if result.modified_count else "info")
-    return redirect(url_for("index"))
-
-@app.route("/delete_company/<company_id>")
-@login_required
-def delete_company(company_id):
-    try:
-        obj_id = ObjectId(company_id)
-        company = collection.find_one({"_id": obj_id, "owner": current_user.id})
-        if not company:
-            flash("企業データが見つかりませんでした。", "warning")
-            return redirect(url_for("index"))
-
-        collection.delete_one({"_id": obj_id, "owner": current_user.id})
-        company_name = company.get("company_name")
-        if company_name:
-            urls_collection.delete_many({"owner": current_user.id, "pre_company_name": company_name})
-
-        flash("企業データを削除しました。", "success")
-    except InvalidId:
-        flash("無効なIDが指定されました。", "danger")
-    except Exception as e:
-        print(f"[ERROR] 削除時の例外: {e}")
-        flash("削除中にエラーが発生しました。", "danger")
+    if result.modified_count > 0:
+        flash("企業情報を更新しました。", "success")
+    else:
+        flash("変更内容がありませんでした。", "info")
 
     return redirect(url_for("index"))
 
-@app.route("/export_excel_filtered", methods=["POST"])
-@login_required
-def export_excel_filtered():
-    filters = request.get_json(force=True)
-    query = {"owner": current_user.id}
+from flask import Flask, request, render_template_string
+from datetime import datetime
 
-    if filters.get("name"):
-        query["company_name"] = {"$regex": filters["name"], "$options": "i"}
-    if filters.get("address"):
-        query["address"] = {"$regex": filters["address"], "$options": "i"}
-    if filters.get("category"):
-        query["category_keywords"] = {"$regex": filters["category"], "$options": "i"}
-    if filters.get("status"):
-        query["sales_status"] = filters["status"]
+log_file_path = "runtime.log"
 
-    results = list(collection.find(query, {
-        "_id": 0,
-        "company_name": 1,
-        "url_top": 1,
-        "url_form": 1,
-        "address": 1,
-        "tel": 1,
-        "fax": 1,
-        "category_keywords": 1,
-        "description": 1,
-        "sales_status": 1,
-        "sales_note": 1,
-    }))
-
-    df = pd.DataFrame(results)
-    output = BytesIO()
-    with pd.ExcelWriter(output, engine="xlsxwriter") as writer:
-        df.to_excel(writer, sheet_name="Filtered", index=False)
-
-    output.seek(0)
-    return send_file(
-        output,
-        as_attachment=True,
-        download_name="filtered_companies.xlsx",
-        mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-    )
-
+# ログを受け取るエンドポイント
 @app.route("/log", methods=["GET", "POST"])
 def receive_log():
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    user = request.values.get("user", "unknown")
-    msg = request.get_json().get("message") if request.is_json else request.args.get("msg", "")
+    
+    if request.method == "POST":
+        data = request.get_json()
+        msg = data.get("message", "")
+        user = data.get("user", "unknown")  # POSTでもuserを指定できるように
+    else:
+        msg = request.args.get("msg", "")
+        user = request.args.get("user", "unknown")
 
+    # ユーザー別ディレクトリ
     log_dir = os.path.join("logs", user)
     os.makedirs(log_dir, exist_ok=True)
-    log_file = os.path.join(log_dir, f"{datetime.now().strftime('%Y-%m-%d')}.txt")
 
+    log_file = os.path.join(log_dir, f"{datetime.now().strftime('%Y-%m-%d')}.txt")
     with open(log_file, "a", encoding="utf-8") as f:
         f.write(f"[{timestamp}] {msg}\n")
 
     return jsonify(status="ok")
 
+# ログをブラウザから確認するページ
+@app.route("/logs")
+def view_logs():
+    try:
+        with open(log_file_path, "r", encoding="utf-8") as f:
+            log_content = f.read()
+    except FileNotFoundError:
+        log_content = "ログはまだありません。"
+
+    # 簡易テンプレート
+    return render_template_string("""
+    <html>
+    <head>
+        <meta charset="utf-8">
+        <title>実行ログ</title>
+        <meta http-equiv="refresh" content="5"> <!-- 5秒ごとに自動更新 -->
+        <style>
+            body { font-family: monospace; background: #f5f5f5; padding: 20px; }
+            pre { background: white; padding: 10px; border: 1px solid #ccc; }
+        </style>
+    </head>
+    <body>
+        <h1>📝 実行ログ</h1>
+        <pre>{{ log }}</pre>
+    </body>
+    </html>
+    """, log=log_content)
+
+from flask import request
+import os
+from datetime import datetime
+
+
+
+def clean_old_logs(base_dir="logs", days_to_keep=7):
+    """logs/以下のユーザーディレクトリ内で、指定日数より古いログファイルを削除"""
+    cutoff_date = datetime.now() - timedelta(days=days_to_keep)
+
+    for user_dir in os.listdir(base_dir):
+        user_path = os.path.join(base_dir, user_dir)
+        if not os.path.isdir(user_path):
+            continue
+
+        for log_file in os.listdir(user_path):
+            file_path = os.path.join(user_path, log_file)
+            try:
+                log_date_str = os.path.splitext(log_file)[0]
+                log_date = datetime.strptime(log_date_str, "%Y-%m-%d")
+                if log_date < cutoff_date:
+                    os.remove(file_path)
+                    print(f"[CLEANUP] 削除済み: {file_path}")
+            except Exception as e:
+                print(f"[CLEANUP ERROR] ファイルスキップ: {file_path} - {e}")
+
+@app.route("/logs/raw/<user>")
+def view_log(user):
+    date_str = datetime.now().strftime("%Y-%m-%d")
+    log_path = f"logs/{user}/log_{date_str}.txt"
+
+    if not os.path.exists(log_path):
+        return f"<h3>ログが存在しません: {user} / {date_str}</h3>", 404
+
+    with open(log_path, encoding="utf-8") as f:
+        content = f.read().replace("\n", "<br>")
+
+    return f"<h2>ログ表示（{user} / {date_str}）</h2><div>{content}</div>"
+
+import re
+
 @app.route("/logs/<user>")
 @login_required
 def show_logs(user):
+    import os
+    from flask import render_template, abort
+
+    # 👇 ユーザー名が安全な形式かチェック（英数字・_・- のみ許可）
     if not re.match(r"^[\w\-]+$", user):
         return abort(400, "不正なユーザー名")
 
@@ -281,36 +433,6 @@ def show_logs(user):
 
     return render_template("logs.html", user=user, log_lines=lines, filename=latest_file)
 
-def clean_old_logs(base_dir="logs", days_to_keep=7):
-    cutoff_date = datetime.now() - timedelta(days=days_to_keep)
-    for user_dir in os.listdir(base_dir):
-        user_path = os.path.join(base_dir, user_dir)
-        if os.path.isdir(user_path):
-            for log_file in os.listdir(user_path):
-                try:
-                    log_date_str = os.path.splitext(log_file)[0]
-                    log_date = datetime.strptime(log_date_str, "%Y-%m-%d")
-                    if log_date < cutoff_date:
-                        os.remove(os.path.join(user_path, log_file))
-                except Exception as e:
-                    print(f"[CLEANUP ERROR] {log_file}: {e}")
-
-@app.route("/get_weather_by_coords", methods=["POST"])
-def get_weather_by_coords_api():
-    from weather import get_weather_by_coords
-    data = request.get_json()
-    lat = data.get("lat")
-    lon = data.get("lon")
-
-    if not lat or not lon:
-        return jsonify({"error": "緯度経度が不足しています"}), 400
-
-    try:
-        return jsonify(get_weather_by_coords(lat, lon))
-    except Exception as e:
-        print("🌩️ 天気API処理エラー:", e)
-        return jsonify({"error": "サーバーエラー"}), 500
-
 if __name__ == "__main__":
-    clean_old_logs(days_to_keep=7)
+    clean_old_logs(days_to_keep=7)  # 起動時に古いログを削除
     app.run(host="0.0.0.0", port=10000)

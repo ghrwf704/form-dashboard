@@ -7,7 +7,7 @@
   <div class="log-box">
     <pre>
 {% for line in log_lines %}
-{{ line }}
+{{ line | e }}
 {% endfor %}
     </pre>
   </div>
