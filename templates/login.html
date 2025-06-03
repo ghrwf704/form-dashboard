@@ -9,7 +9,7 @@
 <body>
     <div class="container">
         <div class="login-form">
-            <h1 style="text-align: center; margin-bottom: 2rem;">🔐 ログイン</h1>
+            <h1>🔐 ログイン</h1>
             
             {% with messages = get_flashed_messages() %}
               {% if messages %}
@@ -28,12 +28,12 @@
                 <div class="form-group">
                     <input type="password" name="password" placeholder="🔑 パスワード" required>
                 </div>
-                <button type="submit" style="width: 100%;">🚀 ログイン</button>
+                <button type="submit">🚀 ログイン</button>
             </form>
             
-            <div style="text-align: center; margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid #e0e0e0; color: #666;">
+            <div>
                 <p>フォーム管理システムへようこそ</p>
-                <p style="font-size: 0.9rem;">認証情報を入力してアクセスしてください</p>
+                <p>認証情報を入力してアクセスしてください</p>
             </div>
         </div>
     </div>

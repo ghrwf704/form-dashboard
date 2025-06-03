@@ -14,7 +14,6 @@ from selenium.webdriver.support import expected_conditions as EC
 import time
 from datetime import datetime
 from tkinter import Tk, simpledialog
-import os
 from urllib.robotparser import RobotFileParser
 
 # .iniみ込み
@@ -50,6 +49,12 @@ def send_log_to_server(message):
     config = configparser.ConfigParser()
     config.read("setting.ini", encoding="utf-8")
     user = config["USER"].get("id", "unknown")
+
+    # 再帰防止メッセージ（再送しない）
+    if "最大URL収集数に達しました" in message:
+        print(message)
+        return
+
     if maxCountPerDay >= MAX_TOTAL_URLS_PER_DAY:
         send_log_to_server("✅ 最大URL収集数に達しました。終了します。")
         return
@@ -61,6 +66,7 @@ def send_log_to_server(message):
             print("[SERVER] ログ送信成功")
     except Exception as e:
         print(f"[ERROR] ログ送信失敗: {e}")
+
 
 # USERセクション確認
 if "USER" not in config:

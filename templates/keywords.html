@@ -28,9 +28,9 @@
         {% for kw in keywords %}
         <tr>
             <td>
-                <form method="post" action="/keywords/update/{{ kw.keyword }}" style="display: flex; gap: 0.5rem; align-items: center;">
-                    <input type="text" name="new_keyword" value="{{ kw.keyword }}" style="margin-bottom: 0; flex: 1;">
-                    <button type="submit" style="padding: 0.5rem 1rem; font-size: 0.9rem;">✏️ 変更</button>
+                <form method="post" action="/keywords/update/{{ kw.keyword }}">
+                    <input type="text" name="new_keyword" value="{{ kw.keyword }}">
+                    <button type="submit">✏️ 変更</button>
                 </form>
             </td>
             <td>
@@ -50,8 +50,7 @@
                         🎯 これだけ有効
                     </a>
                     <a href="/keywords/delete/{{ kw.keyword }}" 
-                       onclick="return confirm('「{{ kw.keyword }}」を削除しますか？この操作は取り消せません。');"
-                       style="background: #dc3545; color: white;">
+                       onclick="return confirm('「{{ kw.keyword }}」を削除しますか？この操作は取り消せません。');">
                         🗑️ 削除
                     </a>
                 </div>
@@ -62,15 +61,15 @@
 </table>
 
 {% if not keywords %}
-<div style="text-align: center; padding: 3rem; color: #999;">
-    <p style="font-size: 1.2rem;">🏷️ キーワードがまだ登録されていません</p>
+<div>
+    <p>🏷️ キーワードがまだ登録されていません</p>
     <p>上のフォームから新しいキーワードを追加してください。</p>
 </div>
 {% endif %}
 
-<div style="margin-top: 2rem; padding: 1.5rem; background: rgba(102, 126, 234, 0.1); border-radius: 15px; border-left: 4px solid #667eea;">
-    <h3 style="color: #667eea; margin-bottom: 1rem;">💡 使い方のヒント</h3>
-    <ul style="color: #555; line-height: 1.6;">
+<div>
+    <h3>💡 使い方のヒント</h3>
+    <ul>
         <li><strong>キーワード追加:</strong> 検索に使用したいキーワードを入力して追加ボタンを押します。</li>
         <li><strong>状態切り替え:</strong> キーワードの有効/無効を個別に切り替えできます。</li>
         <li><strong>これだけ有効:</strong> 選択したキーワードのみを有効にし、他を全て無効にします。</li>
@@ -79,7 +78,7 @@
           <strong>入力ルール:</strong> 法人属性、地域、業種 をスペース区切りで入力してください。
           <br><br>
           <strong>入力例：</strong>
-          <ul style="margin-top: 4px; margin-bottom: 4px;">
+          <ul>
             <li>医療法人 町田市 美容</li>
             <li>NPO法人 八王子市 介護</li>
             <li>株式会社 渋谷区 IT</li>
