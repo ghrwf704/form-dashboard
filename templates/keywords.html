@@ -12,54 +12,55 @@
 <h1>🏷️ キーワード管理</h1>
 
 <form method="post" class="keyword-form">
-    <input type="text" name="keyword" placeholder="新しいキーワードを入力..." required>
-    <button type="submit">➕ 追加</button>
-</form>
-
-<table>
-    <thead>
-        <tr>
-            <th>キーワード</th>
-            <th>状態</th>
-            <th>操作</th>
-        </tr>
+    <input type="text" class="form-control" name="keyword" placeholder="新しいキーワードを入力..." required>
+    <button type="submit" class="btn btn-primary">➕ 追加</button>
+  </form>
+  
+  <table class="table table-striped table-bordered align-middle">
+    <thead class="table-light">
+      <tr>
+        <th>キーワード</th>
+        <th>状態</th>
+        <th>操作</th>
+      </tr>
     </thead>
     <tbody>
-        {% for kw in keywords %}
-        <tr>
-            <td>
-                <form method="post" action="/keywords/update/{{ kw.keyword }}" style="display: flex; gap: 0.5rem; align-items: center;">
-                    <input type="text" name="new_keyword" value="{{ kw.keyword }}" style="margin-bottom: 0; flex: 1;">
-                    <button type="submit" style="padding: 0.5rem 1rem; font-size: 0.9rem;">✏️ 変更</button>
-                </form>
-            </td>
-            <td>
-                {% if kw.active %}
-                    <span class="status-active">✅ 有効</span>
-                {% else %}
-                    <span class="status-inactive">❌ 無効</span>
-                {% endif %}
-            </td>
-            <td>
-                <div class="keyword-actions">
-                    <a href="/keywords/toggle/{{ kw.keyword }}">
-                        {% if kw.active %}🔄 無効にする{% else %}🔄 有効にする{% endif %}
-                    </a>
-                    <a href="/keywords/only/{{ kw.keyword }}" 
-                       onclick="return confirm('「{{ kw.keyword }}」のみを有効にして、他を無効にしますか？');">
-                        🎯 これだけ有効
-                    </a>
-                    <a href="/keywords/delete/{{ kw.keyword }}" 
-                       onclick="return confirm('「{{ kw.keyword }}」を削除しますか？この操作は取り消せません。');"
-                       style="background: #dc3545; color: white;">
-                        🗑️ 削除
-                    </a>
-                </div>
-            </td>
-        </tr>
-        {% endfor %}
+      {% for kw in keywords %}
+      <tr>
+        <td>
+          <form method="post" action="/keywords/update/{{ kw.keyword }}" class="d-flex gap-2">
+            <input type="text" class="form-control" name="new_keyword" value="{{ kw.keyword }}">
+            <button type="submit" class="btn btn-outline-secondary">✏️ 変更</button>
+          </form>
+        </td>
+        <td>
+          {% if kw.active %}
+            <span class="status-active">✅ 有効</span>
+          {% else %}
+            <span class="status-inactive">❌ 無効</span>
+          {% endif %}
+        </td>
+        <td>
+          <div class="keyword-actions">
+            <a class="btn btn-sm btn-warning" href="/keywords/toggle/{{ kw.keyword }}">
+              {% if kw.active %}🔄 無効にする{% else %}🔄 有効にする{% endif %}
+            </a>
+            <a class="btn btn-sm btn-info" href="/keywords/only/{{ kw.keyword }}"
+               onclick="return confirm('「{{ kw.keyword }}」のみを有効にして、他を無効にしますか？');">
+              🎯 これだけ有効
+            </a>
+            <a class="btn btn-sm btn-danger" href="/keywords/delete/{{ kw.keyword }}"
+               onclick="return confirm('「{{ kw.keyword }}」を削除しますか？この操作は取り消せません。');">
+              🗑️ 削除
+            </a>
+          </div>
+        </td>
+      </tr>
+      {% endfor %}
     </tbody>
-</table>
+  </table>
+  
+  
 
 {% if not keywords %}
 <div style="text-align: center; padding: 3rem; color: #999;">

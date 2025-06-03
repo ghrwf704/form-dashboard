@@ -1,0 +1,34 @@
+フォルダー パスの一覧
+ボリューム シリアル番号は 64F3-12E8 です
+C:.
+|   .gitignore
+|   app.py
+|   chromedriver.exe
+|   create_user.py
+|   MyCrawler.py
+|   requirements.txt
+|   setting.ini
+|   stripe_checkout.py
+|   tree.txt
+|   weather.py
+|   
++---downloads
+|       MyCrawler.exe
+|       
++---static
+|       favicon.png
+|       og_image.jpg
+|       style.css
+|       
++---templates
+|       edit_company.html
+|       form.html
+|       index.html
+|       keywords.html
+|       login.html
+|       logs.html
+|       _base.html
+|       
+\---version
+        latest_setting.ini
+        

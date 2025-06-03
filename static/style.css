@@ -793,3 +793,50 @@ td a:hover {
         box-shadow: none !important;
     }
 }
+
+.keyword-form {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 2rem;
+  }
+  
+  .keyword-form input[type="text"] {
+    flex: 1;
+  }
+  
+  .keyword-actions a {
+    display: inline-block;
+    margin-right: 0.5rem;
+    padding: 0.3rem 0.7rem;
+    border-radius: 5px;
+    text-decoration: none;
+    color: white;
+    background-color: #007bff;
+    font-size: 0.9rem;
+  }
+  
+  .keyword-actions a:last-child {
+    background-color: #dc3545;
+  }
+  
+  .status-active {
+    color: green;
+    font-weight: bold;
+  }
+  
+  .status-inactive {
+    color: gray;
+    font-weight: bold;
+  }
+  
+  .keyword-empty {
+    text-align: center;
+    padding: 2rem;
+    color: #aaa;
+    font-size: 1.2rem;
+  }
+  .card input.form-control {
+    font-size: 1rem;
+    padding: 0.75rem 1rem;
+  }
+  
