@@ -63,7 +63,7 @@
         <td>
           <a href="#" class="edit-btn btn btn-outline-primary btn-sm"
              data-id="{{ f['_id'] }}"
-             data-company-name="{{ f.get('company_name', '') | e }}"
+             data-company-name="{{ f.get('company_name', '') | e | forceescape }}"
              data-url-top="{{ f.get('url_top', '') | e }}"
              data-url-form="{{ f.get('url_form', '') | e }}"
              data-address="{{ f.get('address', '') | e }}"
@@ -228,7 +228,7 @@
         
         // データ属性から値を取得してモーダルのフィールドに設定
         document.getElementById('edit_id').value = this.dataset.id || '';
-        document.getElementById('edit_name').value = this.dataset.companyName || '';
+        document.getElementById('edit_name').value = this.getAttribute('data-company-name') || '';
         document.getElementById('edit-url-top').value = this.dataset.urlTop || '';
         document.getElementById('edit-url-form').value = this.dataset.urlForm || '';
         document.getElementById('edit_address').value = this.dataset.address || '';
