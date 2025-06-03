@@ -183,11 +183,7 @@
         const matchCategory = category.includes(categoryFilter);
         const matchStatus = !statusFilter || status === statusFilter;
 
-        if (matchName && matchAddress && matchCategory && matchStatus) {
-          row.style.display = "";
-        } else {
-          row.style.display = "none";
-        }
+        row.style.display = (matchName && matchAddress && matchCategory && matchStatus) ? "" : "none";
       });
     }
 
@@ -196,7 +192,7 @@
     categoryInput.addEventListener("input", filterTable);
     statusSelect.addEventListener("change", filterTable);
 
-    // Excel出力ボタンが押されたとき、現在のフィルター値をサーバーに送信
+    // Excel出力
     const exportBtn = document.getElementById("exportVisible");
     exportBtn.addEventListener("click", () => {
       const name = nameInput.value.trim();
@@ -222,13 +218,9 @@
     // 編集ボタンクリック時の処理
     document.querySelectorAll('.edit-btn').forEach(button => {
       button.addEventListener('click', function () {
-        // デバッグ用：データ属性の値を確認
-        console.log('Company Name:', this.dataset.companyName);
-        console.log('All dataset:', this.dataset);
-        
-        // データ属性から値を取得してモーダルのフィールドに設定
+        const name = this.dataset.companyName;
         document.getElementById('edit_id').value = this.dataset.id || '';
-        document.getElementById('edit_name').value = this.getAttribute('data-company-name') || '';
+        document.getElementById('edit_name').value = name && name !== 'None' ? name : '';
         document.getElementById('edit-url-top').value = this.dataset.urlTop || '';
         document.getElementById('edit-url-form').value = this.dataset.urlForm || '';
         document.getElementById('edit_address').value = this.dataset.address || '';
