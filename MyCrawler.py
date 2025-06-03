@@ -253,40 +253,59 @@ def collect_company_info():
 
             driver.get(topurl)
             top_text = driver.page_source
-
-            form_data = {
+            text = text.replace("\n", "")  # ← 修正ポイント
+            form_data = form_data = {
                 "company_name": company_name,
+
+                # 従業員数（社員数）
                 "employees": extract_field([
-                    r"従業員数[:：\s]*([0-9,]+人?)", 
-                    r"社員数[:：\s]*([0-9,]+人?)"
-                ], full_text),
+                    r"(従業員|社員)[^0-9０-９]{0,5}([1-9１-９][0-9０-９,]{1,6})人?"
+                ], text),
+
+                # 資本金
                 "capital": extract_field([
-                    r"資本金[:：\s]*([0-9,億円万円]+)"
-                ], full_text),
+                    r"資本金[^0-9０-９]{0,5}([0-9０-９,億万円]+)"
+                ], text),
+
+                # 住所（都道府県名で開始）
                 "address": extract_field([
-                    r"((北海道|青森県|岩手県|宮城県|秋田県|山形県|福島県|茨城県|栃木県|群馬県|埼玉県|千葉県|東京都|神奈川県|新潟県|富山県|石川県|福井県|山梨県|長野県|岐阜県|静岡県|愛知県|三重県|滋賀県|京都府|大阪府|兵庫県|奈良県|和歌山県|鳥取県|島根県|岡山県|広島県|山口県|徳島県|香川県|愛媛県|高知県|福岡県|佐賀県|長崎県|熊本県|大分県|宮崎県|鹿児島県|沖縄県)[^、。・1-9１-９一-九]+)"
+                    r"((北海道|青森県|岩手県|宮城県|秋田県|山形県|福島県|茨城県|栃木県|群馬県|埼玉県|千葉県|東京都|神奈川県|新潟県|富山県|石川県|福井県|山梨県|長野県|岐阜県|静岡県|愛知県|三重県|滋賀県|京都府|大阪府|兵庫県|奈良県|和歌山県|鳥取県|島根県|岡山県|広島県|山口県|徳島県|香川県|愛媛県|高知県|福岡県|佐賀県|長崎県|熊本県|大分県|宮崎県|鹿児島県|沖縄県)[^、。\n\r0-9０-９一-九]+)"
                 ], full_text),
+
+                # 電話番号
                 "tel": extract_field([
-                    r"(?:Tel|TEL|電話番号|電話|tel)[^\d]*([0-9０-９\-\s]{10,15})",
-                    r"(\d{2,4}[-‐－―\s]?\d{2,4}[-‐－―\s]?\d{3,4})"
-                ], full_text),
+                    r"(?:Tel|TEL|電話番号|電話|tel)[^\d０-９]{0,5}([0-9０-９]{2,4}[-‐－―ー―\s]?[0-9０-９]{2,4}[-‐－―ー―\s]?[0-9０-９]{3,4})"
+                ], text),
+
+                # FAX番号
                 "fax": extract_field([
-                    r"(?:FAX|Fax|ファックス|fax)[^\d]*([0-9０-９\-\s]{10,15})"
-                ], full_text),
+                    r"(?:FAX|Fax|ファックス|fax)[^\d０-９]{0,5}([0-9０-９]{2,4}[-‐－―ー―\s]?[0-9０-９]{2,4}[-‐－―ー―\s]?[0-9０-９]{3,4})"
+                ], text),
+
+                # 設立年月
                 "founded": extract_field([
-                    r"(?:設立|創立|創業)[:：\s]*(\d{4}年\d{1,2}月?)"
-                ], full_text),
+                    r"(?:設立|創立|創業)[^0-9０-９]{0,5}([0-9０-９]{4}年[0-9０-９]{1,2}月?)"
+                ], text),
+
+                # 代表者名
                 "ceo": extract_field([
-                    r"(代表取締役[^\n]{0,20})", 
+                    r"(代表取締役[^\n]{0,20})",
                     r"(CEO[^\n]{0,20})"
                 ], full_text),
+
+                # メールアドレス
                 "email": extract_email(text),
+
+                # カテゴリキーワードと説明（metaタグ）
                 "category_keywords": extract_field([
-                    r'<meta name="keywords" content="(.*?)"'
+                    r'<meta[^>]+name=["\']keywords["\'][^>]+content=["\'](.*?)["\']'
                 ], top_text),
+
                 "description": extract_field([
-                    r'<meta name="description" content="(.*?)"'
+                    r'<meta[^>]+name=["\']description["\'][^>]+content=["\'](.*?)["\']'
                 ], top_text),
+
+                # URL情報は別途取得済みのものを利用
                 "url_top": topurl,
                 "eyecatch_image": result.get("eyecatch_image"),
                 "owner": username
