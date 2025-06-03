@@ -14,7 +14,7 @@
 <div class="d-flex justify-content-between align-items-center mb-3">
   <h1>🏢 企業一覧</h1>
   <!-- 表示中データだけをExcel出力するボタン -->
-  <button id="exportVisible" style="margin-top: 10px;" class="btn btn-success">表示中データをExcel出力</button>
+  <button id="exportVisible" class="btn btn-success">表示中データをExcel出力</button>
 </div>
 
 <!-- フィルターフォーム -->
@@ -40,9 +40,9 @@
   </form>
 </div>
 
-<div class="table-container" style="overflow-x: auto; max-height: 70vh;">
-  <table class="table" style="table-layout: fixed;">
-    <thead style="position: sticky; top: 0; background: white; z-index: 2;">
+<div class="table-container">
+  <table class="table">
+    <thead>
       <tr>
         <th>操作</th>
         <th>企業名</th>
@@ -85,7 +85,7 @@
           {% if f.get('url_top') and f.get('url_top') != '#' %}
             <a href="{{ f['url_top'] }}" target="_blank">
               {% if f.get('eyecatch_image') %}
-                <img src="{{ f['eyecatch_image'].replace('http://', 'https://') }}" alt="アイキャッチ" class="eyecatch-img" style="width: 64px; height: 64px; object-fit: cover;" />
+                <img src="{{ f['eyecatch_image'].replace('http://', 'https://') }}" alt="アイキャッチ" class="eyecatch-img"/>
               {% else %}
                 🌐 サイトを開く
               {% endif %}
