@@ -216,21 +216,23 @@
 
     // 編集ボタンクリック時の処理
     document.querySelectorAll('.edit-btn').forEach(button => {
-      button.addEventListener('click', function () {
-        console.log(this);
-        const name = this.dataset.companyName;
-        document.getElementById('edit_id').value = this.dataset.id || '';
-        document.getElementById('edit_name').value = name && name !== 'None' ? name : '';
-        document.getElementById('edit-url-top').value = this.dataset.urlTop || '';
-        document.getElementById('edit-url-form').value = this.dataset.urlForm || '';
-        document.getElementById('edit_address').value = this.dataset.address || '';
-        document.getElementById('edit_tel').value = this.dataset.tel || '';
-        document.getElementById('edit_fax').value = this.dataset.fax || '';
-        document.getElementById('edit_category').value = this.dataset.category || '';
-        document.getElementById('edit_description').value = this.dataset.description || '';
-        document.getElementById('edit_status').value = this.dataset.salesStatus || '未連絡';
-        document.getElementById('edit_note').value = this.dataset.salesNote || '';
-      });
+      document.addEventListener('click', function (e) {
+      const button = e.target.closest('.edit-btn');
+      if (!button) return; // edit-btnでないクリックは無視
+
+      const name = button.dataset.companyName;
+      document.getElementById('edit_id').value = button.dataset.id || '';
+      document.getElementById('edit_name').value = name && name !== 'None' ? name : '';
+      document.getElementById('edit-url-top').value = button.dataset.urlTop || '';
+      document.getElementById('edit-url-form').value = button.dataset.urlForm || '';
+      document.getElementById('edit_address').value = button.dataset.address || '';
+      document.getElementById('edit_tel').value = button.dataset.tel || '';
+      document.getElementById('edit_fax').value = button.dataset.fax || '';
+      document.getElementById('edit_category').value = button.dataset.category || '';
+      document.getElementById('edit_description').value = button.dataset.description || '';
+      document.getElementById('edit_status').value = button.dataset.salesStatus || '未連絡';
+      document.getElementById('edit_note').value = button.dataset.salesNote || '';
+    });
     });
   });
 </script>
