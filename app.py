@@ -6,7 +6,8 @@ import bcrypt
 import configparser
 import pandas as pd
 from flask_pymongo import PyMongo
-from bson import ObjectId, InvalidId
+from bson import ObjectId
+from bson.errors import InvalidId  # 👈 これが正解！
 from io import BytesIO
 from datetime import datetime, timedelta
 import os
