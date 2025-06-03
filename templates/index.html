@@ -105,19 +105,22 @@
         <td>{{ f.get("tel", "未設定") }}</td>
         <td>{{ f.get("fax", "未設定") }}</td>
         <td class="sales-status">{{ f.get("sales_status", "未連絡") }}</td>
+        <!-- カテゴリ -->
         <td>
           <span class="hover-tooltip">🔍
-            <span class="tooltip-text">{{ f.get("category_keywords", "なし") }}</span>
+            <span class="tooltip-text">{{ f.get("category_keywords") or "なし" }}</span>
           </span>
         </td>
+        <!-- 説明 -->
         <td>
           <span class="hover-tooltip">📝
-            <span class="tooltip-text">{{ f.get("description", "なし") }}</span>
+            <span class="tooltip-text">{{ f.get("description") or "なし" }}</span>
           </span>
         </td>
+        <!-- メモ -->
         <td>
           <span class="hover-tooltip">🗒️
-            <span class="tooltip-text">{{ f.get("sales_note", "なし") }}</span>
+            <span class="tooltip-text">{{ f.get("sales_note") or "なし" }}</span>
           </span>
         </td>
       </tr>
