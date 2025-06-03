@@ -12,6 +12,7 @@
     <nav>
       <a href="{{ url_for('index') }}">📊 ダッシュボード</a>
       <a href="{{ url_for('manage_keywords') }}">🏷️ キーワード管理</a>
+      <li><a href="{{ url_for('show_logs', user=user) }}">📝 収集ログを見る</a></li>
       <a href="{{ url_for('logout') }}">🚪 ログアウト</a>
     </nav>
 
