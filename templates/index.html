@@ -217,6 +217,7 @@
     // 編集ボタンクリック時の処理
     document.querySelectorAll('.edit-btn').forEach(button => {
       button.addEventListener('click', function () {
+        console.log(this);
         const name = this.dataset.companyName;
         document.getElementById('edit_id').value = this.dataset.id || '';
         document.getElementById('edit_name').value = name && name !== 'None' ? name : '';
