@@ -63,16 +63,16 @@
         <td>
           <a href="#" class="edit-btn btn btn-outline-primary btn-sm"
              data-id="{{ f['_id'] }}"
-             data-company-name="{{ f.get('company_name', '') }}"
-             data-url-top="{{ f.get('url_top', '') }}"
-             data-url-form="{{ f.get('url_form', '') }}"
-             data-address="{{ f.get('address', '') }}"
-             data-tel="{{ f.get('tel', '') }}"
-             data-fax="{{ f.get('fax', '') }}"
-             data-category="{{ f.get('category_keywords', '') }}"
-             data-description="{{ f.get('description', '') }}"
-             data-sales-status="{{ f.get('sales_status', '未連絡') }}"
-             data-sales-note="{{ f.get('sales_note', '') }}"
+             data-company-name="{{ f.get('company_name', '') | e }}"
+             data-url-top="{{ f.get('url_top', '') | e }}"
+             data-url-form="{{ f.get('url_form', '') | e }}"
+             data-address="{{ f.get('address', '') | e }}"
+             data-tel="{{ f.get('tel', '') | e }}"
+             data-fax="{{ f.get('fax', '') | e }}"
+             data-category="{{ f.get('category_keywords', '') | e }}"
+             data-description="{{ f.get('description', '') | e }}"
+             data-sales-status="{{ f.get('sales_status', '未連絡') | e }}"
+             data-sales-note="{{ f.get('sales_note', '') | e }}"
              data-bs-toggle="modal" data-bs-target="#editModal">✏️</a>
           <a href="{{ url_for('delete_company', company_id=f['_id']) }}"
              onclick="return confirm('この企業データを削除してよろしいですか？');"
@@ -222,6 +222,10 @@
     // 編集ボタンクリック時の処理
     document.querySelectorAll('.edit-btn').forEach(button => {
       button.addEventListener('click', function () {
+        // デバッグ用：データ属性の値を確認
+        console.log('Company Name:', this.dataset.companyName);
+        console.log('All dataset:', this.dataset);
+        
         // データ属性から値を取得してモーダルのフィールドに設定
         document.getElementById('edit_id').value = this.dataset.id || '';
         document.getElementById('edit_name').value = this.dataset.companyName || '';
