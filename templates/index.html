@@ -63,7 +63,7 @@
         <td>
           <a href="#" class="edit-btn btn btn-outline-primary btn-sm"
              data-id="{{ f['_id'] }}"
-             data-company-name="{{ f.get('company_name', '') | e | forceescape }}"
+             data-company-name="{{ f.get('company_name', '') | e }}"
              data-url-top="{{ f.get('url_top', '') | e }}"
              data-url-form="{{ f.get('url_form', '') | e }}"
              data-address="{{ f.get('address', '') | e }}"
