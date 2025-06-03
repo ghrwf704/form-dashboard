@@ -1,5 +1,5 @@
 #app.py
-from flask import Flask, render_template, request, redirect, url_for, flash, send_file, session
+from flask import Flask, render_template, request, redirect, url_for, flash, send_file
 from flask_login import LoginManager, login_user, logout_user, login_required, UserMixin, current_user
 import pymongo
 import certifi
@@ -37,12 +37,8 @@ login_manager.init_app(app)
 login_manager.login_view = "login"
 
 class User(UserMixin):
-    def __init__(self, user_doc):
-        self.id = user_doc["username"]
-        self.display_name = user_doc.get("display_name", self.id)
-        self.email = user_doc.get("email", "")
-        self.role = user_doc.get("role", "user")  # 任意
-
+    def __init__(self, username):
+        self.id = username
 
 @app.route("/downloads/<filename>")
 def serve_downloads(filename):
@@ -54,28 +50,22 @@ def serve_version(filename):
 
 @login_manager.user_loader
 def load_user(username):
-    user_doc = users_collection.find_one({"username": username})
-    if user_doc:
-        return User(user_doc)
+    user = users_collection.find_one({"username": username})
+    if user:
+        return User(username=user["username"])
     return None
-
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
         username = request.form.get("username")
         password = request.form.get("password")
-
-        user_doc = users_collection.find_one({"username": username})
-        if user_doc and bcrypt.checkpw(password.encode(), user_doc["password"]):
-            login_user(User(user_doc))  # user_doc全体を渡すのがポイント
+        user = users_collection.find_one({"username": username})
+        if user and bcrypt.checkpw(password.encode('utf-8'), user["password_hash"]):
+            login_user(User(username))
             return redirect(url_for("index"))
-
-        flash("ログイン失敗: ユーザー名またはパスワードが間違っています", "danger")
-
+        flash("ログイン失敗: ユーザー名またはパスワードが間違っています。")
     return render_template("login.html")
-
-
 
 @app.route("/logout")
 @login_required
@@ -132,10 +122,9 @@ from weather import get_weather
 @app.route("/")
 @login_required
 def index():
-    user = current_user.id  # ✅ ここをFlask-Login基準に統一！
-
-    forms = list(collection.find({"owner": user}).sort("_id", -1))
-    active_keywords = [k["keyword"] for k in keywords_collection.find({"active": True, "owner": user})]
+    user = session.get("user", "unknown")
+    forms = list(collection.find({"owner": current_user.id}).sort("_id", -1))
+    active_keywords = [k["keyword"] for k in keywords_collection.find({"active": True, "owner": current_user.id})]
     weather_info = get_weather()
 
     return render_template(
@@ -145,7 +134,6 @@ def index():
         active_keywords=active_keywords,
         weather=weather_info
     )
-
 
 
 from flask import request, jsonify
