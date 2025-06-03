@@ -55,8 +55,9 @@ def login():
         password = request.form.get("password")
         user_doc = users_collection.find_one({"username": username})
 
-        if user_doc and bcrypt.checkpw(password.encode(), user_doc["password"]):
-            login_user(User(user_doc))
+        # ✅ password → password_hash に修正
+        if user_doc and bcrypt.checkpw(password.encode(), user_doc["password_hash"]):
+            login_user(User(user_doc))  # ✅ user_doc 丸ごと渡す
             return redirect(url_for("index"))
 
         flash("ログイン失敗: ユーザー名またはパスワードが間違っています", "danger")
