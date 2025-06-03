@@ -60,12 +60,26 @@ def login():
     if request.method == "POST":
         username = request.form.get("username")
         password = request.form.get("password")
+
         user = users_collection.find_one({"username": username})
         if user and bcrypt.checkpw(password.encode('utf-8'), user["password_hash"]):
             login_user(User(username))
+
+            # ✅ ログディレクトリとファイルを自動生成
+            today = datetime.now().strftime("%Y-%m-%d")
+            log_dir = os.path.join("logs", username)
+            os.makedirs(log_dir, exist_ok=True)
+            log_path = os.path.join(log_dir, f"{today}.txt")
+
+            with open(log_path, "a", encoding="utf-8") as f:
+                f.write(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] 🔐 ユーザー {username} がログインしました\n")
+
             return redirect(url_for("index"))
+
         flash("ログイン失敗: ユーザー名またはパスワードが間違っています。")
+
     return render_template("login.html")
+
 
 @app.route("/logout")
 @login_required
