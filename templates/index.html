@@ -79,6 +79,7 @@
              class="btn btn-outline-danger btn-sm">
              🗑️
           </a>
+          <button class="toggle-details btn btn-sm btn-outline-secondary">▼</button>
         </td>
         <td class="company-name">{{ f.get("company_name", "未設定") }}</td>
         <td>
@@ -124,6 +125,15 @@
           </span>
         </td>
       </tr>
+      <tr class="detail-row" style="display: none;">
+        <td colspan="11" class="company-details-row">
+          <div class="detail-inline">
+            <span><strong>カテゴリ:</strong> {{ f.get("category_keywords", "なし") }}</span>
+            <span><strong>説明:</strong> {{ f.get("description", "なし") }}</span>
+            <span><strong>メモ:</strong> {{ f.get("sales_note", "なし") }}</span>
+          </div>
+        </td>
+      </tr>     
       {% endfor %}
     </tbody>
   </table>
@@ -250,5 +260,16 @@
     });
     });
   });
+  document.addEventListener("DOMContentLoaded", () => {
+  document.querySelectorAll('.toggle-details').forEach(btn => {
+    btn.addEventListener("click", () => {
+      const row = btn.closest("tr");
+      const detailRow = row.nextElementSibling;
+      if (detailRow && detailRow.classList.contains("detail-row")) {
+        detailRow.style.display = detailRow.style.display === "none" ? "table-row" : "none";
+      }
+    });
+  });
+});
 </script>
 {% endblock %}
