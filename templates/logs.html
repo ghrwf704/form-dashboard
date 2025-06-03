@@ -1,15 +1,16 @@
 <!-- templates/logs.html -->
-{% extends "_base.html" %}
-
-{% block content %}
-<div class="log-container">
-  <h2>🗂 ログファイル: {{ filename }}</h2>
-  <div class="log-box">
-    <pre>
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>ログ - {{ user }}</title>
+</head>
+<body>
+  <h2>{{ filename }}</h2>
+  <pre>
 {% for line in log_lines %}
-{{ line | e }}
+{{ line }}
 {% endfor %}
-    </pre>
-  </div>
-</div>
-{% endblock %}
+  </pre>
+</body>
+</html>

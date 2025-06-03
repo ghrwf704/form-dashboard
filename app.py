@@ -122,19 +122,16 @@ from weather import get_weather
 @app.route("/")
 @login_required
 def index():
-    user = session.get("user", "unknown")
     forms = list(collection.find({"owner": current_user.id}).sort("_id", -1))
     active_keywords = [k["keyword"] for k in keywords_collection.find({"active": True, "owner": current_user.id})]
     weather_info = get_weather()
 
     return render_template(
         "index.html",
-        user=user,
         forms=forms,
         active_keywords=active_keywords,
         weather=weather_info
     )
-
 
 from flask import request, jsonify
 from weather import get_weather_by_coords  # weather.pyからインポート
@@ -393,22 +390,16 @@ def view_log(user):
 
     return f"<h2>ログ表示（{user} / {date_str}）</h2><div>{content}</div>"
 
-import re
-
 @app.route("/logs/<user>")
-@login_required
 def show_logs(user):
     import os
-    from flask import render_template, abort
-
-    # 👇 ユーザー名が安全な形式かチェック（英数字・_・- のみ許可）
-    if not re.match(r"^[\w\-]+$", user):
-        return abort(400, "不正なユーザー名")
+    from flask import render_template
 
     log_dir = os.path.join("logs", user)
     if not os.path.exists(log_dir):
         return f"ログディレクトリが存在しません: {user}", 404
 
+    # 最新日付のログファイルを取得
     files = sorted(os.listdir(log_dir), reverse=True)
     if not files:
         return "ログファイルが存在しません", 404
@@ -420,6 +411,7 @@ def show_logs(user):
         lines = f.readlines()
 
     return render_template("logs.html", user=user, log_lines=lines, filename=latest_file)
+
 
 if __name__ == "__main__":
     clean_old_logs(days_to_keep=7)  # 起動時に古いログを削除

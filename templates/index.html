@@ -218,7 +218,7 @@
     document.querySelectorAll('.edit-btn').forEach(button => {
       document.addEventListener('click', function (e) {
       const button = e.target.closest('.edit-btn');
-      if (!button) return; // edit-btnでないクリックは無視
+      if (!button) return; // edit-btnでないクリック無視
 
       const name = button.dataset.companyName;
       document.getElementById('edit_id').value = button.dataset.id || '';
