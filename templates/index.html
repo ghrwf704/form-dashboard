@@ -57,9 +57,6 @@
         <th>設立年月</th>
         <th>代表取締役</th>
         <th>メール</th>
-        <th>🔍</th>  <!-- カテゴリ -->
-        <th>📝</th>  <!-- 説明 -->
-        <th>🗒️</th> <!-- メモ -->                
       </tr>
     </thead>
     <tbody>
@@ -119,24 +116,6 @@
         <td>{{ f.get("ceo", "不明") }}</td>
         <td>{{ f.get("email", "未登録") }}</td>
         <!-- カテゴリ -->
-        <td>
-          <span class="hover-tooltip">🔍
-            <span class="tooltip-text">{{ f.get("category_keywords") or "なし" }}</span>
-          </span><br>
-        </td>
-        <!-- 説明 -->
-        <td>
-          <span class="hover-tooltip">📝
-            <span class="tooltip-text">{{ f.get("description") or "なし" }}</span>
-          </span><br>
-        </td>
-        <!-- メモ -->
-        <td>
-          <span class="hover-tooltip">🗒️
-            <span class="tooltip-text">{{ f.get("sales_note") or "なし" }}</span>
-          </span>
-        </td>
-      </tr>
       <tr class="detail-row" style="display: none;">
         <td colspan="16" class="company-details-row">
           <div class="detail-inline">
