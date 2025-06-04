@@ -174,25 +174,21 @@
   document.addEventListener("DOMContentLoaded", function () {
     const nameInput = document.getElementById("filter-name");
     const addressInput = document.getElementById("filter-address");
-    const categoryInput = document.getElementById("filter-category");
     const statusSelect = document.getElementById("filter-status");
     const rows = document.querySelectorAll("table tbody tr");
 
     function filterTable() {
       const nameFilter = nameInput.value.toLowerCase();
       const addressFilter = addressInput.value.toLowerCase();
-      const categoryFilter = categoryInput.value.toLowerCase();
       const statusFilter = statusSelect.value;
 
       rows.forEach(row => {
         const name = row.querySelector(".company-name")?.textContent.toLowerCase() || "";
         const address = row.cells[4]?.textContent.toLowerCase() || "";
-        const category = row.querySelector(".category-tag")?.textContent.toLowerCase() || "";
         const status = row.querySelector(".sales-status")?.textContent || "";
 
         const matchName = name.includes(nameFilter);
         const matchAddress = address.includes(addressFilter);
-        const matchCategory = category.includes(categoryFilter);
         const matchStatus = !statusFilter || status === statusFilter;
 
         row.style.display = (matchName && matchAddress && matchCategory && matchStatus) ? "" : "none";
@@ -201,7 +197,6 @@
 
     nameInput.addEventListener("input", filterTable);
     addressInput.addEventListener("input", filterTable);
-    categoryInput.addEventListener("input", filterTable);
     statusSelect.addEventListener("change", filterTable);
 
     // Excel出力
@@ -209,7 +204,6 @@
     exportBtn.addEventListener("click", () => {
       const name = nameInput.value.trim();
       const address = addressInput.value.trim();
-      const category = categoryInput.value.trim();
       const status = statusSelect.value.trim();
 
       fetch("/export_excel_filtered", {
