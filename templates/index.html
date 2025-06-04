@@ -84,7 +84,9 @@
              class="btn btn-outline-danger btn-sm">
              🗑️
           </a>
-          <button class="toggle-details btn btn-sm btn-outline-secondary">▼</button>
+          <button class="toggle-details btn btn-sm btn-outline-secondary">
+            <span class="toggle-icon">▼</span>
+          </button>
         </td>
         <td class="company-name">{{ f.get("company_name", "未設定") }}</td>
         <td>
@@ -270,16 +272,19 @@
     });
     });
   });
-  document.addEventListener("DOMContentLoaded", () => {
   document.querySelectorAll('.toggle-details').forEach(btn => {
     btn.addEventListener("click", () => {
       const row = btn.closest("tr");
       const detailRow = row.nextElementSibling;
+      const icon = btn.querySelector(".toggle-icon");
+
       if (detailRow && detailRow.classList.contains("detail-row")) {
-        detailRow.style.display = detailRow.style.display === "none" ? "table-row" : "none";
+        const isVisible = detailRow.style.display !== "none";
+        detailRow.style.display = isVisible ? "none" : "table-row";
+        icon.textContent = isVisible ? "▼" : "▲";
       }
     });
   });
-});
 </script>
 {% endblock %}
+
