@@ -205,11 +205,10 @@
       const name = nameInput.value.trim();
       const address = addressInput.value.trim();
       const status = statusSelect.value.trim();
-
       fetch("/export_excel_filtered", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, address, category, status })
+        body: JSON.stringify({ name, address, status })  // 👈 category 削除
       })
       .then(res => res.blob())
       .then(blob => {
