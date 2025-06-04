@@ -16,6 +16,31 @@ from datetime import datetime
 from tkinter import Tk, simpledialog
 from urllib.robotparser import RobotFileParser
 
+
+INI_URL = "https://get-infomation.net/list_collection/latest_setting.ini"  # ← 実際のURLに変更してください
+EXE_URL = "https://get-infomation.net/list_collection/MyCrawler.exe"
+LOCAL_INI_PATH = "setting.ini"
+EXE_PATH = "MyCrawler.exe"
+
+# 定数
+MAX_NEW_URLS_PER_OWNER = 10
+MAX_TOTAL_URLS_PER_DAY = 100
+maxCountPerDay = 0
+
+# 設定ファイルからユーザーIDを取得
+config = configparser.ConfigParser()
+config.read("setting.ini", encoding="utf-8")
+username = config["USER"]["id"]
+
+# MongoDB接続
+MONGO_URI = config["USER"]["mongo_uri"]
+client = MongoClient(MONGO_URI, tls=True, tlsCAFile=certifi.where())
+db = client["form_database"]
+forms_collection = db["forms"]
+keywords_collection = db["keywords"]
+urls_collection = db["urls"]
+
+
 # .iniみ込み
 config = configparser.ConfigParser()
 config.read("setting.ini", encoding="utf-8")
@@ -88,12 +113,6 @@ if not config["USER"].get("pass"):
         send_log_to_server("パスワードが設定されませんでした。終了します。")
         exit()
 
-INI_URL = "https://form-dashboard.onrender.com/version/latest_setting.ini"  # ← 実際のURLに変更してください
-EXE_URL = "https://form-dashboard.onrender.com/downloads/MyCrawler.exe"
-LOCAL_INI_PATH = "setting.ini"
-EXE_PATH = "MyCrawler.exe"
-
-
 def download_file(url, dest_path):
     try:
         r = requests.get(url)
@@ -107,31 +126,47 @@ def download_file(url, dest_path):
         return False
 
 def check_and_update():
+    import os
+    import sys
+
     # 1. 最新INIを取得
     if not download_file(INI_URL, "latest.ini"):
-        return  # 通信失敗などで終了
+        print("❌ INIファイルのダウンロードに失敗しました。")
+        input("Enterキーで終了")
+        return
 
     # 2. バージョン読み込み
     latest = configparser.ConfigParser()
     current = configparser.ConfigParser()
-    latest.read("latest.ini")
-    current.read(LOCAL_INI_PATH)
+    latest.read("latest.ini", encoding="utf-8")
+    current.read(LOCAL_INI_PATH, encoding="utf-8")
 
     latest_ver = latest.get("USER", "version", fallback="0.0.0")
     current_ver = current.get("USER", "version", fallback="0.0.0")
 
-    # 3. 比較
+    # 3. バージョン比較
     if latest_ver != current_ver:
         send_log_to_server(f"[INFO] アップデートあり：{current_ver} → {latest_ver}")
-        # exeダウンロード
-        if download_file(EXE_URL, EXE_PATH):
-            # ini更新
-            current.set("USER", "version", latest_ver)
-            with open(LOCAL_INI_PATH, 'w') as f:
-                current.write(f)
-            send_log_to_server("[INFO] EXEとINIを更新しました")
+
+        today_str = datetime.now().strftime("%Y%m%d")
+        save_dir = os.path.join(os.getcwd(), today_str)
+        os.makedirs(save_dir, exist_ok=True)
+        new_exe_path = os.path.join(save_dir, "MyCrawler.exe")
+
+        if download_file(EXE_URL, new_exe_path):
+            send_log_to_server(f"[INFO] 新バージョンを {save_dir} に保存しました")
+            print(f"\n🔄 新しいバージョン（{latest_ver}）を {save_dir} に保存しました。")
+            print(f"➡️ 次回は現在のMyCrawler.exeではなく、{today_str}/MyCrawler.exeを上書き後に実行してください。")
+            input("Enterキーで終了")
+            sys.exit(1)
+        else:
+            send_log_to_server("[ERROR] 新EXEのダウンロード失敗")
+            print("❌ 新バージョンのダウンロードに失敗しました。")
+            input("Enterキーで終了")
+            sys.exit(1)
     else:
         send_log_to_server("[INFO] 現在のバージョンは最新版です")
+
 
 # 起動時にチェック
 check_and_update()
@@ -146,23 +181,6 @@ def get_og_image_from_url(url):
     except Exception:
         return None
 
-# 定数
-MAX_NEW_URLS_PER_OWNER = 10
-MAX_TOTAL_URLS_PER_DAY = 100
-maxCountPerDay = 0
-
-# 設定ファイルからユーザーIDを取得
-config = configparser.ConfigParser()
-config.read("setting.ini", encoding="utf-8")
-username = config["USER"]["id"]
-
-# MongoDB接続
-MONGO_URI = config["USER"]["mongo_uri"]
-client = MongoClient(MONGO_URI, tls=True, tlsCAFile=certifi.where())
-db = client["form_database"]
-forms_collection = db["forms"]
-keywords_collection = db["keywords"]
-urls_collection = db["urls"]
 # 抽出関数
 def extract_field(patterns, text):
     for pattern in patterns:
