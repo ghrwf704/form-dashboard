@@ -811,14 +811,10 @@ td a:hover {
     border-radius: 5px;
     text-decoration: none;
     color: white;
-    background-color: #007bff;
+    /* background-color: #007bff; */
     font-size: 0.9rem;
   }
-  
-  .keyword-actions a:last-child {
-    background-color: #dc3545;
-  }
-  
+   
   .status-active {
     color: green;
     font-weight: bold;
