@@ -138,14 +138,14 @@
         </td>
       </tr>
       <tr class="detail-row" style="display: none;">
-        <td colspan="11" class="company-details-row">
+        <td colspan="16" class="company-details-row">
           <div class="detail-inline">
-            <span><strong>カテゴリ:</strong> {{ f.get("category_keywords", "なし") }}</span>
-            <span><strong>説明:</strong> {{ f.get("description", "なし") }}</span>
+            <span><strong>カテゴリ:</strong> {{ f.get("category_keywords", "なし") }}</span><br>
+            <span><strong>説明:</strong> {{ f.get("description", "なし") }}</span><br>
             <span><strong>メモ:</strong> {{ f.get("sales_note", "なし") }}</span>
           </div>
         </td>
-      </tr>     
+      </tr>
       {% endfor %}
     </tbody>
   </table>
