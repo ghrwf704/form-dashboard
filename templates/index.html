@@ -139,7 +139,9 @@
 <!-- 編集モーダル -->
 <div class="modal fade" id="editModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-lg">
-    <form method="POST" action="/update_company">
+    <!-- ★★★ ここを修正 ★★★ -->
+    <form method="POST" action="{{ url_for('update_company') }}">
+    <!-- ★★★ ここまで ★★★ -->
       <div class="modal-content">
         <div class="modal-header">
           <h5 class="modal-title">✏️ 企業情報を編集</h5>
