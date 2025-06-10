@@ -92,15 +92,20 @@ def logout():
 @login_required
 def manage_keywords():
     if request.method == "POST":
-        new_keyword = request.form.get("keyword")
-        if new_keyword:
-            keywords_collection.insert_one({"keyword": new_keyword, "active": True, "owner": current_user.id})
+        new_keyword = request.form.get("keyword", "").strip()
+        if new_keyword:  # 空白除去後でも値があれば登録
+            keywords_collection.insert_one({
+                "keyword": new_keyword,
+                "active": True,
+                "owner": current_user.id
+            })
+        else:
+            flash("空白のみのキーワードは登録できません。", "danger")
         return redirect("/keywords")
 
     all_keywords = list(keywords_collection.find({"owner": current_user.id}))
     weather_info = get_weather()  # 🌤 追加
     return render_template("keywords.html", keywords=all_keywords, weather=weather_info)  # ✅ weather追加
-
 
 @app.route("/keywords/toggle/<keyword>")
 @login_required
@@ -126,10 +131,16 @@ def activate_only_keyword(keyword):
 @app.route("/keywords/update/<keyword>", methods=["POST"])
 @login_required
 def update_keyword(keyword):
-    new_keyword = request.form.get("new_keyword")
+    new_keyword = request.form.get("new_keyword", "").strip()
     if new_keyword and new_keyword != keyword:
-        keywords_collection.update_one({"keyword": keyword, "owner": current_user.id}, {"$set": {"keyword": new_keyword}})
+        keywords_collection.update_one(
+            {"keyword": keyword, "owner": current_user.id},
+            {"$set": {"keyword": new_keyword}}
+        )
+    elif not new_keyword:
+        flash("空白のみのキーワードには変更できません。", "danger")
     return redirect("/keywords")
+
 
 from weather import get_weather
 

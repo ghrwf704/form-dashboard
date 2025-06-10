@@ -5,3 +5,6 @@ __pycache__/
 *.BAK
 logs/
 dist/
+*.exe
+*.ini
+*.zip
