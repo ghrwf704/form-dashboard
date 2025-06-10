@@ -150,6 +150,44 @@ def add_keyword():
     # 処理が完了したら、必ずキーワード管理ページにリダイレクトする
     return redirect(url_for('manage_keywords'))
 
+@app.route('/keywords/edit/<keyword_id>', methods=['POST'])
+# @login_required # 必要であればログイン必須にする
+def edit_keyword(keyword_id):
+    # keywords.htmlの編集フォームから送信されたテキストを取得
+    # <input name="new_text"> に対応
+    new_text = request.form.get('new_text')
+
+    # --- 入力値のバリデーション (検証) ---
+    if not new_text or not new_text.strip():
+        flash('キーワードが空です。入力してください。', 'error')
+        return redirect(url_for('manage_keywords'))
+    
+    clean_new_text = new_text.strip()
+
+    # --- データベースの更新処理 ---
+    try:
+        # 更新対象のキーワードを特定
+        from bson.objectid import ObjectId # MongoDBのObjectIDを使うためにインポート
+        target_keyword = {'_id': ObjectId(keyword_id)}
+
+        # 新しいテキストで更新
+        update_operation = {'$set': {'text': clean_new_text}}
+        
+        result = db.keywords.update_one(target_keyword, update_operation)
+
+        if result.modified_count > 0:
+            flash(f'キーワードを「{clean_new_text}」に更新しました。', 'success')
+        else:
+            # IDが見つからない、または内容が同じで変更がなかった場合
+            flash('キーワードの更新は行われませんでした。', 'info')
+
+    except Exception as e:
+        print(f"データベースのキーワード更新中にエラーが発生: {e}")
+        flash('キーワードの更新中にエラーが発生しました。', 'error')
+
+    # 処理が完了したら、必ずキーワード管理ページにリダイレクトする
+    return redirect(url_for('manage_keywords'))
+
 @app.route("/keywords/toggle/<keyword>")
 @login_required
 def toggle_keyword(keyword):
