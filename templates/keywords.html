@@ -1,46 +1,99 @@
-// ファイルパス: static/js/keywords.js
+{% extends "_base.html" %}
 
-document.addEventListener("DOMContentLoaded", function () {
-  // イベントデリゲーションを使用して、テーブル内のクリックを処理
-  const table = document.querySelector(".keywords-table");
-  if (!table) return;
+{% block title %}キーワード管理 - フォーム管理{% endblock %}
 
-  table.addEventListener("click", function (e) {
-    const target = e.target;
+{% block page_css %}
+  <!-- keywords.htmlで使うコンポーネントとページ専用のスタイル -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/components/buttons.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/components/tables.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/components/forms.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/pages/keywords.css') }}">
+{% endblock %}
 
-    // --- 削除ボタンの確認ダイアログ ---
-    if (target.classList.contains("delete-btn")) {
-      if (!confirm("このキーワードを本当に削除しますか？")) {
-        e.preventDefault(); // aタグの遷移をキャンセル
-      }
-      return; // 他の処理は不要なのでここで終了
-    }
+{% block content %}
+<div class="keyword-page-header">
+  <h1>🏷️ キーワード管理</h1>
+</div>
 
-    // --- 変更ボタンの処理 ---
-    if (target.classList.contains("edit-btn")) {
-      e.preventDefault(); // aタグの遷移をキャンセル
-      const row = target.closest("tr");
-      
-      const keywordSpan = row.querySelector(".keyword-text");
-      const editForm = row.querySelector(".edit-form");
+<!-- 新規キーワード追加フォーム -->
+<div class="add-keyword-box">
+  <form method="POST" action="{{ url_for('add_keyword') }}" class="d-flex gap-2">
+    <input type="text" name="keyword_text" class="form-control" placeholder="新しいキーワードを入力" required>
+    <button type="submit" class="btn btn-primary flex-shrink-0">＋ 追加</button>
+  </form>
+</div>
 
-      // 表示と編集フォームを切り替える
-      keywordSpan.style.display = "none";
-      editForm.style.display = "flex"; // 横並びにするためflex
-      return;
-    }
+<!-- キーワード一覧テーブル -->
+<div class="table-container">
+  <table class="table keywords-table">
+    <thead>
+      <tr>
+        <th>キーワード</th>
+        <th>状態</th>
+        <th>操作</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for kw in keywords %}
+      <tr>
+        <td>
+          <!-- 通常表示用のspan -->
+          <span class="keyword-text">{{ kw.text }}</span>
+          <!-- 編集用のform (普段は非表示) -->
+          <form method="POST" action="{{ url_for('edit_keyword', keyword_id=kw['_id']) }}" class="edit-form" style="display: none;">
+            <input type="text" name="new_text" class="form-control form-control-sm" value="{{ kw.text }}">
+            <button type="submit" class="btn btn-success btn-sm">保存</button>
+            <button type="button" class="btn btn-secondary btn-sm cancel-btn">キャンセル</button>
+          </form>
+        </td>
+        <td>
+          {% if kw.is_active %}
+            <span class="status-active">✅ 有効</span>
+          {% else %}
+            <span class="status-inactive">無効</span>
+          {% endif %}
+        </td>
+        <td class="actions">
+          <a href="#" class="btn btn-sm btn-outline-primary edit-btn">📝 変更</a>
+          {% if kw.is_active %}
+            <a href="{{ url_for('toggle_keyword_status', keyword_id=kw['_id']) }}" class="btn btn-sm btn-outline-warning">🔄 無効にする</a>
+          {% else %}
+            <a href="{{ url_for('toggle_keyword_status', keyword_id=kw['_id']) }}" class="btn btn-sm btn-outline-info">🔄 有効にする</a>
+          {% endif %}
+          <a href="{{ url_for('activate_only', keyword_id=kw['_id']) }}" class="btn btn-sm btn-outline-secondary">🎯 これだけ有効</a>
+          <a href="{{ url_for('delete_keyword', keyword_id=kw['_id']) }}" class="btn btn-sm btn-outline-danger delete-btn">🗑️ 削除</a>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
 
-    // --- キャンセルボタンの処理 ---
-    if (target.classList.contains("cancel-btn")) {
-      e.preventDefault(); // buttonのデフォルト動作をキャンセル
-      const row = target.closest("tr");
+<!-- 使い方のヒント -->
+<div class="how-to-box">
+  <h3>💡 使い方のヒント</h3>
+  <ul>
+    <li><strong>キーワード追加:</strong> 検索に使用したいキーワードを入力して追加ボタンを押します。※空白のみのキーワードは登録できません。</li>
+    <li><strong>状態切り替え:</strong> キーワードの有効/無効を個別に切り替えできます。</li>
+    <li><strong>これだけ有効:</strong> 選択したキーワードのみを有効にし、他を全て無効にします。</li>
+    <li><strong>キーワード編集:</strong> 「変更」ボタンで既存のキーワードの内容を変更できます。</li>
+    <li><strong>入力ルール:</strong> 法人属性、地域、業種をスペース区切りで入力してください。</li>
+  </ul>
+  <div class="input-examples">
+    <p><strong>入力例：</strong></p>
+    <ul>
+        <li>医療法人 町田市 美容</li>
+        <li>NPO法人 八王子市 介護</li>
+        <li>株式会社 渋谷区 IT</li>
+        <li>合同会社 横浜市 飲食</li>
+    </ul>
+    <p class="small text-muted mt-2">
+      ※固定キーワード（概要 情報）と除外キーワード（-一覧 -ランキング -まとめ -比較）は自動で追加されます。
+    </p>
+  </div>
+</div>
+{% endblock %}
 
-      const keywordSpan = row.querySelector(".keyword-text");
-      const editForm = row.querySelector(".edit-form");
-
-      // 編集フォームを隠して、表示に戻す
-      editForm.style.display = "none";
-      keywordSpan.style.display = "block";
-    }
-  });
-});
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/keywords.js') }}"></script>
+{% endblock %}
