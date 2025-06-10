@@ -1,38 +1,21 @@
-# app.py (整理後 - ロジック変更なし)
-
-# ==============================================================================
-# 1. インポート
-# ==============================================================================
-# 標準ライブラリ
-import os
+#app.py
+from flask import Flask, render_template, request, redirect, url_for, flash, send_file
+from flask_login import LoginManager, login_user, logout_user, login_required, UserMixin, current_user
+import pymongo
+import certifi
+import bcrypt
 import configparser
+import pandas as pd
+from flask_pymongo import PyMongo
+import os
+from flask import send_from_directory
+from bson import ObjectId
 from io import BytesIO
 from datetime import datetime, timedelta
-
-# サードパーティライブラリ
-import bcrypt
-import certifi
-import pandas as pd
-import pymongo
-from bson import ObjectId
-from bson.objectid import InvalidId
-from flask import (Flask, render_template, request, redirect, url_for, flash, 
-                   send_file, send_from_directory, jsonify, render_template_string)
-from flask_login import (LoginManager, login_user, logout_user, login_required,
-                         UserMixin, current_user)
-from flask_pymongo import PyMongo
-
-# 自作モジュール
 from env_secrets import MONGO_URI
-from weather import get_weather, get_weather_by_coords
 
-
-# ==============================================================================
-# 2. 初期設定とアプリケーションのセットアップ
-# ==============================================================================
 if not os.path.exists("logs"):
     os.makedirs("logs")
-
 # 設定ファイル読み込み
 config = configparser.ConfigParser()
 config.read("setting.ini", encoding="utf-8")
@@ -43,19 +26,12 @@ mongo = PyMongo(app)
 
 app.secret_key = os.environ.get("SECRET_KEY")
 
-# ==============================================================================
-# 3. データベース接続とコレクションの定義
-# ==============================================================================
-client = pymongo.MongoClient(MONGO_URI, tls=True, tlsCAFile=certifi.where())
+client = pymongo.MongoClient(os.environ.get("MONGO_URI"), tls=True, tlsCAFile=certifi.where())
 db = client["form_database"]
 collection = db["forms"]
 keywords_collection = db["keywords"]
 users_collection = db["users"]
 urls_collection = db["urls"]
-
-# ==============================================================================
-# 4. ログインマネージャーとユーザーモデル
-# ==============================================================================
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = "login"
@@ -64,44 +40,6 @@ class User(UserMixin):
     def __init__(self, username):
         self.id = username
 
-@login_manager.user_loader
-def load_user(username):
-    user = users_collection.find_one({"username": username})
-    if user:
-        return User(username=user["username"])
-    return None
-
-# ==============================================================================
-# 5. ヘルパー関数 (ルートではない補助的な関数)
-# ==============================================================================
-def clean_old_logs(base_dir="logs", days_to_keep=7):
-    """logs/以下のユーザーディレクトリ内で、指定日数より古いログファイルを削除"""
-    cutoff_date = datetime.now() - timedelta(days=days_to_keep)
-
-    for user_dir in os.listdir(base_dir):
-        user_path = os.path.join(base_dir, user_dir)
-        if not os.path.isdir(user_path):
-            continue
-
-        for log_file in os.listdir(user_path):
-            file_path = os.path.join(user_path, log_file)
-            try:
-                log_date_str = os.path.splitext(log_file)[0]
-                log_date = datetime.strptime(log_date_str, "%Y-%m-%d")
-                if log_date < cutoff_date:
-                    os.remove(file_path)
-                    print(f"[CLEANUP] 削除済み: {file_path}")
-            except Exception as e:
-                print(f"[CLEANUP ERROR] ファイルスキップ: {file_path} - {e}")
-
-
-# ==============================================================================
-# 6. ビュー関数 (ルート定義)
-# ==============================================================================
-
-# ------------------------------------------------------------------------------
-# 6.1. 静的ファイル配信
-# ------------------------------------------------------------------------------
 @app.route("/downloads/<filename>")
 def serve_downloads(filename):
     return send_from_directory("downloads", filename)
@@ -110,9 +48,13 @@ def serve_downloads(filename):
 def serve_version(filename):
     return send_from_directory("version", filename)
 
-# ------------------------------------------------------------------------------
-# 6.2. 認証関連 (ログイン・ログアウト)
-# ------------------------------------------------------------------------------
+@login_manager.user_loader
+def load_user(username):
+    user = users_collection.find_one({"username": username})
+    if user:
+        return User(username=user["username"])
+    return None
+
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
@@ -138,32 +80,14 @@ def login():
 
     return render_template("login.html")
 
+
 @app.route("/logout")
 @login_required
 def logout():
     logout_user()
     return redirect(url_for("login"))
 
-# ------------------------------------------------------------------------------
-# 6.3. メインページ
-# ------------------------------------------------------------------------------
-@app.route("/")
-@login_required
-def index():
-    forms = list(collection.find({"owner": current_user.id}).sort("_id", -1))
-    active_keywords = [k["keyword"] for k in keywords_collection.find({"active": True, "owner": current_user.id})]
-    weather_info = get_weather()
 
-    return render_template(
-        "index.html",
-        forms=forms,
-        active_keywords=active_keywords,
-        weather=weather_info
-    )
-
-# ------------------------------------------------------------------------------
-# 6.4. キーワード管理
-# ------------------------------------------------------------------------------
 @app.route("/keywords", methods=["GET", "POST"])
 @login_required
 def manage_keywords():
@@ -217,9 +141,45 @@ def update_keyword(keyword):
         flash("空白のみのキーワードには変更できません。", "danger")
     return redirect("/keywords")
 
-# ------------------------------------------------------------------------------
-# 6.5. 企業情報管理 (編集・削除・更新・エクスポート)
-# ------------------------------------------------------------------------------
+
+from weather import get_weather
+
+@app.route("/")
+@login_required
+def index():
+    forms = list(collection.find({"owner": current_user.id}).sort("_id", -1))
+    active_keywords = [k["keyword"] for k in keywords_collection.find({"active": True, "owner": current_user.id})]
+    weather_info = get_weather()
+
+    return render_template(
+        "index.html",
+        forms=forms,
+        active_keywords=active_keywords,
+        weather=weather_info
+    )
+
+from flask import request, jsonify
+from weather import get_weather_by_coords  # weather.pyからインポート
+@app.route("/get_weather_by_coords", methods=["POST"])
+def get_weather_by_coords_api():
+    try:
+        data = request.get_json()
+        lat = data.get("lat")
+        lon = data.get("lon")
+
+        if not lat or not lon:
+            return jsonify({"error": "緯度経度が不足しています"}), 400
+
+        weather_data = get_weather_by_coords(lat, lon)
+        return jsonify(weather_data)
+
+    except Exception as e:
+        print("🌩️ 天気API処理エラー:", e)
+        return jsonify({"error": "サーバーエラー"}), 500
+
+from bson.objectid import ObjectId, InvalidId
+from flask import flash
+
 @app.route("/delete_company/<company_id>")
 @login_required
 def delete_company(company_id):
@@ -254,6 +214,7 @@ def delete_company(company_id):
         flash("削除中にエラーが発生しました。", "danger")
         return redirect(url_for("index"))
 
+
 @app.route("/edit_company/<company_id>", methods=["GET", "POST"])
 @login_required
 def edit_company(company_id):
@@ -277,39 +238,6 @@ def edit_company(company_id):
         return redirect(url_for("index"))
 
     return render_template("edit_company.html", company=company)
-
-@app.route("/update_company", methods=["POST"])
-@login_required
-def update_company():
-    company_id = request.form.get("company_id")
-    if not company_id:
-        flash("企業IDが見つかりません。", "danger")
-        return redirect(url_for("index"))
-
-    update_data = {
-        "company_name": request.form.get("company_name"),
-        "url_top": request.form.get("url_top"),
-        "url_form": request.form.get("url_form"),
-        "address": request.form.get("address"),
-        "tel": request.form.get("tel"),
-        "fax": request.form.get("fax"),
-        "category_keywords": request.form.get("category_keywords"),
-        "description": request.form.get("description"),
-        "sales_status": request.form.get("sales_status"),
-        "sales_note": request.form.get("sales_note")
-    }
-
-    result = collection.update_one(
-        {"_id": ObjectId(company_id), "owner": current_user.id},
-        {"$set": update_data}
-    )
-
-    if result.modified_count > 0:
-        flash("企業情報を更新しました。", "success")
-    else:
-        flash("変更内容がありませんでした。", "info")
-
-    return redirect(url_for("index"))
 
 @app.route("/export_excel_filtered", methods=["POST"])
 @login_required
@@ -359,26 +287,45 @@ def export_excel_filtered():
         mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     )
 
-# ------------------------------------------------------------------------------
-# 6.6. 外部API (天気・ログ受付)
-# ------------------------------------------------------------------------------
-@app.route("/get_weather_by_coords", methods=["POST"])
-def get_weather_by_coords_api():
-    try:
-        data = request.get_json()
-        lat = data.get("lat")
-        lon = data.get("lon")
+@app.route("/update_company", methods=["POST"])
+@login_required
+def update_company():
+    company_id = request.form.get("company_id")
+    if not company_id:
+        flash("企業IDが見つかりません。", "danger")
+        return redirect(url_for("index"))
 
-        if not lat or not lon:
-            return jsonify({"error": "緯度経度が不足しています"}), 400
+    update_data = {
+        "company_name": request.form.get("company_name"),
+        "url_top": request.form.get("url_top"),
+        "url_form": request.form.get("url_form"),
+        "address": request.form.get("address"),
+        "tel": request.form.get("tel"),
+        "fax": request.form.get("fax"),
+        "category_keywords": request.form.get("category_keywords"),
+        "description": request.form.get("description"),
+        "sales_status": request.form.get("sales_status"),
+        "sales_note": request.form.get("sales_note")
+    }
 
-        weather_data = get_weather_by_coords(lat, lon)
-        return jsonify(weather_data)
+    result = collection.update_one(
+        {"_id": ObjectId(company_id), "owner": current_user.id},
+        {"$set": update_data}
+    )
 
-    except Exception as e:
-        print("🌩️ 天気API処理エラー:", e)
-        return jsonify({"error": "サーバーエラー"}), 500
+    if result.modified_count > 0:
+        flash("企業情報を更新しました。", "success")
+    else:
+        flash("変更内容がありませんでした。", "info")
 
+    return redirect(url_for("index"))
+
+from flask import Flask, request, render_template_string
+from datetime import datetime
+
+log_file_path = "runtime.log"
+
+# ログを受け取るエンドポイント
 @app.route("/log", methods=["GET", "POST"])
 def receive_log():
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -401,11 +348,7 @@ def receive_log():
 
     return jsonify(status="ok")
 
-# ------------------------------------------------------------------------------
-# 6.7. ログ表示機能
-# ------------------------------------------------------------------------------
-log_file_path = "runtime.log"
-
+# ログをブラウザから確認するページ
 @app.route("/logs")
 def view_logs():
     try:
@@ -432,6 +375,32 @@ def view_logs():
     </body>
     </html>
     """, log=log_content)
+
+from flask import request
+import os
+from datetime import datetime
+
+
+
+def clean_old_logs(base_dir="logs", days_to_keep=7):
+    """logs/以下のユーザーディレクトリ内で、指定日数より古いログファイルを削除"""
+    cutoff_date = datetime.now() - timedelta(days=days_to_keep)
+
+    for user_dir in os.listdir(base_dir):
+        user_path = os.path.join(base_dir, user_dir)
+        if not os.path.isdir(user_path):
+            continue
+
+        for log_file in os.listdir(user_path):
+            file_path = os.path.join(user_path, log_file)
+            try:
+                log_date_str = os.path.splitext(log_file)[0]
+                log_date = datetime.strptime(log_date_str, "%Y-%m-%d")
+                if log_date < cutoff_date:
+                    os.remove(file_path)
+                    print(f"[CLEANUP] 削除済み: {file_path}")
+            except Exception as e:
+                print(f"[CLEANUP ERROR] ファイルスキップ: {file_path} - {e}")
 
 @app.route("/logs/raw/<user>")
 def view_log(user):
@@ -468,9 +437,7 @@ def show_logs(user):
 
     return render_template("logs.html", user=user, log_lines=lines, filename=latest_file)
 
-# ==============================================================================
-# 7. アプリケーションの実行
-# ==============================================================================
+
 if __name__ == "__main__":
     clean_old_logs(days_to_keep=7)  # 起動時に古いログを削除
     app.run(host="0.0.0.0", port=10000)
