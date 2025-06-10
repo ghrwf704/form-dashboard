@@ -12,7 +12,6 @@ from flask import send_from_directory
 from bson import ObjectId
 from io import BytesIO
 from datetime import datetime, timedelta
-from env_secrets import MONGO_URI
 
 if not os.path.exists("logs"):
     os.makedirs("logs")
