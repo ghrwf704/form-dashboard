@@ -75,15 +75,6 @@ def send_log_to_server(message):
     config.read("setting.ini", encoding="utf-8")
     user = config["USER"].get("id", "unknown")
 
-    # 再帰防止メッセージ（再送しない）
-    if "最大URL収集数に達しました" in message:
-        print(message)
-        return
-
-    if maxCountPerDay >= MAX_TOTAL_URLS_PER_DAY:
-        send_log_to_server("✅ 最大URL収集数に達しました。終了します。")
-        return
-
     print(message)
     try:
         res = requests.get("https://form-dashboard.onrender.com/log", params={"msg": message, "user": user}, timeout=5)
@@ -362,6 +353,10 @@ def collect_company_info():
 
 # メインループで収集と検索を切り替え
 while True:
+    if maxCountPerDay >= MAX_TOTAL_URLS_PER_DAY:
+        send_log_to_server("✅ 最大URL収集数に達しました。終了します。")
+        break  # これにより finally ブロックで driver.quit() が呼ばれる
+
     # Seleniumセットアップ（非headless）
     chrome_options = Options()
     chrome_options.add_argument("--no-sandbox")
