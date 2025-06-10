@@ -15,7 +15,7 @@ import time
 from datetime import datetime
 from tkinter import Tk, simpledialog
 from urllib.robotparser import RobotFileParser
-
+import configparser
 
 INI_URL = "https://get-infomation.net/list_collection/latest_setting.ini"  # ← 実際のURLに変更してください
 EXE_URL = "https://get-infomation.net/list_collection/MyCrawler.exe"
@@ -24,7 +24,7 @@ EXE_PATH = "MyCrawler.exe"
 
 # 定数
 MAX_NEW_URLS_PER_OWNER = 10
-MAX_TOTAL_URLS_PER_DAY = 100
+MAX_TOTAL_URLS_PER_DAY = int(config.get("CRAWLER", "max_urls_per_day", fallback="100"))
 maxCountPerDay = 0
 
 # 設定ファイルからユーザーIDを取得

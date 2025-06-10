@@ -5,9 +5,9 @@ from pymongo import MongoClient
 import certifi
 import configparser
 import os
+from env_secrets import MONGO_URI
 
 # MongoDB接続設定
-MONGO_URI = "mongodb+srv://ykeikeikie:qMUerl78WgsEEOWA@cluster0.helfbov.mongodb.net/?retryWrites=true&w=majority"
 client = MongoClient(MONGO_URI, tls=True, tlsCAFile=certifi.where())
 db = client["form_database"]
 users = db["users"]
