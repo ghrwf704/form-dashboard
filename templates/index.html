@@ -2,6 +2,15 @@
 
 {% block title %}企業一覧 - フォーム管理{% endblock %}
 
+{% block page_css %}
+  <!-- index.htmlで使うコンポーネントとページ専用のスタイル -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/components/buttons.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/components/tables.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/components/modals.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/components/forms.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/pages/index.css') }}">
+{% endblock %}
+
 {% block content %}
 <div class="user-greeting">
   <p>こんにちは、<strong>{{ current_user.id }}</strong> さん！</p>
@@ -19,7 +28,7 @@
 
 <!-- フィルターフォーム -->
 <div class="filter-box mb-4">
-  <form id="filter-form" class="row g-2">
+  <form id="filter-form" class="row g-2" onsubmit="return false;">
     <div class="col-md-3">
       <input type="text" class="form-control" placeholder="企業名でフィルター" id="filter-name">
     </div>
@@ -112,7 +121,7 @@
         <td>{{ f.get("founded", "不明") }}</td>
         <td>{{ f.get("ceo", "不明") }}</td>
         <td>{{ f.get("email", "未登録") }}</td>
-        <!-- カテゴリ -->
+      </tr>
       <tr class="detail-row" style="display: none;">
         <td colspan="16" class="company-details-row">
           <div class="detail-inline">
@@ -139,7 +148,6 @@
         <div class="modal-body">
           <input type="hidden" name="company_id" id="edit_id">
           <div class="mb-2"><label>企業名: <input type="text" class="form-control" name="company_name" id="edit_name"></label></div>
-          <!-- URLトップ -->
           <div class="mb-3">
             <label for="edit-url-top" class="form-label">トップページURL</label>
             <input type="text" class="form-control" id="edit-url-top" name="url_top">
@@ -170,90 +178,8 @@
     </form>
   </div>
 </div>
-<script>
-  document.addEventListener("DOMContentLoaded", function () {
-    const nameInput = document.getElementById("filter-name");
-    const addressInput = document.getElementById("filter-address");
-    const statusSelect = document.getElementById("filter-status");
-    const rows = document.querySelectorAll("table tbody tr");
-
-    function filterTable() {
-      const nameFilter = nameInput.value.toLowerCase();
-      const addressFilter = addressInput.value.toLowerCase();
-      const statusFilter = statusSelect.value;
-
-      rows.forEach(row => {
-        const name = row.querySelector(".company-name")?.textContent.toLowerCase() || "";
-        const address = row.cells[4]?.textContent.toLowerCase() || "";
-        const status = row.querySelector(".sales-status")?.textContent || "";
-
-        const matchName = name.includes(nameFilter);
-        const matchAddress = address.includes(addressFilter);
-        const matchStatus = !statusFilter || status === statusFilter;
-
-        row.style.display = (matchName && matchAddress && matchStatus) ? "" : "none";
-      });
-    }
-
-    nameInput.addEventListener("input", filterTable);
-    addressInput.addEventListener("input", filterTable);
-    statusSelect.addEventListener("change", filterTable);
-
-    // Excel出力
-    const exportBtn = document.getElementById("exportVisible");
-    exportBtn.addEventListener("click", () => {
-      const name = nameInput.value.trim();
-      const address = addressInput.value.trim();
-      const status = statusSelect.value.trim();
-      fetch("/export_excel_filtered", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, address, status })  // 👈 category 削除
-      })
-      .then(res => res.blob())
-      .then(blob => {
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = "filtered_companies.xlsx";
-        a.click();
-      });
-    });
-
-    // 編集ボタンクリック時の処理
-    document.querySelectorAll('.edit-btn').forEach(button => {
-      document.addEventListener('click', function (e) {
-      const button = e.target.closest('.edit-btn');
-      if (!button) return; // edit-btnでないクリック無視
-
-      const name = button.dataset.companyName;
-      document.getElementById('edit_id').value = button.dataset.id || '';
-      document.getElementById('edit_name').value = name && name !== 'None' ? name : '';
-      document.getElementById('edit-url-top').value = button.dataset.urlTop || '';
-      document.getElementById('edit-url-form').value = button.dataset.urlForm || '';
-      document.getElementById('edit_address').value = button.dataset.address || '';
-      document.getElementById('edit_tel').value = button.dataset.tel || '';
-      document.getElementById('edit_fax').value = button.dataset.fax || '';
-      document.getElementById('edit_category').value = button.dataset.category || '';
-      document.getElementById('edit_description').value = button.dataset.description || '';
-      document.getElementById('edit_status').value = button.dataset.salesStatus || '未連絡';
-      document.getElementById('edit_note').value = button.dataset.salesNote || '';
-    });
-    });
-  });
-  document.querySelectorAll('.toggle-details').forEach(btn => {
-    btn.addEventListener("click", () => {
-      const row = btn.closest("tr");
-      const detailRow = row.nextElementSibling;
-      const icon = btn.querySelector(".toggle-icon");
-
-      if (detailRow && detailRow.classList.contains("detail-row")) {
-        const isVisible = detailRow.style.display !== "none";
-        detailRow.style.display = isVisible ? "none" : "table-row";
-        icon.textContent = isVisible ? "▼" : "▲";
-      }
-    });
-  });
-</script>
 {% endblock %}
 
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/company-list.js') }}"></script>
+{% endblock %}

@@ -1,0 +1,57 @@
+/* キーワード管理ページ */
+.keyword-form {
+    margin: 2rem 0;
+    display: flex;
+    gap: 0.5rem;
+}
+
+.keyword-form input[type="text"] {
+    flex: 1;
+    padding: 0.8rem;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+}
+
+.keyword-form button {
+    padding: 0.8rem 1.2rem;
+    background-color: #28a745;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.keyword-form button:hover {
+    background-color: #218838;
+}
+
+/* keyword-actions is a bit generic, maybe add context */
+.keyword-table .keyword-actions a {
+    display: inline-block;
+    margin-right: 1rem;
+    text-decoration: none;
+    font-weight: bold;
+    color: #007bff;
+}
+
+.keyword-table .keyword-actions a:hover {
+    text-decoration: underline;
+}
+
+.status-active {
+    color: green;
+    font-weight: bold;
+}
+  
+.status-inactive {
+    color: gray;
+    font-weight: bold;
+}
+  
+.keyword-empty {
+    text-align: center;
+    padding: 2rem;
+    color: #aaa;
+    font-size: 1.2rem;
+}

@@ -1,0 +1,59 @@
+/* ==== Log View Styles ==== */
+.log-container {
+    max-width: 1000px;
+    margin: 2rem auto;
+    padding: 2rem;
+    background: #1e1e1e;
+    color: #eee;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.5);
+    font-family: 'Courier New', monospace;
+}
+  
+.log-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #444;
+    padding-bottom: 0.5rem;
+    margin-bottom: 1rem;
+}
+  
+.log-header h2 {
+    margin: 0;
+    font-size: 1.4rem;
+    color: #00ffaa;
+}
+  
+.log-download {
+    color: #0af;
+    text-decoration: none;
+}
+  
+.log-download:hover {
+    text-decoration: underline;
+}
+  
+.log-box {
+    background: #2a2a2a;
+    padding: 1rem;
+    border-radius: 8px;
+    max-height: 600px;
+    overflow-y: scroll;
+    border: 1px solid #444;
+}
+  
+.log-line {
+    white-space: pre-wrap;
+    border-bottom: 1px solid #333;
+    padding: 0.2rem 0;
+}
+  
+.log-line:last-child {
+    border-bottom: none;
+}
+  
+.log-line::before {
+    content: "🗒 ";
+    color: #ccc;
+}

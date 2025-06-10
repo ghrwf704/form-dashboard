@@ -1,0 +1,130 @@
+/* ===== MAIN CONTENT WRAPPER ===== */
+.main-content {
+    background: var(--glass-bg);
+    -webkit-backdrop-filter: blur(20px);
+    padding: 3rem;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-xl);
+    border: 1px solid var(--glass-border);
+    z-index: 10;
+    animation: fadeInUp 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ===== WEATHER BOX STYLES ===== */
+.weather-box {
+    background: var(--glass-bg);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    padding: 2rem;
+    border-radius: var(--border-radius);
+    margin-bottom: 2rem;
+    box-shadow: var(--shadow-lg);
+    border: 1px solid var(--glass-border);
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+    position: relative;
+    z-index: 50;
+    overflow: hidden;
+}
+
+.weather-box p {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 500;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem;
+    background: rgba(255, 255, 255, 0.7);
+    border-radius: var(--border-radius-sm);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+}
+
+.weather-box span {
+    font-weight: 600;
+    color: #667eea;
+}
+
+/* ===== USER GREETING & KEYWORDS DISPLAY ===== */
+.user-greeting {
+    text-align: center;
+    margin-bottom: 2rem;
+    padding: 1.5rem;
+    background: var(--glass-bg);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    border-radius: var(--border-radius-sm);
+    border: 1px solid var(--glass-border);
+}
+
+.user-greeting p {
+    font-size: 1.3rem;
+    color: var(--text-secondary);
+    margin: 0;
+}
+
+.user-greeting strong {
+    color: #667eea;
+    font-weight: 700;
+}
+
+.keywords-display {
+    text-align: center;
+    margin-bottom: 3rem;
+    padding: 2rem;
+    background: var(--primary-gradient);
+    color: white;
+    border-radius: var(--border-radius);
+    font-size: 1.2rem;
+    font-weight: 600;
+    box-shadow: var(--shadow-lg);
+    position: relative;
+    overflow: hidden;
+}
+
+/* ===== FILTER BOX STYLES ===== */
+.filter-box {
+    background: var(--glass-bg);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    padding: 2rem;
+    border-radius: var(--border-radius);
+    margin-bottom: 2rem;
+    box-shadow: var(--shadow-lg);
+    border: 1px solid var(--glass-border);
+    position: relative;
+    z-index: 10;
+}
+
+.row {
+    display: flex;
+    flex-wrap: wrap;
+    margin: -0.5rem;
+}
+
+.col-md-4 {
+    flex: 0 0 33.333333%;
+    max-width: 33.333333%;
+    padding: 0 0.5rem;
+}
+
+.g-2 > * {
+    margin: 0.5rem 0;
+}
+
+/* Responsive Overrides for index.html */
+@media (max-width: 768px) {
+    .main-content, .filter-box { padding: 1.5rem; }
+    .weather-box { grid-template-columns: 1fr; gap: 1rem; padding: 1.5rem; }
+    .row { flex-direction: column; }
+    .col-md-4 { flex: 1; max-width: 100%; margin-bottom: 1rem; }
+}
+
+@media (max-width: 480px) {
+    .weather-box p { font-size: 1rem; }
+    .keywords-display { font-size: 1rem; padding: 1.5rem; }
+    .filter-box { padding: 1rem; }
+}

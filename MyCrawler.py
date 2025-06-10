@@ -299,7 +299,7 @@ def collect_company_info():
 
                 # FAX番号
                 "fax": extract_field([
-                    r"(?:FAX|Fax|ファックス|fax)[^\d0-9０-９]{0,20}([0-9０-９]{2,4}[-‐－―ー―\s]?[0-9０-９]{2,4}[-‐－―ー―\s]?[0-9０-９]{3,4})"
+                    r"(?:Fax|FAX|ファックス|fax)[^\d0-9０-９]{0,20}([0-9０-９]{2,4}[-‐－―ー―\s]?[0-9０-９]{2,4}[-‐－―ー―\s]?[0-9０-９]{3,4})"
                 ], text),
 
                 # 設立年月
@@ -311,7 +311,7 @@ def collect_company_info():
                 "ceo": extract_field([
                     r"(代表取締役[^\n]{0,20})",
                     r"(CEO[^\n]{0,20})"
-                ], full_text),
+                ], text),
 
                 # メールアドレス
                 "email": extract_email(text),

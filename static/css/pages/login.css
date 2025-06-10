@@ -1,0 +1,54 @@
+/* Login Form */
+.login-form {
+    max-width: 400px;
+    margin: 5rem auto;
+    padding: 2.5rem 2rem;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+
+.login-form h1 {
+    color: #333;
+    margin-bottom: 1rem;
+}
+
+.login-form .form-group {
+    margin-bottom: 1.5rem;
+}
+
+.login-form input[type="text"],
+.login-form input[type="password"] {
+    width: 100%;
+    padding: 0.8rem 1rem;
+    font-size: 1rem;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    box-sizing: border-box;
+}
+
+.login-form button[type="submit"] {
+    width: 100%; /* To make it full-width */
+    padding: 0.9rem 1rem;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    font-weight: bold;
+    font-size: 1rem;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+.login-form button[type="submit"]:hover {
+    background-color: #0056b3;
+}
+
+/* Error Messages */
+.login-form .error {
+    background: #f8d7da;
+    padding: 0.8rem 1rem;
+    border-radius: 6px;
+    color: #721c24;
+    margin-bottom: 1rem;
+    border: 1px solid #f5c6cb;
+}

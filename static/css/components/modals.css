@@ -1,0 +1,105 @@
+/* ===== MODAL STYLES - BOOTSTRAP COMPATIBLE ===== */
+.modal {
+    z-index: 1055 !important;
+}
+
+.modal-backdrop {
+    z-index: 1050 !important;
+    background-color: rgba(0, 0, 0, 0.3) !important;
+    backdrop-filter: blur(8px) !important;
+    -webkit-backdrop-filter: blur(8px) !important;
+}
+
+.modal-dialog {
+    position: relative;
+    width: auto;
+    margin: 2rem auto;
+    max-width: 800px;
+    z-index: 1060 !important;
+}
+
+.modal-content {
+    background: rgba(255, 255, 255, 0.98) !important;
+    backdrop-filter: blur(20px) !important;
+    -webkit-backdrop-filter: blur(20px) !important;
+    border: none !important;
+    border-radius: var(--border-radius) !important;
+    box-shadow: var(--shadow-xl) !important;
+    position: relative;
+    overflow: hidden;
+}
+
+.modal-content::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: var(--primary-gradient);
+    opacity: 0.03;
+    z-index: -1;
+}
+
+.modal-header {
+    padding: 2rem 2rem 1rem !important;
+    border-bottom: 1px solid var(--border-light) !important;
+    background: rgba(255, 255, 255, 0.9) !important;
+    backdrop-filter: blur(10px) !important;
+    -webkit-backdrop-filter: blur(10px) !important;
+}
+
+.modal-title {
+    font-size: 1.5rem !important;
+    font-weight: 700 !important;
+    color: var(--text-primary) !important;
+    margin: 0 !important;
+}
+
+.modal-body {
+    padding: 2rem !important;
+    background: rgba(255, 255, 255, 0.95) !important;
+    backdrop-filter: blur(10px) !important;
+    -webkit-backdrop-filter: blur(10px) !important;
+    position: relative;
+    z-index: 1;
+}
+
+.modal-footer {
+    padding: 1rem 2rem 2rem !important;
+    border-top: 1px solid var(--border-light) !important;
+    background: rgba(255, 255, 255, 0.9) !important;
+    backdrop-filter: blur(10px) !important;
+    -webkit-backdrop-filter: blur(10px) !important;
+    display: flex !important;
+    gap: 1rem !important;
+    justify-content: flex-end !important;
+}
+
+.btn-close {
+    background: none !important;
+    border: none !important;
+    font-size: 1.5rem !important;
+    opacity: 0.6 !important;
+    transition: var(--transition) !important;
+    position: relative !important;
+    z-index: 10 !important;
+    color: var(--text-primary) !important;
+}
+
+.btn-close:hover {
+    opacity: 1 !important;
+    transform: scale(1.1) !important;
+    color: var(--text-primary) !important;
+}
+
+.btn-close:focus {
+    outline: none !important;
+    box-shadow: none !important;
+}
+
+@media (max-width: 768px) {
+    .modal-dialog { margin: 1rem; }
+    .modal-content { border-radius: var(--border-radius-sm); }
+    .modal-header, .modal-body, .modal-footer { padding: 1.5rem !important; }
+}
