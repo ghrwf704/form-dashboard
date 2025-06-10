@@ -106,6 +106,50 @@ def manage_keywords():
     weather_info = get_weather()  # 🌤 追加
     return render_template("keywords.html", keywords=all_keywords, weather=weather_info)  # ✅ weather追加
 
+@app.route('/keywords/add', methods=['POST'])
+# @login_required # 必要であればログイン必須にする
+def add_keyword():
+    # keywords.htmlのフォームから送信されたテキストを取得
+    # <input name="keyword_text"> に対応
+    keyword_text = request.form.get('keyword_text')
+
+    # --- 入力値のバリデーション (検証) ---
+    # 1. 値が存在しない、または空白文字のみの場合はエラー
+    if not keyword_text or not keyword_text.strip():
+        # flash()でユーザーにエラーメッセージを表示
+        flash('キーワードが空です。入力してください。', 'error')
+        # キーワード管理ページにリダイレクトして戻る
+        return redirect(url_for('manage_keywords'))
+
+    # 前後の空白を削除したキーワード
+    clean_keyword = keyword_text.strip()
+
+    # 2. データベース内に同じキーワードが既に存在しないかチェック
+    # (ここではMongoDBを想定した書き方です。ご自身のDBに合わせて調整してください)
+    existing_keyword = db.keywords.find_one({'text': clean_keyword})
+    if existing_keyword:
+        flash(f'キーワード「{clean_keyword}」は既に存在します。', 'warning')
+        return redirect(url_for('manage_keywords'))
+
+    # --- データベースへの保存処理 ---
+    try:
+        # 新しいキーワードをデータベースに挿入
+        db.keywords.insert_one({
+            'text': clean_keyword,
+            'is_active': True,  # 新しく追加したキーワードはデフォルトで有効にする
+            # 'user_id': current_user.id  # ユーザーごとに管理する場合はIDも保存
+        })
+        # 成功メッセージをflashで設定
+        flash(f'キーワード「{clean_keyword}」を正常に追加しました。', 'success')
+
+    except Exception as e:
+        # データベースエラーなど、予期せぬ問題が発生した場合
+        print(f"データベースへのキーワード追加中にエラーが発生: {e}")
+        flash('キーワードの追加中にエラーが発生しました。', 'error')
+
+    # 処理が完了したら、必ずキーワード管理ページにリダイレクトする
+    return redirect(url_for('manage_keywords'))
+
 @app.route("/keywords/toggle/<keyword>")
 @login_required
 def toggle_keyword(keyword):
