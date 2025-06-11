@@ -150,7 +150,8 @@ def logout():
 @login_required
 def index():
     forms = list(collection.find({"owner": current_user.id}).sort("_id", -1))
-    active_keywords = [k["keyword"] for k in keywords_collection.find({"active": True, "owner": current_user.id})]
+    # これが新しい正しいコードです
+    active_keywords = [k["text"] for k in db.keywords.find({"is_active": True, "owner": current_user.id})]
     weather_info = get_weather()
 
     return render_template(
