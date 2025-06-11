@@ -244,7 +244,7 @@ def toggle_keyword_status(keyword_id):
     except Exception as e:
         print(f"キーワード状態更新エラー: {e}")
         flash('キーワードの状態更新中にエラーが発生しました。', 'error')
-
+    
     return redirect(url_for('manage_keywords'))
 
 

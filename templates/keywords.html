@@ -39,7 +39,7 @@
           <span class="keyword-text">{{ kw.text }}</span>
           <!-- 編集用のform (普段は非表示) -->
           <form method="POST" action="{{ url_for('edit_keyword', keyword_id=kw['_id']) }}" class="edit-form" style="display: none;">
-            <input type="text" name="new_text" class="form-control form-control-sm" value="{{ kw.text }}">
+            <input type="text" name="new_text" class="form-control form-control-sm" value="{{ kw.keyword }}">
             <button type="submit" class="btn btn-success btn-sm">保存</button>
             <button type="button" class="btn btn-secondary btn-sm cancel-btn">キャンセル</button>
           </form>
