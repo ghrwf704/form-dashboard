@@ -23,7 +23,6 @@ from flask_login import (LoginManager, login_user, logout_user, login_required,
 from flask_pymongo import PyMongo
 
 # 自作モジュール
-from env_secrets import MONGO_URI
 from weather import get_weather, get_weather_by_coords
 
 
