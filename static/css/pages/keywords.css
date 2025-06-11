@@ -16,12 +16,11 @@
     box-shadow: var(--shadow-md);
 }
 
-/* キーワードテーブルの操作ボタンのコンテナ */
-.keywords-table .actions {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-    align-items: center;
+.action-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
 }
 
 /* 編集フォームのレイアウト */
