@@ -15,14 +15,13 @@ import time
 from datetime import datetime
 from tkinter import Tk, simpledialog
 from urllib.robotparser import RobotFileParser
-import configparser
 from env_secrets import MONGO_URI
 
 INI_URL = "https://get-infomation.net/list_collection/latest_setting.ini"  # ← 実際のURLに変更してください
 EXE_URL = "https://get-infomation.net/list_collection/MyCrawler.exe"
 LOCAL_INI_PATH = "setting.ini"
 EXE_PATH = "MyCrawler.exe"
-
+config = configparser.ConfigParser()
 # 定数
 MAX_NEW_URLS_PER_OWNER = 10
 MAX_TOTAL_URLS_PER_DAY = int(config.get("CRAWLER", "max_urls_per_day", fallback="100"))
@@ -380,7 +379,7 @@ while True:
         else:
             send_log_to_server("🔍 未収集URLが無いため、キーワード検索を開始します。")
             keyword_docs = keywords_collection.find({"owner": username})
-            keyword_list = [doc["keyword"] for doc in keyword_docs if "keyword" in doc]
+            keyword_list = [doc["keyword"] for doc in keyword_docs if doc.get("keyword")]
     
             if not keyword_list:
                 send_log_to_server("⚠️ キーワードが見つかりません。Bing検索をスキップします。")

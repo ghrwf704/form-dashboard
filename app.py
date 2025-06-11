@@ -151,7 +151,7 @@ def logout():
 def index():
     forms = list(collection.find({"owner": current_user.id}).sort("_id", -1))
     # これが新しい正しいコードです
-    active_keywords = [k["text"] for k in db.keywords.find({"is_active": True, "owner": current_user.id})]
+    active_keywords = [k["keyword"] for k in db.keywords.find({"is_active": True, "owner": current_user.id})]
     weather_info = get_weather()
 
     return render_template(
@@ -180,13 +180,13 @@ def add_keyword():
         return redirect(url_for('manage_keywords'))
 
     clean_keyword = keyword_text.strip()
-    existing_keyword = db.keywords.find_one({'text': clean_keyword, 'owner': current_user.id})
+    existing_keyword = db.keywords.find_one({'keyword': clean_keyword, 'owner': current_user.id})
 
     if existing_keyword:
         flash(f'キーワード「{clean_keyword}」は既に存在します。', 'warning')
     else:
         db.keywords.insert_one({
-            'text': clean_keyword,
+            'keyword': clean_keyword,
             'is_active': True,
             'owner': current_user.id
         })
@@ -209,7 +209,7 @@ def edit_keyword(keyword_id):
     try:
         result = db.keywords.update_one(
             {'_id': ObjectId(keyword_id), 'owner': current_user.id},
-            {'$set': {'text': clean_new_text}}
+            {'$set': {'keyword': clean_new_text}}
         )
         if result.modified_count > 0:
             flash(f'キーワードを「{clean_new_text}」に更新しました。', 'success')
@@ -236,7 +236,7 @@ def toggle_keyword_status(keyword_id):
                 {'$set': {'is_active': new_status}}
             )
             status_text = "有効" if new_status else "無効"
-            flash(f'キーワード「{target_keyword_obj["text"]}」を{status_text}にしました。', 'success')
+            flash(f'キーワード「{target_keyword_obj["keyword"]}」を{status_text}にしました。', 'success')
         else:
             flash('指定されたキーワードが見つかりませんでした。', 'error')
     except InvalidId:
