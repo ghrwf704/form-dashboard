@@ -54,14 +54,16 @@
           {% endif %}
         </td>
         <td class="actions">
-          <a href="#" class="btn btn-sm btn-outline-primary edit-btn">📝 変更</a>
-          {% if kw.is_active %}
+          <div class="action-buttons">
+            <a href="#" class="btn btn-sm btn-outline-primary edit-btn">📝 変更</a>
+            {% if kw.is_active %}
             <a href="{{ url_for('toggle_keyword_status', keyword_id=kw['_id']) }}" class="btn btn-sm btn-outline-warning">🔄 無効にする</a>
-          {% else %}
+            {% else %}
             <a href="{{ url_for('toggle_keyword_status', keyword_id=kw['_id']) }}" class="btn btn-sm btn-outline-info">🔄 有効にする</a>
-          {% endif %}
+            {% endif %}
           <a href="{{ url_for('activate_only', keyword_id=kw['_id']) }}" class="btn btn-sm btn-outline-secondary">🎯 これだけ有効</a>
           <a href="{{ url_for('delete_keyword', keyword_id=kw['_id']) }}" class="btn btn-sm btn-outline-danger delete-btn">🗑️ 削除</a>
+          </div>
         </td>
       </tr>
       {% endfor %}
