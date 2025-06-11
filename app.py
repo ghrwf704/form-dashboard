@@ -25,7 +25,6 @@ from flask_pymongo import PyMongo
 # 自作モジュール
 from weather import get_weather, get_weather_by_coords
 
-
 # ==============================================================================
 # 2. 初期設定とアプリケーションのセットアップ
 # ==============================================================================
@@ -36,6 +35,7 @@ if not os.path.exists("logs"):
 config = configparser.ConfigParser()
 config.read("setting.ini", encoding="utf-8")
 
+MONGO_URI= os.environ.get("MONGO_URI")
 app = Flask(__name__)
 app.config["MONGO_URI"] = os.environ.get("MONGO_URI")  # または直接MongoDBのURLを書く
 mongo = PyMongo(app)

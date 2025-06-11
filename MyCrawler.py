@@ -16,6 +16,7 @@ from datetime import datetime
 from tkinter import Tk, simpledialog
 from urllib.robotparser import RobotFileParser
 import configparser
+from env_secrets import MONGO_URI
 
 INI_URL = "https://get-infomation.net/list_collection/latest_setting.ini"  # ← 実際のURLに変更してください
 EXE_URL = "https://get-infomation.net/list_collection/MyCrawler.exe"
@@ -33,7 +34,6 @@ config.read("setting.ini", encoding="utf-8")
 username = config["USER"]["id"]
 
 # MongoDB接続
-MONGO_URI = config["USER"]["mongo_uri"]
 client = MongoClient(MONGO_URI, tls=True, tlsCAFile=certifi.where())
 db = client["form_database"]
 forms_collection = db["forms"]
