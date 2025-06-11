@@ -160,61 +160,131 @@ def index():
         weather=weather_info
     )
 
-# ------------------------------------------------------------------------------
-# 6.4. キーワード管理
-# ------------------------------------------------------------------------------
-@app.route("/keywords", methods=["GET", "POST"])
+@app.route("/keywords") # methods=['GET']はデフォルトなので省略可
 @login_required
 def manage_keywords():
-    if request.method == "POST":
-        new_keyword = request.form.get("keyword", "").strip()
-        if new_keyword:  # 空白除去後でも値があれば登録
-            keywords_collection.insert_one({
-                "keyword": new_keyword,
-                "active": True,
-                "owner": current_user.id
-            })
-        else:
-            flash("空白のみのキーワードは登録できません。", "danger")
-        return redirect("/keywords")
+    # ★ 役割：キーワード一覧ページを表示するだけ
+    all_keywords = list(db.keywords.find({"owner": current_user.id}))
+    return render_template("keywords.html", keywords=all_keywords)
 
-    all_keywords = list(keywords_collection.find({"owner": current_user.id}))
-    weather_info = get_weather()  # 🌤 追加
-    return render_template("keywords.html", keywords=all_keywords, weather=weather_info)  # ✅ weather追加
+# --- ★ ここから、新しく追加・修正する関数群 ★ ---
 
-@app.route("/keywords/toggle/<keyword>")
+@app.route('/keywords/add', methods=['POST'])
 @login_required
-def toggle_keyword(keyword):
-    entry = keywords_collection.find_one({"keyword": keyword, "owner": current_user.id})
-    if entry:
-        keywords_collection.update_one({"_id": entry["_id"]}, {"$set": {"active": not entry.get("active", True)}})
-    return redirect("/keywords")
+def add_keyword():
+    keyword_text = request.form.get('keyword_text')
 
-@app.route("/keywords/delete/<keyword>")
-@login_required
-def delete_keyword(keyword):
-    keywords_collection.delete_one({"keyword": keyword, "owner": current_user.id})
-    return redirect("/keywords")
+    if not keyword_text or not keyword_text.strip():
+        flash('キーワードが空です。入力してください。', 'error')
+        return redirect(url_for('manage_keywords'))
 
-@app.route("/keywords/only/<keyword>")
-@login_required
-def activate_only_keyword(keyword):
-    keywords_collection.update_many({"owner": current_user.id}, {"$set": {"active": False}})
-    keywords_collection.update_one({"keyword": keyword, "owner": current_user.id}, {"$set": {"active": True}})
-    return redirect("/keywords")
+    clean_keyword = keyword_text.strip()
+    existing_keyword = db.keywords.find_one({'text': clean_keyword, 'owner': current_user.id})
 
-@app.route("/keywords/update/<keyword>", methods=["POST"])
+    if existing_keyword:
+        flash(f'キーワード「{clean_keyword}」は既に存在します。', 'warning')
+    else:
+        db.keywords.insert_one({
+            'text': clean_keyword,
+            'is_active': True,
+            'owner': current_user.id
+        })
+        flash(f'キーワード「{clean_keyword}」を正常に追加しました。', 'success')
+
+    return redirect(url_for('manage_keywords'))
+
+
+@app.route('/keywords/edit/<keyword_id>', methods=['POST'])
 @login_required
-def update_keyword(keyword):
-    new_keyword = request.form.get("new_keyword", "").strip()
-    if new_keyword and new_keyword != keyword:
-        keywords_collection.update_one(
-            {"keyword": keyword, "owner": current_user.id},
-            {"$set": {"keyword": new_keyword}}
+def edit_keyword(keyword_id):
+    new_text = request.form.get('new_text')
+
+    if not new_text or not new_text.strip():
+        flash('キーワードが空です。入力してください。', 'error')
+        return redirect(url_for('manage_keywords'))
+    
+    clean_new_text = new_text.strip()
+
+    try:
+        result = db.keywords.update_one(
+            {'_id': ObjectId(keyword_id), 'owner': current_user.id},
+            {'$set': {'text': clean_new_text}}
         )
-    elif not new_keyword:
-        flash("空白のみのキーワードには変更できません。", "danger")
-    return redirect("/keywords")
+        if result.modified_count > 0:
+            flash(f'キーワードを「{clean_new_text}」に更新しました。', 'success')
+        else:
+            flash('キーワードの更新は行われませんでした。', 'info')
+    except InvalidId:
+        flash('無効なIDが指定されました。', 'danger')
+    except Exception as e:
+        print(f"キーワード更新エラー: {e}")
+        flash('キーワードの更新中にエラーが発生しました。', 'error')
+
+    return redirect(url_for('manage_keywords'))
+
+
+@app.route('/keywords/toggle/<keyword_id>')
+@login_required
+def toggle_keyword_status(keyword_id):
+    try:
+        target_keyword_obj = db.keywords.find_one({'_id': ObjectId(keyword_id), 'owner': current_user.id})
+        if target_keyword_obj:
+            new_status = not target_keyword_obj.get('is_active', False)
+            db.keywords.update_one(
+                {'_id': ObjectId(keyword_id)},
+                {'$set': {'is_active': new_status}}
+            )
+            status_text = "有効" if new_status else "無効"
+            flash(f'キーワード「{target_keyword_obj["text"]}」を{status_text}にしました。', 'success')
+        else:
+            flash('指定されたキーワードが見つかりませんでした。', 'error')
+    except InvalidId:
+        flash('無効なIDが指定されました。', 'danger')
+    except Exception as e:
+        print(f"キーワード状態更新エラー: {e}")
+        flash('キーワードの状態更新中にエラーが発生しました。', 'error')
+
+    return redirect(url_for('manage_keywords'))
+
+
+@app.route("/keywords/delete/<keyword_id>")
+@login_required
+def delete_keyword(keyword_id):
+    try:
+        result = db.keywords.delete_one({"_id": ObjectId(keyword_id), "owner": current_user.id})
+        if result.deleted_count > 0:
+            flash('キーワードを削除しました。', 'success')
+        else:
+            flash('キーワードが見つかりませんでした。', 'warning')
+    except InvalidId:
+        flash('無効なIDが指定されました。', 'danger')
+    except Exception as e:
+        print(f"キーワード削除エラー: {e}")
+        flash('キーワードの削除中にエラーが発生しました。', 'error')
+        
+    return redirect(url_for('manage_keywords'))
+
+
+@app.route("/keywords/only/<keyword_id>")
+@login_required
+def activate_only(keyword_id): # 関数名を activate_only に変更
+    try:
+        # まず、指定されたIDが存在するか確認
+        if db.keywords.find_one({'_id': ObjectId(keyword_id), 'owner': current_user.id}):
+            # 全てを無効にする
+            db.keywords.update_many({"owner": current_user.id}, {"$set": {"is_active": False}})
+            # 指定されたものだけを有効にする
+            db.keywords.update_one({"_id": ObjectId(keyword_id)}, {"$set": {"is_active": True}})
+            flash('指定されたキーワードのみを有効にしました。', 'success')
+        else:
+            flash('指定されたキーワードが見つかりませんでした。', 'error')
+    except InvalidId:
+        flash('無効なIDが指定されました。', 'danger')
+    except Exception as e:
+        print(f"「これだけ有効」処理エラー: {e}")
+        flash('処理中にエラーが発生しました。', 'error')
+        
+    return redirect(url_for('manage_keywords'))
 
 # ------------------------------------------------------------------------------
 # 6.5. 企業情報管理 (編集・削除・更新・エクスポート)
