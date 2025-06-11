@@ -1,57 +1,71 @@
-/* キーワード管理ページ */
-.keyword-form {
-    margin: 2rem 0;
+/* keywords.css (修正後) */
+
+/* ページ全体のヘッダー */
+.keyword-page-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+/* 新規キーワード追加フォームのコンテナ */
+.add-keyword-box {
+    max-width: 600px;
+    margin: 2rem auto;
+    padding: 1.5rem;
+    background: var(--glass-bg);
+    border-radius: var(--border-radius-sm);
+    box-shadow: var(--shadow-md);
+}
+
+/* キーワードテーブルの操作ボタンのコンテナ */
+.keywords-table .actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+/* 編集フォームのレイアウト */
+.edit-form {
     display: flex;
     gap: 0.5rem;
+    align-items: center;
 }
 
-.keyword-form input[type="text"] {
-    flex: 1;
-    padding: 0.8rem;
-    border-radius: 8px;
-    border: 1px solid #ccc;
-}
-
-.keyword-form button {
-    padding: 0.8rem 1.2rem;
-    background-color: #28a745;
-    color: white;
-    border: none;
-    border-radius: 8px;
-    font-weight: bold;
-    cursor: pointer;
-}
-
-.keyword-form button:hover {
-    background-color: #218838;
-}
-
-/* keyword-actions is a bit generic, maybe add context */
-.keyword-table .keyword-actions a {
-    display: inline-block;
-    margin-right: 1rem;
-    text-decoration: none;
-    font-weight: bold;
-    color: #007bff;
-}
-
-.keyword-table .keyword-actions a:hover {
-    text-decoration: underline;
-}
-
+/* キーワードの状態を示すテキストのスタイル */
 .status-active {
-    color: green;
-    font-weight: bold;
+    color: #28a745; /* Bootstrapのsuccessカラー */
+    font-weight: 600;
 }
   
 .status-inactive {
-    color: gray;
-    font-weight: bold;
+    color: #6c757d; /* Bootstrapのsecondaryカラー */
+    font-weight: 500;
 }
-  
-.keyword-empty {
-    text-align: center;
+
+/* 使い方のヒント ボックス */
+.how-to-box {
+    margin-top: 3rem;
     padding: 2rem;
-    color: #aaa;
-    font-size: 1.2rem;
+    background: var(--glass-bg);
+    border-radius: var(--border-radius-sm);
+    border: 1px solid var(--glass-border);
+}
+
+.how-to-box h3 {
+    margin-bottom: 1rem;
+}
+
+.how-to-box ul {
+    padding-left: 20px;
+}
+
+.how-to-box li {
+    margin-bottom: 0.75rem;
+}
+
+.input-examples {
+    margin-top: 1.5rem;
+    padding: 1rem;
+    background: rgba(0,0,0,0.03);
+    border-radius: 8px;
 }

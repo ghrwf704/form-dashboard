@@ -73,3 +73,22 @@
     padding: 0.5rem 1rem;
     font-size: 0.85rem;
 }
+
+.btn-outline-warning {
+    background: rgba(255, 193, 7, 0.1);
+    color: #ffc107;
+    border: 1px solid rgba(255, 193, 7, 0.3);
+}
+
+.btn-outline-warning:hover {
+    background: linear-gradient(135deg, #ffc107, #e0a800);
+    color: #212529;
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-sm);
+}
+
+.btn-outline-info {
+    background: rgba(23, 162, 184, 0.1);
+    color: #17a2b8;
+    border: 1px solid rgba(23, 162, 184, 0.3);
+}
