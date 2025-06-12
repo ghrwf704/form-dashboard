@@ -9,7 +9,7 @@ try:
 except:
     pass  # Windowsでは使えない可能性あり
 
-API_KEY = "8b1b19f6b181cfcda2d8221d07741da4"
+API_KEY = os.environ.get("OPENWEATHERMAP_API_KEY")
 DEFAULT_LAT = "35.6895"  # 東京
 DEFAULT_LON = "139.6917"
 
