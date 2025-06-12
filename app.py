@@ -23,7 +23,7 @@ from flask_login import (LoginManager, login_user, logout_user, login_required,
 from flask_pymongo import PyMongo
 
 # 自作モジュール
-from weather import get_weather_by_coords
+from weather import get_weather, get_weather_by_coords
 
 # ==============================================================================
 # 2. 初期設定とアプリケーションのセットアップ
@@ -146,42 +146,19 @@ def logout():
 # ------------------------------------------------------------------------------
 # 6.3. メインページ
 # ------------------------------------------------------------------------------
-# ------------------------------------------------------------------------------
-# 6.3. メインページ
-# ------------------------------------------------------------------------------
 @app.route("/")
 @login_required
 def index():
-    # --- 既存の処理（ここは変更なし） ---
     forms = list(collection.find({"owner": current_user.id}).sort("_id", -1))
+    # これが新しい正しいコードです
     active_keywords = [k["keyword"] for k in db.keywords.find({"is_active": True, "owner": current_user.id})]
+    weather_info = get_weather()
 
-    # --- 天気情報取得処理を修正 ---
-    # デフォルトの場所（東京）の緯度経度を定義
-    default_lat = "35.6895"
-    default_lon = "139.6917"
-    
-    # 安全な get_weather_by_coords 関数を呼び出す
-    weather_info = get_weather_by_coords(default_lat, default_lon) 
-
-    # もしAPIキーの問題などで天気情報が取得できなかった場合（weather_infoがNoneの場合）の対策
-    if not weather_info:
-        # テンプレートに渡すための、最低限の「空の」データを作成
-        weather_info = {
-            'description': '情報取得失敗',
-            'temp': '-',
-            'icon': 'unknown', # アイコンがない場合に備える
-            'date': '-',
-            'weekday': '-',
-            'time': '-'
-        }
-    
-    # テンプレートにデータを渡してレンダリング
     return render_template(
         "index.html",
         forms=forms,
         active_keywords=active_keywords,
-        weather=weather_info  # 修正された天気情報を渡す
+        weather=weather_info
     )
 
 @app.route("/keywords") # methods=['GET']はデフォルトなので省略可
