@@ -9,7 +9,7 @@ try:
 except:
     pass  # Windowsでは使えない可能性あり
 
-API_KEY = "60cac4666c0188f445e291cc645bc0f2"
+API_KEY = "8b1b19f6b181cfcda2d8221d07741da4"
 DEFAULT_LAT = "35.6895"  # 東京
 DEFAULT_LON = "139.6917"
 
