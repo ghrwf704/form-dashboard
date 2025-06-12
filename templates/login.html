@@ -10,17 +10,6 @@
     <div class="container">
         <div class="login-form">
             <h1>🔐 ログイン</h1>
-            
-            {% with messages = get_flashed_messages() %}
-              {% if messages %}
-                <div class="error">
-                  {% for message in messages %}
-                    <p>❌ {{ message }}</p>
-                  {% endfor %}
-                </div>
-              {% endif %}
-            {% endwith %}
-
             <form method="post">
                 <div class="form-group">
                     <input type="text" name="username" placeholder="👤 ユーザー名" required>
@@ -30,7 +19,6 @@
                 </div>
                 <button type="submit">🚀 ログイン</button>
             </form>
-            
             <div>
                 <p>フォーム管理システムへようこそ</p>
                 <p>認証情報を入力してアクセスしてください</p>
