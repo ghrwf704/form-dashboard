@@ -15,7 +15,32 @@
 <div class="keywords-display">
   <p>🔍 <strong>Bing検索キーワード:</strong> 「{{ active_keywords | join(' ') }} 概要 情報 -一覧 -ランキング -まとめ -比較」</p>
 </div>
+<!-- ダッシュボードのどこか分かりやすい場所に配置 -->
+<div class="crawler-status-box">
+    <h3>クローラー状態</h3>
+    <p>
+        現在の状態: <strong>{{ crawler.status_jp }}</strong>
+    </p>
+    <p>
+        本日の収集件数: <strong>{{ crawler.count }} / 100</strong>
+    </p>
+    <div class="crawler-actions">
+        {# クローラーが待機中(idle)の場合のみSTARTボタンを表示 #}
+        {% if crawler.status == 'idle' %}
+            <a href="{{ url_for('start_crawler_route') }}" class="btn btn-primary">収集START</a>
+        {% endif %}
+        
+        {# クローラーが実行中(running)の場合のみSTOPボタンを表示 #}
+        {% if crawler.status == 'running' %}
+            <a href="{{ url_for('stop_crawler_route') }}" class="btn btn-danger">収集STOP</a>
+        {% endif %}
 
+        {# 停止中の場合は、ボタンを非表示にするか、メッセージを表示 #}
+        {% if crawler.status == 'stopping' %}
+            <p><em>現在、停止処理を行っています...</em></p>
+        {% endif %}
+    </div>
+</div>
 <div class="d-flex justify-content-between align-items-center mb-3">
   <h1>🏢 企業一覧</h1>
   <!-- 表示中データだけをExcel出力するボタン -->
