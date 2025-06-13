@@ -2,6 +2,7 @@
 import requests
 from datetime import datetime
 import locale
+import os
 
 # 日本語ロケールを設定（曜日取得のため）
 try:
