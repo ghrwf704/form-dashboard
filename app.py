@@ -24,7 +24,6 @@ from flask_pymongo import PyMongo
 
 # 自作モジュール
 from weather import get_weather, get_weather_by_coords
-import crawler_manager
 
 # ==============================================================================
 # 2. 初期設定とアプリケーションのセットアップ
@@ -48,7 +47,6 @@ app.secret_key = os.environ.get("SECRET_KEY")
 # ==============================================================================
 client = pymongo.MongoClient(MONGO_URI, tls=True, tlsCAFile=certifi.where())
 db = client["form_database"]
-crawler_manager.setup_scheduler(db)
 collection = db["forms"]
 keywords_collection = db["keywords"]
 users_collection = db["users"]
@@ -151,31 +149,16 @@ def logout():
 @app.route("/")
 @login_required
 def index():
-    # 既存の処理（変更なし）
     forms = list(collection.find({"owner": current_user.id}).sort("_id", -1))
+    # これが新しい正しいコードです
     active_keywords = [k["keyword"] for k in db.keywords.find({"is_active": True, "owner": current_user.id})]
-    
-    # 天気情報の取得（変更なし、デフォルトの緯度経度を渡す）
-    # (DEFAULT_LAT, DEFAULT_LON はこの関数の外で定義されている想定)
-    weather_info = get_weather_by_coords(DEFAULT_LAT, DEFAULT_LON) 
-    
-    # 【ここからが修正・追加箇所】
-    # crawler_managerから現在のクローラー情報を取得する
-    crawler_info = crawler_manager.get_crawler_status_for_user(current_user.id)
+    weather_info = get_weather()
 
-    # 取得失敗時のためのデフォルト値を設定（weather_infoに対しても行うとより安全）
-    if not weather_info:
-        weather_info = {'description': '取得失敗', 'temp': '-', 'icon': 'unknown', 'date': '-', 'weekday': '-', 'time': '-'}
-    if not crawler_info:
-        crawler_info = {'status': 'unknown', 'status_jp': '状態不明', 'count': 0}
-
-    # テンプレートに新しい `crawler` 変数を渡す
     return render_template(
         "index.html",
         forms=forms,
         active_keywords=active_keywords,
-        weather=weather_info,
-        crawler=crawler_info  # テンプレートにクローラー情報を渡す
+        weather=weather_info
     )
 
 @app.route("/keywords") # methods=['GET']はデフォルトなので省略可
@@ -554,25 +537,6 @@ def show_logs(user):
         lines = f.readlines()
 
     return render_template("logs.html", user=user, log_lines=lines, filename=latest_file)
-
-# ------------------------------------------------------------------------------
-# 6.X. クローラー制御ルート (新規追加)
-# ------------------------------------------------------------------------------
-@app.route('/crawler/start')
-@login_required
-def start_crawler_route():
-    """STARTボタンが押された時の処理"""
-    crawler_manager.request_start_crawler(current_user.id)
-    flash('クローラーの起動をリクエストしました。次回の監視時（最大1分後）に開始されます。', 'success')
-    return redirect(url_for('index'))
-
-@app.route('/crawler/stop')
-@login_required
-def stop_crawler_route():
-    """STOPボタンが押された時の処理"""
-    crawler_manager.request_stop_crawler(current_user.id)
-    flash('クローラーの停止をリクエストしました。処理中のタスクが完了次第、安全に停止します。', 'info')
-    return redirect(url_for('index'))
 
 # ==============================================================================
 # 7. アプリケーションの実行

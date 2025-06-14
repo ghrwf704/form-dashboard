@@ -1,5 +1,4 @@
 #MyCrawler.py
-import os
 import configparser
 import re
 import requests
@@ -14,6 +13,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 import time
 from datetime import datetime
+from tkinter import Tk, simpledialog
 from urllib.robotparser import RobotFileParser
 from env_secrets import MONGO_URI
 
@@ -86,6 +86,80 @@ def send_log_to_server(message):
 # USERセクション確認
 if "USER" not in config:
     config["USER"] = {}
+
+# passチェック
+if not config["USER"].get("pass"):
+    # GUIで入力（バックグラウンドTk無効化）
+    root = Tk()
+    root.withdraw()
+    pw = simpledialog.askstring("初回パスワード設定", "ログイン用パスワードを入力してください。（自動的に保存されます）")
+    root.destroy()
+
+    if pw:
+        config["USER"]["pass"] = pw
+        with open("setting.ini", "w", encoding="utf-8") as f:
+            config.write(f)
+    else:
+        send_log_to_server("パスワードが設定されませんでした。終了します。")
+        exit()
+
+def download_file(url, dest_path):
+    try:
+        r = requests.get(url)
+        r.raise_for_status()
+        with open(dest_path, 'wb') as f:
+            f.write(r.content)
+        send_log_to_server(f"Downloaded: {url}")
+        return True
+    except Exception as e:
+        send_log_to_server(f"[ERROR] Download failed: {url}\n{e}")
+        return False
+
+def check_and_update():
+    import os
+    import sys
+
+    # 1. 最新INIを取得
+    if not download_file(INI_URL, "latest.ini"):
+        print("❌ INIファイルのダウンロードに失敗しました。")
+        input("Enterキーで終了")
+        return
+
+    # 2. バージョン読み込み
+    latest = configparser.ConfigParser()
+    current = configparser.ConfigParser()
+    latest.read("latest.ini", encoding="utf-8")
+    current.read(LOCAL_INI_PATH, encoding="utf-8")
+
+    latest_ver = latest.get("USER", "version", fallback="0.0.0")
+    current_ver = current.get("USER", "version", fallback="0.0.0")
+
+    # 3. バージョン比較
+    if latest_ver != current_ver:
+        send_log_to_server(f"[INFO] アップデートあり：{current_ver} → {latest_ver}")
+
+        today_str = datetime.now().strftime("%Y%m%d")
+        save_dir = os.path.join(os.getcwd(), today_str)
+        os.makedirs(save_dir, exist_ok=True)
+        new_exe_path = os.path.join(save_dir, "MyCrawler.exe")
+
+        if download_file(EXE_URL, new_exe_path):
+            send_log_to_server(f"[INFO] 新バージョンを {save_dir} に保存しました")
+            print(f"\n🔄 新しいバージョン（{latest_ver}）を {save_dir} に保存しました。")
+            print(f"➡️ 次回は現在のMyCrawler.exeではなく、{today_str}/MyCrawler.exeを上書き後に実行してください。")
+            input("Enterキーで終了")
+            sys.exit(1)
+        else:
+            send_log_to_server("[ERROR] 新EXEのダウンロード失敗")
+            print("❌ 新バージョンのダウンロードに失敗しました。")
+            input("Enterキーで終了")
+            sys.exit(1)
+    else:
+        send_log_to_server("[INFO] 現在のバージョンは最新版です")
+
+
+# 起動時にチェック
+check_and_update()
 
 def get_og_image_from_url(url):
     try:
@@ -378,5 +452,3 @@ while True:
     finally:
         driver.quit()  # ✅ これでゾンビChrome退治！
         send_log_to_server("🧼 Chromeドライバを終了しました")
-
-        
