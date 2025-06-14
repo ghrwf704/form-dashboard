@@ -2,7 +2,7 @@
 import requests
 from datetime import datetime
 import locale
-
+import os
 # 日本語ロケールを設定（曜日取得のため）
 try:
     locale.setlocale(locale.LC_TIME, 'ja_JP.UTF-8')
