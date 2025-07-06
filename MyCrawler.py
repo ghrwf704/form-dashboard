@@ -2,7 +2,7 @@
 import configparser
 import re
 import requests
-from urllib.parse import urlparse, urljoin
+from urllib.parse import urlparse, urljoin, quote_plus
 from pymongo import MongoClient
 import certifi
 from bs4 import BeautifulSoup
@@ -58,15 +58,18 @@ def is_same_company(domain, company_name):
     return False
 
 def is_allowed_by_robots(url, user_agent='*'):
-    try:
-        robots_url = urljoin(url, "/robots.txt")
-        rp = RobotFileParser()
-        rp.set_url(robots_url)
-        rp.read()
-        return rp.can_fetch(user_agent, url)
-    except Exception as e:
-        send_log_to_server(f"⚠️ robots.txt の確認エラー: {e}")
-        return True  # エラー時は許可扱い
+    if "Bing" not in url:
+        try:
+            robots_url = urljoin(url, "/robots.txt")
+            rp = RobotFileParser()
+            rp.set_url(robots_url)
+            rp.read()
+            return rp.can_fetch(user_agent, url)
+        except Exception as e:
+            send_log_to_server(f"⚠️ robots.txt の確認エラー: {e}")
+            return True  # エラー時は許可扱い
+    else:
+        return True
 
 def send_log_to_server(message):
     import configparser
@@ -80,7 +83,7 @@ def send_log_to_server(message):
         if res.status_code == 200:
             print("[SERVER] ログ送信成功")
     except Exception as e:
-        print(f"[ERROR] ログ送信失敗: {e}")
+            print(f"[ERROR] ログ送信失敗: {e}")
 
 
 # USERセクション確認
@@ -199,41 +202,33 @@ if not counter_doc or counter_doc.get("date") != today:
 else:
     maxCountPerDay = counter_doc["count"]
 
-def find_contact_page_by_query(top_url):
-    from selenium.webdriver.common.by import By
+def find_contact_page_by_query(top_url, driver):
+    from selenium.common.exceptions import NoSuchElementException, TimeoutException
     from selenium.webdriver.support.ui import WebDriverWait
     from selenium.webdriver.support import expected_conditions as EC
-
-    # お問い合わせに関するクエリを構築
-    query = f"site:{top_url} お問い合わせ"
-    driver.get("https://www.bing.com")
-
+    from selenium.webdriver.common.keys import Keys
     try:
-        # 検索フォームに入力
-        search_box = WebDriverWait(driver, 10).until(
-            EC.presence_of_element_located((By.NAME, "q"))
+        query = f"{top_url} お問い合わせ"
+        encoded_query = quote_plus(query) # URLエンコードを忘れずに行う
+        target_url = f"https://www.bing.com/search?q={encoded_query}"
+
+        driver.get(target_url)
+        wait = WebDriverWait(driver, 10) # タイムアウト10秒
+        first_result_element = wait.until(
+            EC.presence_of_element_located((By.XPATH, "//li[@class='b_algo']//a"))
         )
-        search_box.clear()
-        search_box.send_keys(query)
-        search_box.submit()
-        time.sleep(3)
+        first_result_url = first_result_element.get_attribute("href")
+        return first_result_url
 
-        # 検索結果からリンクを取得（上位最大10件）
-        a_tags = driver.find_elements(By.CSS_SELECTOR, "li.b_algo h2 a")
-        for a in a_tags:
-            href = a.get_attribute("href")
-            if href and top_url in href and any(x in href.lower() for x in [
-                "contact", "form", "inquiry", "otoiawase", "お問い合わせ", "support", "contactus"
-            ]):
-                return href
-
+    except TimeoutException:
+        # 要素が見つからずにタイムアウトした場合
+        send_log_to_server("エラー: 検索結果の取得がタイムアウトしました。ページ構成の変更か、検索結果がなかった可能性があります。")
+        return None
     except Exception as e:
-        send_log_to_server(f"❌ お問い合わせリンク抽出エラー: {e}")
-
-    return ""  # 見つからない場合は空文字を返す
-
-
-
+        # その他の予期せぬエラー
+        send_log_to_server(f"予期せぬエラーが発生しました: {e}")
+        return None
+    
 # 企業情報収集関数
 def collect_company_info():
     global maxCountPerDay
@@ -330,7 +325,7 @@ def collect_company_info():
                 "owner": username
             }
 
-            form_url = find_contact_page_by_query(topurl)
+            form_url = find_contact_page_by_query(topurl, driver)
             if form_url:
                 form_data["url_form"] = form_url
 

@@ -8,7 +8,7 @@ import os
 import configparser
 from io import BytesIO
 from datetime import datetime, timedelta
-
+from flask import Flask, render_template, send_from_directory, abort
 # サードパーティライブラリ
 import bcrypt
 import certifi
@@ -136,6 +136,22 @@ def login():
         flash("ログイン失敗: ユーザー名またはパスワードが間違っています。")
 
     return render_template("login.html")
+
+@app.route('/download/crawler')
+def download_crawler():
+    """クローラーのファイルをダウンロードさせる"""
+    # app.pyファイルがある場所を基準に 'downloads' フォルダを指定
+    directory = os.path.join(app.root_path, 'downloads')
+    filename = 'crawler.zip' # ダウンロードさせたいファイル名
+
+    try:
+        return send_from_directory(
+            directory,
+            filename,
+            as_attachment=True
+        )
+    except FileNotFoundError:
+        abort(404)
 
 @app.route("/logout")
 @login_required
