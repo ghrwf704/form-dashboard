@@ -142,7 +142,7 @@ def download_crawler():
     """クローラーのファイルをダウンロードさせる"""
     # app.pyファイルがある場所を基準に 'downloads' フォルダを指定
     directory = os.path.join(app.root_path, 'downloads')
-    filename = 'MyClawler.zip' # ダウンロードさせたいファイル名
+    filename = 'MyCrawler.zip' # ダウンロードさせたいファイル名
 
     try:
         return send_from_directory(
