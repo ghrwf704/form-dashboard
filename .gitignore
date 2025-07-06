@@ -7,6 +7,5 @@ logs/
 dist/
 *.exe
 *.ini
-*.zip
 env_secrets.py
 stripe_checkout.py
