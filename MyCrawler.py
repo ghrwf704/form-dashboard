@@ -235,7 +235,7 @@ def collect_company_info():
     for url_doc in urls_collection.find({"owner": username, "status": "未収集"}):
         try:
             url_1 = url_doc["url"]
-            if not is_allowed_by_robots(url_1):
+            if not is_allowed_by_robots(url_1) and "bing" not in url_1:
                 send_log_to_server(f"⛔ robots.txt によりアクセス拒否: {url_1}")
                 urls_collection.update_one({"_id": url_doc["_id"]}, {"$set": {"status": "robots拒否"}})
                 continue
